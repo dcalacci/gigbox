@@ -7,6 +7,9 @@
     "noEmit": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "strict": true
+    "strict": true,
+    "paths": {
+      "styles": ["./tailwind.ts"]
+    }
   }
 }
