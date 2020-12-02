@@ -1,13 +1,6 @@
-import React, { Component } from "react";
-
-import {
-  Alert,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  Dimensions,
-} from "react-native";
+import React, { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { StyleSheet, Text, TouchableOpacity, Dimensions } from "react-native";
 
 import * as Loc from "expo-location";
 import * as Permissions from "expo-permissions";
@@ -19,142 +12,126 @@ type Location = {
   longitude: number;
 };
 
-type MapConsentState = {
-  currentLocation: Location;
-  mapReady: boolean;
-  locationConsentGiven: boolean;
-  locationGranted: boolean;
-  map: MapView | null;
-  errorMessage: string;
-};
-
 const DELTAS = {
   latitudeDelta: 0.02,
   longitudeDelta: 0.02,
 };
 
-export class MapConsent extends Component<{}, MapConsentState> {
-    /* private mapref = React.createRef<MapView|null>(); */
-    private map: MapView | null
-  /* private mapref: React.RefObject<MapView>; */
+type LocConsentProps = {
+  onPermissionRecieved: Function;
+};
 
-  constructor(props: object) {
-    super(props);
-    this.map = null;
-    this.state = {
-      currentLocation: { latitude: -1, longitude: -1 },
-      mapReady: false,
-      locationConsentGiven: false,
-      locationGranted: false,
-      map: null,
-      errorMessage: "",
-    };
-  }
+type MapProps = {
+  centerLocation: Location;
+};
 
-  componentDidUpdate() {
-    // once we have current location and the map is ready, animate the map to the user.
-    if (this.state.currentLocation.latitude != -1 && this.map !== null) {
-      console.log("got current location for user, animating the map...");
-      console.log(this.state.currentLocation)
-      this.map.animateToRegion({
-        latitude: this.state.currentLocation.latitude,
-        longitude: this.state.currentLocation.longitude,
-        ...DELTAS,
-      });
-    } else if (!this.state.currentLocation) {
-      console.log("checking permissions because we don't have location:", this.state.currentLocation)
-      this._checkPermissionsAndLocation()
+const LocationConsentButton: React.SFC<LocConsentProps> = (props) => {
+  // sets permission to true or false and stores it in async storage
+
+  useEffect(() => {
+      // if we've already recieved permissions, don't show the button
+    if (hasGrantedPermission()) {
+      props.onPermissionRecieved(true);
     }
-  }
+  });
 
-  _locationDataError = (text: string) => {
-    return (
-      data: Permissions.PermissionResponse
-    ): Permissions.PermissionResponse => {
-      if (data.status != "granted") {
-        Alert.alert(
-          "Background Location",
-          text,
-          [{ text: "Cancel" }, { text: "Continue Anyway" }],
-          { cancelable: false }
-        );
-        return data;
-      } else {
-        return data;
+  const hasGrantedPermission = async () => {
+    const val = await AsyncStorage.getItem("@locationPermission");
+    if (val) {
+      const { granted } = JSON.parse(val);
+      return granted;
+    } else {
+      return false;
+    }
+  };
+
+  const setPermission = async (granted: boolean, date: Date) => {
+    const val = JSON.stringify({ granted, date });
+    await AsyncStorage.setItem("@locationPermission", val);
+    props.onPermissionRecieved(granted);
+  };
+
+  // retrieves locatino permission from expo permissions API.
+  // nothing is stored if user refuses
+  const getLocPermission = async () => {
+    if (!hasGrantedPermission()) {
+      const { status } = await Permissions.getAsync(Permissions.LOCATION);
+      if (status == "granted") {
+        setPermission(true, new Date());
       }
-    };
-  };
-
-  _checkPermissionsAndLocation = async () => {
-    let { status } = await Permissions.getAsync(Permissions.LOCATION);
-    if (status == "granted") {
-      let location = await Loc.getCurrentPositionAsync({});
-      console.log("location coords:", location.coords);
-      this.setState({
-        locationGranted: true,
-        currentLocation: { ...location.coords },
-      });
-    }
-  };
-
-  _getLocationAsync = async () => {
-    let { status } = await Permissions.askAsync(Permissions.LOCATION);
-    if (status !== "granted") {
-      this.setState({
-        ...this.state,
-        locationGranted: false,
-        errorMessage: "Permission to access location was denied",
-      });
     } else {
-      //TODO: this fails if we don't have GPS or if data/wifi is turned off.
-      // check how to handle this error.
-      let location = await Loc.getCurrentPositionAsync({});
-      console.log("got location:", {
-        latitude: location.coords.latitude,
-        longitude: location.coords.longitude,
-      });
-      this.setState({
-        locationGranted: true,
-        currentLocation: {
-          latitude: location.coords.latitude,
-          longitude: location.coords.longitude,
-        },
-      });
+      // we've already gotten permission, send it up
+      props.onPermissionRecieved(true);
     }
   };
 
-  render() {
-    if (this.state.locationGranted) {
-      return (
-        <MapView
-          ref={map=> {this.map = map}}
-          showsUserLocation={true}
-          showsCompass={true}
-          style={styles.mapStyle}
-          cacheEnabled={false}
-          zoomEnabled={false}
-          zoomTapEnabled={false}
-          rotateEnabled={false}
-          scrollEnabled={false}
-          loadingEnabled={true}
-          onMapReady={() => this.setState({ mapReady: true })}
-        >
-        </MapView>
-      );
-    } else {
-      return (
-        <View style={styles.mapContainer}>
-          <TouchableOpacity
-            onPress={this._getLocationAsync}
-            style={styles.locationButton}
-          >
-            <Text style={styles.buttonText}>Request Location Permission</Text>
-          </TouchableOpacity>
-        </View>
-      );
+  return (
+    <TouchableOpacity onPress={getLocPermission} style={styles.locationButton}>
+      <Text style={styles.buttonText}>Request Location Permission</Text>
+    </TouchableOpacity>
+  );
+};
+
+const Map: React.SFC<MapProps> = (props) => {
+  const [mapReady, setMapReady] = useState<boolean>(false);
+  const [map, setMap] = useState<MapView | null>(null);
+
+  useEffect(() => {
+    if (mapReady && map) {
+      map.animateToRegion({ ...props.centerLocation, ...DELTAS });
     }
+  }, [props, mapReady]);
+
+  return (
+    <MapView
+      ref={(m: MapView) => {
+        setMap(m);
+      }}
+      showsUserLocation={true}
+      showsCompass={true}
+      style={styles.mapStyle}
+      cacheEnabled={false}
+      zoomEnabled={false}
+      zoomTapEnabled={false}
+      rotateEnabled={false}
+      scrollEnabled={false}
+      loadingEnabled={true}
+      onMapReady={() => setMapReady(true)}
+    ></MapView>
+  );
+};
+
+const MapConsent = () => {
+  const [locPermission, setLocPermission] = useState<boolean>(false);
+  const [userLocation, setUserLocation] = useState<Location | null>(null);
+
+  const getUserLocation = async () => {
+    const loc = await Loc.getCurrentPositionAsync();
+    console.log("got user location:", loc);
+    setUserLocation({
+      latitude: loc.coords.latitude,
+      longitude: loc.coords.longitude,
+    });
+  };
+
+  useEffect(() => {
+    // get the user location as soon as permissions update
+    if (locPermission && !userLocation) {
+      getUserLocation();
+    }
+  }, [locPermission]);
+
+  if (!locPermission) {
+    return <LocationConsentButton onPermissionRecieved={setLocPermission} />;
+  } else if (userLocation) {
+    return <Map centerLocation={userLocation} />;
+  } else {
+    // TODO: small loading screen here
+    return <></>;
   }
-}
+};
+
+export default MapConsent;
 
 const styles = StyleSheet.create({
   mapStyle: {
