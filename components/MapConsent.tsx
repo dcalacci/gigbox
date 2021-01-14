@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { StyleSheet, Text, TouchableOpacity, Dimensions } from "react-native";
+import { StyleSheet, Dimensions } from "react-native";
 
 import * as Loc from "expo-location";
 import * as Permissions from "expo-permissions";
@@ -17,59 +16,8 @@ const DELTAS = {
   longitudeDelta: 0.02,
 };
 
-type LocConsentProps = {
-  onPermissionRecieved: Function;
-};
-
 type MapProps = {
   centerLocation: Location;
-};
-
-const LocationConsentButton: React.SFC<LocConsentProps> = (props) => {
-  // sets permission to true or false and stores it in async storage
-
-  useEffect(() => {
-      // if we've already recieved permissions, don't show the button
-    if (hasGrantedPermission()) {
-      props.onPermissionRecieved(true);
-    }
-  });
-
-  const hasGrantedPermission = async () => {
-    const val = await AsyncStorage.getItem("@locationPermission");
-    if (val) {
-      const { granted } = JSON.parse(val);
-      return granted;
-    } else {
-      return false;
-    }
-  };
-
-  const setPermission = async (granted: boolean, date: Date) => {
-    const val = JSON.stringify({ granted, date });
-    await AsyncStorage.setItem("@locationPermission", val);
-    props.onPermissionRecieved(granted);
-  };
-
-  // retrieves locatino permission from expo permissions API.
-  // nothing is stored if user refuses
-  const getLocPermission = async () => {
-    if (!hasGrantedPermission()) {
-      const { status } = await Permissions.getAsync(Permissions.LOCATION);
-      if (status == "granted") {
-        setPermission(true, new Date());
-      }
-    } else {
-      // we've already gotten permission, send it up
-      props.onPermissionRecieved(true);
-    }
-  };
-
-  return (
-    <TouchableOpacity onPress={getLocPermission} style={styles.locationButton}>
-      <Text style={styles.buttonText}>Request Location Permission</Text>
-    </TouchableOpacity>
-  );
 };
 
 const Map: React.SFC<MapProps> = (props) => {
@@ -114,16 +62,29 @@ const MapConsent = () => {
     });
   };
 
+  const askPermissions = async () => {
+    const { status, granted } = await Permissions.askAsync(
+      Permissions.LOCATION
+    );
+    if (status === "granted") {
+      setLocPermission(granted);
+    } else {
+      console.log("Permissions denied.");
+      setLocPermission(false);
+    }
+  };
+
   useEffect(() => {
+    if (!locPermission) {
+      askPermissions();
+    }
     // get the user location as soon as permissions update
     if (locPermission && !userLocation) {
       getUserLocation();
     }
   }, [locPermission]);
 
-  if (!locPermission) {
-    return <LocationConsentButton onPermissionRecieved={setLocPermission} />;
-  } else if (userLocation) {
+  if (userLocation) {
     return <Map centerLocation={userLocation} />;
   } else {
     // TODO: small loading screen here
