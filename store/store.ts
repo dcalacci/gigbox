@@ -2,7 +2,7 @@ import { createStore } from "redux";
 import { persistStore, persistReducer } from "redux-persist";
 import { ExpoFileSystemStorage } from "./expoFileSystemStorage";
 
-import rootReducer from "../reducers";
+import rootReducer from ".";
 const fsStorage = new ExpoFileSystemStorage();
 
 const persistConfig = {
