@@ -1,23 +1,34 @@
 import React, { FunctionComponent } from "react";
 import { StyleSheet, Text, ScrollView, View } from "react-native";
+import { tailwind } from "tailwind";
 
 import EditScreenInfo from "../components/EditScreenInfo";
-import { tailwind } from "tailwind";
+import TrackingBar from "../components/TrackingBar";
 
 export default function TabOneScreen() {
   return (
-    <View style={tailwind("flex-1 flex-col overflow-scroll justify-start items-center pt-10 bg-white")}>
-      <Card title={"Hours Worked"} />
-      <Card title={"Miles Driven"} />
-    </View>
+    <>
+        <TrackingBar/>
+          <ScrollView
+            style={tailwind("pt-10 bg-white")}
+          >
+        <Card title={"Hours Worked"} />
+        <Card title={"Miles Driven"} />
+        <Card title={"Miles Driven"} />
+        <Card title={"Miles Driven"} />
+        <Card title={"Miles Driven"} />
+        <Card title={"Miles Driven"} />
+        <Card title={"Miles Driven"} />
+      </ScrollView>
+    </>
   );
 }
 
 type CardProps = {
-    title: string
-}
+  title: string;
+};
 
-const Card: FunctionComponent<CardProps> = ({title}) => (
+const Card: FunctionComponent<CardProps> = ({ title }) => (
   <View style={tailwind("flex-1 w-11/12")}>
     <View
       style={tailwind("self-start bg-transparent border w-10/12 h-36")}
