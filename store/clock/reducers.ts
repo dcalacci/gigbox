@@ -1,10 +1,11 @@
 import { ClockState, ClockActionTypes, ClockAction } from './types'
 
 const initialState: ClockState = {
-    startTime: null,
+    startTime: new Date(),
     milesTracked: 0,
     employers: [],
-    active: false
+    active: false,
+    previousShifts: []
 }
 
 export function ClockReducer(
@@ -22,7 +23,16 @@ export function ClockReducer(
             //todo submit tracked period
             return {
                 ...state,
-                active: false
+                active: false,
+                previousShifts: [
+                    ...state.previousShifts, 
+                    {
+                        startTime: state.startTime,
+                        endTime: new Date(),
+                        milesTracked: state.milesTracked,
+                        employers: state.employers
+                    }
+                ]
             }
         default:
             return state

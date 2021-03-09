@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { tailwind } from "tailwind";
@@ -11,11 +11,12 @@ export default function TrackingBar() {
   const clockState = useSelector((state: RootState) => state.clock);
   const dispatch = useDispatch();
 
-  const getElapsedTime = useSelector((state: RootState) => {
+  const getElapsedTime = ():string => {
     const now = new Date()
-    if (state.clock.startTime !== null) {
+    const startTime = new Date(clockState.startTime)
+    if (clockState.startTime !== null) {
       // strip milliseconds
-      let timeDiff = (now.getTime() - state.clock.startTime.getTime())/1000
+      let timeDiff = (now.getTime() - startTime.getTime())/1000
       //var timeStr = timeDiff.toTimeString().split(' ')[0];
       const seconds = Math.round(timeDiff % 60);
       timeDiff = Math.floor(timeDiff / 60);
@@ -27,8 +28,16 @@ export default function TrackingBar() {
     } else {
       return "0h 0m"
     }
+  }
 
-  })
+  const [elapsedTime, setElapsedTime] = useState<string>(getElapsedTime())
+
+  useEffect(() => {
+    let interval = setInterval(() => {
+      setElapsedTime(getElapsedTime())
+    }, 1000);
+    return () => clearInterval(interval)
+  }, [elapsedTime])
 
   const onTogglePress = () => {
     console.log(clockState)
@@ -57,7 +66,7 @@ export default function TrackingBar() {
       />
       <View style={tailwind("flex-grow-0")}>
         <Text style={textStyle}>0.0mi</Text>
-        <Text style={textStyle}>{getElapsedTime}</Text>
+        <Text style={textStyle}>{elapsedTime}</Text>
       </View>
     </View>
   );

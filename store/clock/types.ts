@@ -26,11 +26,18 @@ export interface SetEmployersAction {
 
 export type ClockAction = StartTrackingAction | StopTrackingAction | SetEmployersAction
 
+export interface PreviousClocks {
+    startTime: Date;
+    endTime: Date;
+    milesTracked: number;
+    employers: Employers[];
+}
 export interface ClockState {
-  startTime: Date | null;
+  startTime: Date;
   milesTracked: number;
   employers: Employers[];
   active: boolean;
+  previousShifts: PreviousClocks[]
 }
 
 export enum Employers {
