@@ -2,7 +2,6 @@ import React, { FunctionComponent } from "react";
 import { StyleSheet, Text, ScrollView, View } from "react-native";
 import { tailwind } from "tailwind";
 
-import EditScreenInfo from "../components/EditScreenInfo";
 import TrackingBar from "../components/TrackingBar";
 
 export default function TabOneScreen() {
