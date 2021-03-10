@@ -34,7 +34,7 @@ export default function TrackingBar() {
       setElapsedTime(formatElapsedTime(startTimestamp));
     }, 1000);
     return () => clearInterval(interval);
-  }, [elapsedTime]);
+  });
 
   const onTogglePress = () => {
     console.log(clockState);
