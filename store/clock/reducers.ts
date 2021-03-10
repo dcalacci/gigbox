@@ -15,13 +15,13 @@ export function ClockReducer(
   action: ClockAction
 ): ClockState {
   switch (action.type) {
-    case ClockActionTypes.StartTracking:
+    case ClockActionTypes.StartShift:
       return {
         ...state,
         startTime: action.meta.timestamp,
         active: true,
       };
-    case ClockActionTypes.StopTracking:
+    case ClockActionTypes.StopShift:
       //TODO submit tracked period
       return {
         ...state,

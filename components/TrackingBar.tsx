@@ -12,7 +12,7 @@ import { clockIn, clockOut } from "../store/clock/actions";
 
 import { ClockState } from "../store/clock/types";
 import { formatElapsedTime } from "../utils"
-import { startGettingBackgroundLocation } from "../tasks"
+import { startGettingBackgroundLocation, stopGettingBackgroundLocation } from "../tasks"
 
 
 export default function TrackingBar() {
@@ -38,6 +38,7 @@ export default function TrackingBar() {
       startGettingBackgroundLocation()
     } else {
       dispatch(clockOut());
+      stopGettingBackgroundLocation()
     }
   };
 

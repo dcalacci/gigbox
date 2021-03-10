@@ -3,7 +3,7 @@ import { ClockAction, ClockActionTypes, LocationRecord } from './types'
 export function clockIn(): ClockAction {
     console.log("Clocking in.")
     return {
-        type: ClockActionTypes.StartTracking,
+        type: ClockActionTypes.StartShift,
         meta: {
             timestamp: new Date()
         }
@@ -13,7 +13,7 @@ export function clockIn(): ClockAction {
 export function clockOut(): ClockAction {
     console.log("Clocking out.")
     return {
-        type: ClockActionTypes.StopTracking,
+        type: ClockActionTypes.StopShift,
         meta: {
             timestamp: new Date()
         }

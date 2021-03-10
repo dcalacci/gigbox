@@ -1,6 +1,6 @@
 export enum ClockActionTypes {
-  StartTracking = "START_TRACKING",
-  StopTracking = "STOP_TRACKING",
+  StartShift = "START_SHIFT",
+  StopShift = "STOP_SHIFT",
   AddEmployers = "ADD_EMPLOYERS",
   SetEmployers = "SET_EMPLOYERS",
   AddLocations = "ADD_LOCATIONS"
@@ -13,15 +13,15 @@ export interface LocationRecord {
     accuracy: number
 }
 
-export interface StartTrackingAction {
-    type: typeof ClockActionTypes.StartTracking,
+export interface StartShiftAction {
+    type: typeof ClockActionTypes.StartShift,
     meta: {
         timestamp: Date
     }
 }
 
-export interface StopTrackingAction {
-    type: typeof ClockActionTypes.StopTracking,
+export interface StopShiftAction {
+    type: typeof ClockActionTypes.StopShift,
     meta: {
         timestamp: Date
     }
@@ -37,7 +37,7 @@ export interface SetEmployersAction {
     payload: Employers[]
 }
 
-export type ClockAction = StartTrackingAction | StopTrackingAction | SetEmployersAction | AddLocationAction
+export type ClockAction = StartShiftAction | StopShiftAction | SetEmployersAction | AddLocationAction
 
 export interface PreviousShift {
     startTime: Date;
