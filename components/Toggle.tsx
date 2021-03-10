@@ -26,7 +26,7 @@ const Toggle: React.FC<ToggleProps> = ({
         style={[tailwind(
           "bg-gray-200 text-sm text-gray-500 border-2 border-gray-200 rounded-full flex-row"
         ),
-        value ? tailwind("bg-green-500") : ""
+        (value ? tailwind("bg-green-500") : null)
       ]}
       >
         <View

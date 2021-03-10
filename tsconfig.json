@@ -8,8 +8,12 @@
     "skipLibCheck": true,
     "resolveJsonModule": true,
     "strict": true,
+    "baseUrl": ".",
     "paths": {
-      "styles": ["./tailwind.ts"]
+      "styles": ["./tailwind.ts"],
+      "@/*": [
+        "./*"
+      ]
     }
   }
 }

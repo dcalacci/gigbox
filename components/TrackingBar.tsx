@@ -1,10 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
-import * as TaskManager from "expo-task-manager";
 import { tailwind } from "tailwind";
-import { LocationObject } from "expo-location";
-import * as Loc from "expo-location";
 
 import { RootState } from "../store/index";
 import Toggle from "../components/Toggle";
@@ -25,7 +22,7 @@ export default function TrackingBar() {
   // so our setInterval resets on cue.
   useEffect(() => {
     let interval = setInterval(() => {
-      const startTimestamp = clockState.active ? clockState.startTime : null
+      const startTimestamp = clockState.active ? clockState.startTime.getTime() : null
       setElapsedTime(formatElapsedTime(startTimestamp));
     }, 1000);
     return () => clearInterval(interval);
@@ -44,7 +41,7 @@ export default function TrackingBar() {
 
   const textStyle = [
     tailwind("text-lg"),
-    clockState.active ? tailwind("font-semibold") : "",
+    clockState.active ? tailwind("font-semibold") : null,
   ];
 
   return (

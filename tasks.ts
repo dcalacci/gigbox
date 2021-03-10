@@ -6,13 +6,12 @@ import { store } from "./store/store";
 
 TaskManager.defineTask(
   "gigbox.mileageTracker",
-  ({ data: { locations }, error }) => {
+  ({ data, error }) => {
     if (error) {
       console.log("error message:", error.message);
-      // check `error.message` for more details.
       return;
     }
-    let locs = locations.map((location: LocationObject) => {
+    let locs = data.locations.map((location: LocationObject) => {
       let obj = {
         lat: location.coords.latitude,
         lng: location.coords.longitude,
