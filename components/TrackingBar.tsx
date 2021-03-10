@@ -56,12 +56,12 @@ export default function TrackingBar() {
     <>
       <View
         style={[
-          tailwind("flex-shrink flex-row justify-around items-center p-2 border-b-2 border-green-600"),
-          clockState.active ? tailwind("bg-green-400 border-0 p-3") : null,
+          tailwind("flex-shrink flex-row justify-around items-center p-2 border-b-4 border-green-600 h-16 bg-white"),
+          clockState.active ? tailwind("bg-green-500 border-0 p-2") : null,
         ]}
       >
         <Toggle
-          title="Clock In"
+          title={clockState.active ? "Tracking Shift" : "Clock In"}
           activeText="On"
           inactiveText="Off"
           value={clockState.active}
