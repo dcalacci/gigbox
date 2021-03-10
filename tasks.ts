@@ -4,33 +4,37 @@ import * as TaskManager from "expo-task-manager";
 import { addLocations } from "./store/clock/actions";
 import { store } from "./store/store";
 
-TaskManager.defineTask(
-  "gigbox.mileageTracker",
-  ({ data, error }) => {
-    if (error) {
-      console.log("error message:", error.message);
-      return;
-    }
-    let locs = data.locations.map((location: LocationObject) => {
-      let obj = {
-        lat: location.coords.latitude,
-        lng: location.coords.longitude,
-        timestamp: location.timestamp,
-        accuracy: location.coords.accuracy,
-      };
-      return obj;
-    });
-    const state = store.getState();
-    if (state.clock.active) {
-      store.dispatch(addLocations(locs));
+TaskManager.isTaskRegisteredAsync("gigbox.mileageTracker").then(
+  (isRegistered) => {
+    if (isRegistered) {
+      console.log("gigbox mileage task already registered.");
+    } else {
+      TaskManager.defineTask("gigbox.mileageTracker", ({ data, error }) => {
+        if (error) {
+          console.log("error message:", error.message);
+          return;
+        }
+        let locs = data.locations.map((location: LocationObject) => {
+          let obj = {
+            lat: location.coords.latitude,
+            lng: location.coords.longitude,
+            timestamp: location.timestamp,
+            accuracy: location.coords.accuracy,
+          };
+          return obj;
+        });
+        const state = store.getState();
+        if (state.clock.active) {
+          store.dispatch(addLocations(locs));
+        }
+      });
     }
   }
 );
-
 /**
- * Creates a new background location task using Expo's `startLocationUpdatesAsync`. 
- * 
- * The task is titled "gigbox.mileageTracker", uses Loc.Accuracy.Balanced, and 
+ * Creates a new background location task using Expo's `startLocationUpdatesAsync`.
+ *
+ * The task is titled "gigbox.mileageTracker", uses Loc.Accuracy.Balanced, and
  * includes a foreground notification service.
  */
 export const startGettingBackgroundLocation = () => {
@@ -51,5 +55,5 @@ export const startGettingBackgroundLocation = () => {
  * Stops background location task
  */
 export const stopGettingBackgroundLocation = () => {
-    Loc.stopLocationUpdatesAsync("gigbox.mileageTracker")
-}
+  Loc.stopLocationUpdatesAsync("gigbox.mileageTracker");
+};
