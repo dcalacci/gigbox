@@ -47,3 +47,10 @@ export const startGettingBackgroundLocation = () => {
     activityType: Loc.ActivityType.AutomotiveNavigation,
   }).then(() => console.log("Location task registered."));
 };
+
+/**
+ * Stops background location task
+ */
+export const stopGettingBackgroundLocation = () => {
+    Loc.stopLocationUpdatesAsync("gigbox.mileageTracker")
+}
