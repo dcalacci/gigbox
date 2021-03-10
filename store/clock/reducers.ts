@@ -22,10 +22,12 @@ export function ClockReducer(
         active: true,
       };
     case ClockActionTypes.StopTracking:
-      //todo submit tracked period
+      //TODO submit tracked period
       return {
         ...state,
         active: false,
+        locations: [],
+        milesTracked: 0,
         previousShifts: [
           ...state.previousShifts,
           {

@@ -11,7 +11,7 @@ import Toggle from "../components/Toggle";
 import { clockIn, clockOut } from "../store/clock/actions";
 
 import { ClockState } from "../store/clock/types";
-import { getElapsedTime } from "../utils"
+import { formatElapsedTime } from "../utils"
 import { startGettingBackgroundLocation } from "../tasks"
 
 
@@ -19,11 +19,14 @@ export default function TrackingBar() {
   const clockState = useSelector((state: RootState) : ClockState => state.clock);
   const dispatch = useDispatch();
 
-  const [elapsedTime, setElapsedTime] = useState<string>(getElapsedTime(clockState.startTime));
+  const [elapsedTime, setElapsedTime] = useState<string>(formatElapsedTime(null));
 
+  // updates the tracking bar time logger every second. Uses useEffect
+  // so our setInterval resets on cue.
   useEffect(() => {
     let interval = setInterval(() => {
-      setElapsedTime(getElapsedTime(clockState.startTime));
+      const startTimestamp = clockState.active ? clockState.startTime : null
+      setElapsedTime(formatElapsedTime(startTimestamp));
     }, 1000);
     return () => clearInterval(interval);
   }, [elapsedTime]);
