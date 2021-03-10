@@ -1,10 +1,9 @@
-import { LocationSubscriber } from "expo-location/build/LocationSubscribers";
-import { ClockState, ClockActionTypes, ClockAction } from "./types";
+import { ClockState, ClockActionTypes, ClockAction, Employers } from "./types";
 
 const initialState: ClockState = {
   startTime: new Date(),
   milesTracked: 0,
-  employers: [],
+  employers: [Employers.Instacart, Employers.Postmates],
   active: false,
   previousShifts: [],
   locations: []

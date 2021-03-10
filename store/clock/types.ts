@@ -6,6 +6,16 @@ export enum ClockActionTypes {
   AddLocations = "ADD_LOCATIONS"
 }
 
+export enum Employers {
+    Instacart = "Instacart",
+    DoorDash = "DoorDash",
+    GrubHub = "GrubHub",
+    Postmates = "Postmates",
+    UberEats = "UberEats",
+    Shipt = "Shipt",
+    Favor = "Favor",
+  }
+
 export interface LocationRecord {
     lat: number,
     lng: number,
@@ -53,14 +63,4 @@ export interface ClockState {
   locations: LocationRecord[];
   active: boolean;
   previousShifts: PreviousShift[]
-}
-
-export enum Employers {
-  Instacart,
-  DoorDash,
-  GrubHub,
-  Postmates,
-  UberEats,
-  Shipt,
-  Favor,
 }
