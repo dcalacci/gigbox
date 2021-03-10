@@ -19,7 +19,8 @@
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
-        "NSPhotoLibraryUsageDescription": "Gigbox needs access to your photos to automatically recognize screenshots of gig apps to help track your jobs."
+        "NSPhotoLibraryUsageDescription": "Gigbox needs access to your photos to automatically recognize screenshots of gig apps to help track your jobs.",
+        "UIBackgroundModes": ["location"]
       }
     },
     "android": {

@@ -1,61 +1,55 @@
 import React, { useEffect, useState } from "react";
 import { View, Text } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
+import * as TaskManager from "expo-task-manager";
 import { tailwind } from "tailwind";
+import { LocationObject } from "expo-location";
+import * as Loc from "expo-location";
 
 import { RootState } from "../store/index";
 import Toggle from "../components/Toggle";
 import { clockIn, clockOut } from "../store/clock/actions";
 
+import { ClockState } from "../store/clock/types";
+import { getElapsedTime } from "../utils"
+import { startGettingBackgroundLocation } from "../tasks"
+
+
 export default function TrackingBar() {
-  const clockState = useSelector((state: RootState) => state.clock);
+  const clockState = useSelector((state: RootState) : ClockState => state.clock);
   const dispatch = useDispatch();
 
-  const getElapsedTime = ():string => {
-    const now = new Date()
-    const startTime = new Date(clockState.startTime)
-    if (clockState.startTime !== null) {
-      // strip milliseconds
-      let timeDiff = (now.getTime() - startTime.getTime())/1000
-      //var timeStr = timeDiff.toTimeString().split(' ')[0];
-      const seconds = Math.round(timeDiff % 60);
-      timeDiff = Math.floor(timeDiff / 60);
-      var minutes = Math.round(timeDiff % 60);
-      timeDiff = Math.floor(timeDiff / 60);
-      var hours = Math.round(timeDiff % 24);
-      const timestr = `${hours}h ${minutes}m`
-      return timestr
-    } else {
-      return "0h 0m"
-    }
-  }
-
-  const [elapsedTime, setElapsedTime] = useState<string>(getElapsedTime())
+  const [elapsedTime, setElapsedTime] = useState<string>(getElapsedTime(clockState.startTime));
 
   useEffect(() => {
     let interval = setInterval(() => {
-      setElapsedTime(getElapsedTime())
+      setElapsedTime(getElapsedTime(clockState.startTime));
     }, 1000);
-    return () => clearInterval(interval)
-  }, [elapsedTime])
+    return () => clearInterval(interval);
+  }, [elapsedTime]);
 
   const onTogglePress = () => {
-    console.log(clockState)
+    console.log(clockState);
     if (!clockState.active) {
       dispatch(clockIn());
+      startGettingBackgroundLocation()
     } else {
       dispatch(clockOut());
     }
   };
 
-  const textStyle = [tailwind("text-lg"), clockState.active ? tailwind("font-semibold") : ""]
+  const textStyle = [
+    tailwind("text-lg"),
+    clockState.active ? tailwind("font-semibold") : "",
+  ];
 
   return (
     <View
-      style={[tailwind(
-        "flex-shrink flex-row overflow-scroll justify-around items-center m-2"
-      ), 
-    ]}
+      style={[
+        tailwind(
+          "flex-shrink flex-row overflow-scroll justify-around items-center m-2"
+        ),
+      ]}
     >
       <Toggle
         title="Clock In"

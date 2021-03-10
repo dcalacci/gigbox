@@ -1,4 +1,4 @@
-import { ClockAction, ClockActionTypes } from './types'
+import { ClockAction, ClockActionTypes, LocationRecord } from './types'
 
 export function clockIn(): ClockAction {
     console.log("Clocking in.")
@@ -17,6 +17,14 @@ export function clockOut(): ClockAction {
         meta: {
             timestamp: new Date()
         }
+    }
+}
+
+export function addLocations(locs: LocationRecord[]): ClockAction {
+    console.log("locs in action:", locs)
+    return {
+        type: ClockActionTypes.AddLocations,
+        locations: locs
     }
 }
 
