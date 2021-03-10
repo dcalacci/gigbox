@@ -28,6 +28,12 @@ TaskManager.defineTask(
   }
 );
 
+/**
+ * Creates a new background location task using Expo's `startLocationUpdatesAsync`. 
+ * 
+ * The task is titled "gigbox.mileageTracker", uses Loc.Accuracy.Balanced, and 
+ * includes a foreground notification service.
+ */
 export const startGettingBackgroundLocation = () => {
   Loc.startLocationUpdatesAsync("gigbox.mileageTracker", {
     accuracy: Loc.Accuracy.Balanced,

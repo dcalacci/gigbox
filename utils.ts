@@ -1,3 +1,9 @@
+
+/**
+ * 
+ * @param startTimestamp A timestamp (number) to calculate elapsed time from.
+ * @return {[string]} Hours and minutes since startTimestamp, formatted as "0h 0m"
+ */
 export const formatElapsedTime = (startTimestamp: number | null): string => {
   const now = new Date();
   if (startTimestamp === null) {
