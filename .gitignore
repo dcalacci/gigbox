@@ -13,3 +13,6 @@ web-build/
 .DS_Store
 ios
 package-lock.json
+
+# server
+*__pycache__
