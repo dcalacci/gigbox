@@ -4,10 +4,24 @@ from flask import current_app
 import datetime
 import jwt
 import pyotp
-from twilio import twiml, base
+from twilio import twiml, base 
 from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
+from api.controllers.errors import ExpiredTokenError, InvalidTokenError, TokenCreationError, TextMessageSendError
 
-from api.controllers.errors import ExpiredTokenError, InvalidTokenError, TokenCreationError
+def send_text(message, to_phone, from_phone):
+        TwilioClient = Client(
+            current_app.config["TWILIO_SID"], current_app.config["TWILIO_TOKEN"]
+        )
+        try:
+            sent_message = TwilioClient.messages.create(
+                body=message,
+                from_=from_phone,
+                to=to_phone,
+            )
+        except TwilioRestException as e:
+            raise TextMessageSendError("Could not send message with texting service")
+        return sent_message
 
 
 def encode_base32(str, key):

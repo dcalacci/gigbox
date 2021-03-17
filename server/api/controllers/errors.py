@@ -10,14 +10,24 @@ custom_errors = {
     'ExpiredTokenError': {
         'message': 'Authorization token has expired. Please log in again',
         'status': 400
-    }
+    },
+    'OTPSendError': {
+        'message': 'Encountered a problem sending the one-time-passcode',
+        'status': 500
+        }
 }
+
+class OTPSendError(HTTPException):
+    pass
 
 class ExpiredTokenError(HTTPException):
     pass
 
 class InvalidTokenError(HTTPException):
     """Raised if there is no authorization header in the request or the token is invalid"""
+    pass
+
+class TextMessageSendError(Exception):
     pass
 
 class TokenCreationError(Exception):

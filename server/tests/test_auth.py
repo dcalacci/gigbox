@@ -11,7 +11,8 @@ import jwt
 
 from api import create_app
 from api.controllers.errors import custom_errors
-from api.controllers.auth.utils import create_jwt, decode_jwt
+from api.controllers.auth.utils import create_jwt, decode_jwt, get_otp
+from unittest import mock
 
 
 def create_expired_token(phone):
@@ -34,7 +35,7 @@ class ApiTestCase(unittest.TestCase):
         self.conn = self.r.connect(db=self.app.config['DATABASE_NAME'])
 
 
-class AuthTestCase(ApiTestCase):
+class TokenTestCase(ApiTestCase):
 
     def test_400_with_no_authorization_header(self):
         """tests 400 error for a request with no authorization header
@@ -75,6 +76,23 @@ class AuthTestCase(ApiTestCase):
         self.assertEqual(res.status_code, 400)
         self.assertIn(custom_errors['ExpiredTokenError']
                       ['message'], str(res.data))
+
+
+class OTPTestCase(ApiTestCase):
+    @mock.patch('api.controllers.auth.send_text')
+    def test_send_otp(self, mock_send_text):
+        with self.app.app_context():
+            expected_sid = "SID1"
+            mock_send_text.return_value.sid = expected_sid
+
+            res = self.client().post('/api/v1/auth/otp',
+                                     data={'phone': current_app.config['TESTING_TO_NUMBER']})
+            assert res.get_json()['message_sid'] == expected_sid
+            # ensures that our send_text function is called with the right arguments
+            # create the current OTP for our phone
+            mock_send_text.assert_called_once_with(message=current_app.config['OTP_MESSAGE'].format(get_otp(current_app.config['TESTING_TO_NUMBER'])),
+                                            to_phone=current_app.config['TESTING_TO_NUMBER'],
+                                            from_phone=current_app.config['TWILIO_NUMBER'])
 
 
 if __name__ == "__main__":

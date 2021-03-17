@@ -15,9 +15,10 @@ import bcrypt
 from flask import current_app
 
 from api.models import User
-from api.controllers.errors import ValidationError
-from api.controllers.auth.utils import get_otp, create_jwt, decode_jwt, encode_base32
+from api.controllers.errors import ValidationError, OTPSendError, TextMessageSendError
+from api.controllers.auth.utils import get_otp, create_jwt, decode_jwt, encode_base32, send_text
 from api.controllers.auth.decorators import login_required
+
 
 class GetOtp(Resource):
     def post(self):
@@ -32,15 +33,17 @@ class GetOtp(Resource):
         args = parser.parse_args()
         phone = args.get("phone")
 
-        TwilioClient = Client(
-            current_app.config["TWILIO_SID"], current_app.config["TWILIO_TOKEN"]
-        )
+        try:
+            sent_message = send_text(
+                message=current_app.config['OTP_MESSAGE'].format(get_otp(phone)),
+                to_phone=phone,
+                from_phone=current_app.config['TWILIO_NUMBER']
+            )
+        except TextMessageSendError as e:
+            current_app.logger.error("Error sending text message: {}".format(e))
+            raise OTPSendError()
+
         # create one-time password with phone as secret, send to user's phone
-        sent_message = TwilioClient.messages.create(
-            body=current_app.config['OTP_MESSAGE'].format(get_otp(phone)),
-            from_=current_app.config["TWILIO_NUMBER"],
-            to=phone,
-        )
         return {"message": 'Success',
                 "message_sid": sent_message.sid}
 
@@ -83,6 +86,7 @@ class VerifyOtp(Resource):
             return {'token': jwt,
                     'authenticated': True,
                     'userCreated': False}
+
 
 class GetSomeResource(Resource):
     @login_required

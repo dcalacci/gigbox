@@ -15,8 +15,12 @@ class DevelopmentConfig(Config):
     TWILIO_NUMBER="+14013570487"
     TWILIO_SID="ACf94ed41badca81cd1f75d453b785e41f"
 
+class TestingConfig(DevelopmentConfig):
+    DATABASE_NAME = "gigbox-testing"
+    TESTING_TO_NUMBER = "+19082298992"
+
 config = {
     'development': DevelopmentConfig,
-    'testing': DevelopmentConfig,
+    'testing': TestingConfig,
     'production': DevelopmentConfig
 }
