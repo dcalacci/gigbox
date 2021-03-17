@@ -64,7 +64,7 @@ class TokenTestCase(ApiTestCase):
                       ['message'], str(res.data))
 
     def test_400_with_invalid_token(self):
-        """tests that an invalid token returns 400 
+        """tests that an invalid token returns 400
         """
         res = self.client().get('/api/v1/auth/test_get',
                                 headers={'authorization': 'not-a-token'})
@@ -97,11 +97,6 @@ class TokenTestCase(ApiTestCase):
 
 class OTPTestCase(ApiTestCase):
 
-    def setUp(self):
-        super(OTPTestCase, self).setUp()
-        with self.app.app_context():
-            self.r.table(User._table).delete().run(self.conn)
-
     @mock.patch('api.controllers.auth.send_text')
     def test_otp_sent_with_valid_numbers(self, mock_send_text):
         """ensures that an OTP with a valid phone number(s) should be sent."""
@@ -132,6 +127,7 @@ class OTPTestCase(ApiTestCase):
         """A call to the verify_otp endpoint should create a new user if they didn't exist before and the OTP is correct.
         """
         with self.app.app_context():
+            self.r.table(User._table).delete().run(self.conn)
             otp = get_otp(current_app.config['TESTING_TO_NUMBER'])
             res = self.client().post('/api/v1/auth/verify_otp',
                                      data={'phone': current_app.config['TESTING_TO_NUMBER'],
@@ -156,6 +152,26 @@ class OTPTestCase(ApiTestCase):
         self.assertEqual(res.status_code, 400)
         self.assertIn(custom_errors['OTPInvalidError']
                       ['message'], res.get_json()['message'])
+
+    def test_verify_otp_logs_in_if_existing_user(self):
+        """verify_otp should indicate that a user wasn't created if they aready exist"""
+        with self.app.app_context():
+            otp = get_otp(current_app.config['TESTING_TO_NUMBER'])
+            res = self.client().post("/api/v1/auth/verify_otp",
+                                     data={'phone': current_app.config['TESTING_TO_NUMBER'],
+                                           'otp': otp})
+
+            obj = res.get_json()
+            self.assertEqual(res.status_code, 200)
+            # request should come back authenticated
+            self.assertEqual(obj['authenticated'], True)
+            # user should have been FOUND, not created
+            self.assertEqual(obj['userCreated'], False)
+            id = decode_jwt(obj['token'])['payload']
+            # user ID returned by API is same as the one decoded from the token
+            self.assertEqual(obj['user_id'], id)
+            # created user ID in database is same as decoded ID in token
+            self.assertEqual(User.find(obj['user_id'])['id'], id)
 
 
 if __name__ == "__main__":

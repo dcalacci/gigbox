@@ -29,7 +29,6 @@ class GetOtp(Resource):
             help="You need to log in using a phone number.",
             required=True,
         )
-        # TODO: verify it's a phone number first
         args = parser.parse_args()
         phone = args.get("phone")
 
