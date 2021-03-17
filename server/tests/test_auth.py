@@ -80,19 +80,29 @@ class TokenTestCase(ApiTestCase):
 
 class OTPTestCase(ApiTestCase):
     @mock.patch('api.controllers.auth.send_text')
-    def test_send_otp(self, mock_send_text):
+    def test_otp_sent_with_valid_numbers(self, mock_send_text):
+        """ensures that an OTP with a valid phone number(s) should be sent."""
         with self.app.app_context():
             expected_sid = "SID1"
             mock_send_text.return_value.sid = expected_sid
 
             res = self.client().post('/api/v1/auth/otp',
                                      data={'phone': current_app.config['TESTING_TO_NUMBER']})
-            assert res.get_json()['message_sid'] == expected_sid
+            self.assertEqual(res.get_json()['message_sid'], expected_sid)
             # ensures that our send_text function is called with the right arguments
             # create the current OTP for our phone
             mock_send_text.assert_called_once_with(message=current_app.config['OTP_MESSAGE'].format(get_otp(current_app.config['TESTING_TO_NUMBER'])),
                                             to_phone=current_app.config['TESTING_TO_NUMBER'],
                                             from_phone=current_app.config['TWILIO_NUMBER'])
+            self.assertEqual(res.status_code, 200)
+
+    def test_otp_raises_error_if_cant_send(self):
+        """API errors if an OTP is asked for by a number that is invalid"""
+        with self.app.app_context():
+            res = self.client().post('/api/v1/auth/otp',
+                                     data={'phone': 'not-a-phone-number'})
+            self.assertEqual(res.status_code, 500)
+            self.assertIn(custom_errors['OTPSendError']['message'], res.get_json()['message'])
 
 
 if __name__ == "__main__":
