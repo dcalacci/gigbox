@@ -16,42 +16,8 @@ from flask import current_app
 
 from api.models import User
 from api.controllers.errors import ValidationError
-
-
-def encode_base32(str, key):
-    """encode input as base32 string using input and a secret key"""
-    return base64.b32encode(bytearray(str + key, "ascii")).decode("utf-8")
-
-
-def get_otp(phone):
-    """create OTP for a phone, using phone as base32 secret"""
-    totp = pyotp.TOTP(encode_base32(phone, current_app.config['SECRET_KEY']))
-    return totp.now()
-
-
-def create_jwt(phone):
-    """generates a token from successful authentication"""
-    try:
-        payload = {
-            "exp": datetime.datetime.utcnow() + datetime.timedelta(days=7),
-            "iat": datetime.datetime.utcnow(),
-            "sub": phone,
-        }
-        return jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm="HS256").decode("utf-8")
-    except Exception as e:
-        print("Could not create JWT token for phone")
-
-
-def decode_jwt(token):
-    """decodes a token and returns ID associated (subject) if valid"""
-    try:
-        payload = jwt.decode(token.encode(), current_app.config['SECRET_KEY'])
-        return {"isError": False, "payload": payload["sub"]}
-    except jwt.ExpiredSignatureError as e:
-        return {"isError": True, "message": "Signature expired"}
-    except jwt.InvalidTokenError as e:
-        return {"isError": True, "message": "Invalid token: {}".format(e)}
-
+from api.controllers.auth.utils import get_otp, create_jwt, decode_jwt, encode_base32
+from api.controllers.auth.decorators import login_required
 
 class GetOtp(Resource):
     def post(self):
@@ -116,31 +82,6 @@ class VerifyOtp(Resource):
             return {'token': jwt,
                     'authenticated': True,
                     'userCreated': False}
-
-
-def login_required(f):
-    '''
-    This decorator checks the header to ensure a valid token is set
-    '''
-    @wraps(f)
-    def func(*args, **kwargs):
-        try:
-            if 'authorization' not in request.headers:
-                current_app.logger.error("No authorization header found.")
-                abort(404, message="You need to be logged in to access this resource")
-            token = request.headers.get('authorization')
-            user_id = decode_jwt(token).get("payload")
-            g.user = User.find(user_id)
-            if g.user is None:
-                current_app.logger.error("Invalid User ID")
-                abort(404, message="The user id is invalid")
-            return f(*args, **kwargs)
-        except Exception as e:
-            current_app.logger.error("Error parsing token: {}".format(e))
-            abort(
-                400, message="There was a problem while trying to parse your token")
-    return func
-
 
 class GetSomeResource(Resource):
     @login_required
