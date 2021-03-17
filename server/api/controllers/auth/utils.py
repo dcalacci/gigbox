@@ -7,6 +7,8 @@ import pyotp
 from twilio import twiml, base
 from twilio.rest import Client
 
+from api.controllers.errors import ExpiredTokenError, InvalidTokenError, TokenCreationError
+
 
 def encode_base32(str, key):
     """encode input as base32 string using input and a secret key"""
@@ -20,7 +22,9 @@ def get_otp(phone):
 
 
 def create_jwt(phone):
-    """generates a token from successful authentication"""
+    """generates a token from successful authentication
+    NOTE: If this is changed, you need to change tests.test_auth.create_expired_token as well.
+    """
     try:
         jwt_timedelta = current_app.config['TOKEN_LIFETIME']
         payload = {
@@ -30,15 +34,18 @@ def create_jwt(phone):
         }
         return jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm="HS256").decode("utf-8")
     except Exception as e:
-        print("Could not create JWT token for phone")
+        raise TokenCreationError()
+        current_app.logger.error("Could not create JWT token for phone: {}".format(e))
 
 
 def decode_jwt(token):
     """decodes a token and returns ID associated (subject) if valid"""
     try:
-        payload = jwt.decode(token.encode(), current_app.config['SECRET_KEY'])
+        payload = jwt.decode(token.encode(), current_app.config['SECRET_KEY'], algorithms=['HS256'])
         return {"isError": False, "payload": payload["sub"]}
     except jwt.ExpiredSignatureError as e:
-        return {"isError": True, "message": "Signature expired"}
+        current_app.logger.error("Token expired.")
+        raise ExpiredTokenError()
     except jwt.InvalidTokenError as e:
-        return {"isError": True, "message": "Invalid token: {}".format(e)}
+        current_app.logger.error("Invalid token.")
+        raise InvalidTokenError()

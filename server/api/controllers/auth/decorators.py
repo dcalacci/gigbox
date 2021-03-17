@@ -7,6 +7,7 @@ from flask import Blueprint, request, jsonify, g
 from functools import wraps
 
 from api.controllers.auth.utils import decode_jwt
+from api.controllers.errors import InvalidTokenError
 from api.models import User
 
 
@@ -16,19 +17,22 @@ def login_required(f):
     '''
     @wraps(f)
     def func(*args, **kwargs):
-        try:
-            if 'authorization' not in request.headers:
-                current_app.logger.error("No authorization header found.")
-                abort(404, message="You need to be logged in to access this resource")
-            token = request.headers.get('authorization')
-            user_id = decode_jwt(token).get("payload")
-            g.user = User.find(user_id)
-            if g.user is None:
-                current_app.logger.error("Invalid User ID")
-                abort(404, message="The user id is invalid")
-            return f(*args, **kwargs)
-        except Exception as e:
-            current_app.logger.error("Error parsing token: {}".format(e))
-            abort(
-                400, message="There was a problem while trying to parse your token")
+
+        if 'authorization' not in request.headers:
+            current_app.logger.error("No authorization header found.")
+            raise InvalidTokenError()
+        token = request.headers.get('authorization')
+        user_id = decode_jwt(token).get("payload")
+        if user_id is None:
+            current_app.logger.error("Token parsed to none")
+            raise InvalidTokenError()
+        g.user = User.find(user_id)
+        if g.user is None:
+            current_app.logger.error("Token corresponds to a user that doesn't exist")
+            raise InvalidTokenError()
+        return f(*args, **kwargs)
+        # except JWTError as e:
+        #     current_app.logger.error("Error parsing token: {}".format(e))
+        #     abort(
+        #         400, message="There was a problem while trying to parse your token")
     return func

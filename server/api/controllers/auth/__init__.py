@@ -36,12 +36,13 @@ class GetOtp(Resource):
             current_app.config["TWILIO_SID"], current_app.config["TWILIO_TOKEN"]
         )
         # create one-time password with phone as secret, send to user's phone
-        message = TwilioClient.messages.create(
+        sent_message = TwilioClient.messages.create(
             body=current_app.config['OTP_MESSAGE'].format(get_otp(phone)),
             from_=current_app.config["TWILIO_NUMBER"],
             to=phone,
         )
-        return {"message": 'Success'}
+        return {"message": 'Success',
+                "message_sid": sent_message.sid}
 
 
 class VerifyOtp(Resource):

@@ -3,7 +3,7 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_graphql import GraphQLView
 
-
+from api.controllers.errors import custom_errors
 from api.controllers import auth
 from config import config
 
@@ -14,11 +14,11 @@ def create_app(env):
     app.config.from_object(config[env])
 
     api_bp = Blueprint('api', __name__)
-    api = Api(api_bp)
+    api = Api(api_bp, errors=custom_errors)
 
     api.add_resource(auth.GetOtp, '/auth/otp')
     api.add_resource(auth.VerifyOtp, '/auth/verify_otp')
-    api.add_resource(auth.GetSomeResource, '/getSomething')
+    api.add_resource(auth.GetSomeResource, '/auth/test_get')
 
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
