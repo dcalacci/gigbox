@@ -15,7 +15,7 @@ import bcrypt
 from flask import current_app
 
 from api.models import User
-from api.controllers.errors import ValidationError, OTPSendError, TextMessageSendError
+from api.controllers.errors import ValidationError, OTPSendError, OTPInvalidError, TextMessageSendError
 from api.controllers.auth.utils import get_otp, create_jwt, decode_jwt, encode_base32, send_text
 from api.controllers.auth.decorators import login_required
 
@@ -35,12 +35,14 @@ class GetOtp(Resource):
 
         try:
             sent_message = send_text(
-                message=current_app.config['OTP_MESSAGE'].format(get_otp(phone)),
+                message=current_app.config['OTP_MESSAGE'].format(
+                    get_otp(phone)),
                 to_phone=phone,
                 from_phone=current_app.config['TWILIO_NUMBER']
             )
         except TextMessageSendError as e:
-            current_app.logger.error("Error sending text message: {}".format(e))
+            current_app.logger.error(
+                "Error sending text message: {}".format(e))
             raise OTPSendError()
 
         # create one-time password with phone as secret, send to user's phone
@@ -69,21 +71,19 @@ class VerifyOtp(Resource):
         authenticated = get_otp(phone) == otp
 
         if not authenticated:
-            return {'token': None,
-                    'authenticated': False,
-                    'message': 'One time passcode incorrect.'
-                    }
-
+            raise OTPInvalidError()
         user_id = encode_base32(phone, key=current_app.config['SECRET_KEY'])
         jwt = create_jwt(user_id)
         try:
             User.create(id=user_id)
             return {'token': jwt,
+                    'user_id': user_id,
                     'authenticated': True,
                     'userCreated': True}
         except ValidationError as e:
             current_app.logger.info("Could not create user: {}".format(e))
             return {'token': jwt,
+                    'user_id': user_id,
                     'authenticated': True,
                     'userCreated': False}
 

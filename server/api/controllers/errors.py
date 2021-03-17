@@ -14,8 +14,15 @@ custom_errors = {
     'OTPSendError': {
         'message': 'Encountered a problem sending the one-time-passcode',
         'status': 500
-        }
+        },
+    'OTPInvalidError': {
+        'message': 'Invalid one-time-passcode for user',
+        'status': 400
+    }
 }
+
+class OTPInvalidError(HTTPException):
+    pass
 
 class OTPSendError(HTTPException):
     pass

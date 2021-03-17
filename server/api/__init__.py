@@ -5,6 +5,7 @@ from flask_graphql import GraphQLView
 
 from api.controllers.errors import custom_errors
 from api.controllers import auth
+from api.models import initialize_db
 from config import config
 
 
@@ -12,6 +13,7 @@ def create_app(env):
     app = Flask(__name__)
 
     app.config.from_object(config[env])
+    initialize_db(app)
 
     api_bp = Blueprint('api', __name__)
     api = Api(api_bp, errors=custom_errors)

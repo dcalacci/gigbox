@@ -15,12 +15,17 @@ r = RethinkDB()
 conn = r.connect(db='gigbox')
 # conn = r.connect(db=current_app.config['DATABASE_NAME'])
 
+def initialize_db(app):
+    with app.app_context():
+        conn.use(current_app.config['DATABASE_NAME'])
+        print("Connection: {}".format(conn))
 
 class RethinkDBModel(object):
+    
     @classmethod
-    def find(cls, id):
+    def find(cls, id): 
         return r.table(cls._table).get(id).run(conn)
-
+       
     @classmethod
     def filter(cls, predicate):
         return list(r.table(cls._table).filter(predicate).run(conn))
