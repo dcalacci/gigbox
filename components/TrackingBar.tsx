@@ -53,11 +53,11 @@ export default function TrackingBar() {
   ];
 
   return (
-    <>
+    <View style ={[tailwind(""), clockState.active ? tailwind("bg-green-500") : null]}>
       <View
         style={[
-          tailwind("flex-shrink flex-row justify-around items-center p-2 border-b-4 border-green-600 h-16 bg-white"),
-          clockState.active ? tailwind("bg-green-500 border-0 p-2") : null,
+          tailwind("flex-shrink flex-row justify-around items-center border-b-4 p-3 border-green-600 h-16 bg-white"),
+          clockState.active ? tailwind("bg-green-500") : null,
         ]}
       >
         <Toggle
@@ -73,6 +73,6 @@ export default function TrackingBar() {
         </View>
       </View>
       <EmployerBoxes hidden={!clockState.active}/>
-    </>
+    </View>
   );
 }

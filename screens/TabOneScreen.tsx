@@ -6,7 +6,7 @@ import TrackingBar from "../components/TrackingBar";
 
 export default function TabOneScreen() {
   return (
-    <>
+    <View style={tailwind("bg-white")}>
         <TrackingBar/>
           <ScrollView
             style={tailwind("pt-10 bg-white")}
@@ -19,7 +19,7 @@ export default function TabOneScreen() {
         <Card title={"Miles Driven"} />
         <Card title={"Miles Driven"} />
       </ScrollView>
-    </>
+    </View>
   );
 }
 
