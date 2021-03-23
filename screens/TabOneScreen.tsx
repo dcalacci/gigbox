@@ -2,7 +2,7 @@ import React, { FunctionComponent } from "react";
 import { StyleSheet, Text, ScrollView, View } from "react-native";
 import { tailwind } from "tailwind";
 
-import TrackingBar from "../components/TrackingBar";
+import TrackingBar from "../features/clock/TrackingBar";
 
 export default function TabOneScreen() {
   return (
