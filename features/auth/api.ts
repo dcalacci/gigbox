@@ -27,6 +27,12 @@ export interface VerifyOtpResponse {
     userCreated: boolean,
 }
 
+/**
+ * Login / verify one-time-passcode for a given phone
+ * @param phone phone to verify for
+ * @param otp one-time passcode
+ * @returns a VerifyOtpResponse with OTP login data
+ */
 export const verifyOtp = async (phone: string, otp: string): Promise<VerifyOtpResponse | OtpResponse> => {
     const response = await fetchWithQueryParams('http://localhost:5000/api/v1/auth/verify_otp',
         { phone, otp }, 'POST')
