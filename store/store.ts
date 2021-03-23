@@ -20,6 +20,7 @@ const fsStorage = new ExpoFileSystemStorage();
 const persistConfig = {
   key: "gigbox",
   storage: fsStorage,
+  blacklist: ['otp']
 };
 
 const persistedReducer = persistReducer(persistConfig, rootReducer);

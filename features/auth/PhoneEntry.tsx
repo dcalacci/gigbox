@@ -1,18 +1,39 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { TextInput, Text, Pressable } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { tailwind } from "tailwind";
-import { AsYouType } from 'libphonenumber-js'
+import Toast from "react-native-fast-toast";
+import { AsYouType, parsePhoneNumber } from 'libphonenumber-js'
 import { RootState } from "../../store/index"
-import { requestOtp, loginWithOtp, reset } from "./otpSlice"
+import { requestOtp, loginWithOtp, reset, clearErrorMessage } from "./otpSlice"
 
 const PhoneEntry: React.FC = (props) => {
     const [phone, setPhone] = useState<string>("")
+    const [phoneIsValid, setPhoneValid] = useState<boolean>(false)
     const [otp, setOtp] = useState<string>("")
     const tokenSent = useSelector((state: RootState): boolean => state.otp.tokenSent)
+    const errormsg = useSelector((state: RootState): string => state.otp.errorMessage)
     const dispatch = useDispatch()
+
     const ayt = new AsYouType('US')
+    const toast = useRef(null);
+
+    useEffect(() => {
+        if (errormsg != "")
+            toast.current.show(errormsg);
+            dispatch(clearErrorMessage())
+    }, [errormsg]);
+
+    // validate phone number
+    useEffect(() => {
+        try {
+            const phoneNumber = parsePhoneNumber(phone, 'US')
+            setPhoneValid(phoneNumber.isValid())
+        } catch (e) {
+            setPhoneValid(false)
+        }
+    }, [phone])
 
     const setFormattedPhone = (phone: string) => {
         // formats phone number to US-centric (xxx) xxx-xxxx
@@ -25,6 +46,7 @@ const PhoneEntry: React.FC = (props) => {
             setPhone(phone)
         }
     }
+
 
     const TokenInput = () => (
         <SafeAreaView>
@@ -82,7 +104,9 @@ const PhoneEntry: React.FC = (props) => {
                 autoCompleteType="tel"
                 autoFocus={true}>
             </TextInput>
-            <Pressable style={[tailwind("items-center rounded-md py-2 w-full mt-6 bg-green-500")]}
+            <Pressable style={[tailwind("items-center rounded-md py-2 w-full mt-6"),
+            phoneIsValid ? tailwind('bg-green-500') : tailwind('bg-gray-600')]}
+                disabled={!phoneIsValid}
                 onPress={() => dispatch(requestOtp(phone))}>
                 <Text style={tailwind("text-white font-semibold")}>
                     Request Code
@@ -93,7 +117,7 @@ const PhoneEntry: React.FC = (props) => {
 
     return (<SafeAreaView style={tailwind("px-20")}>
         {tokenSent ? <TokenInput /> : <PhoneInput />}
-
+        <Toast ref={toast} />
     </SafeAreaView>)
 }
 
