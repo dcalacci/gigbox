@@ -19,7 +19,7 @@ interface VerifyOtpAction {
 }
 
 export const requestOtp = createAsyncThunk(
-    "auth/requestOtp",
+    "auth/otp/requestOtp",
     async (phone: string, thunkApi: any): Promise<OtpResponse> => {
         const data = await getOtp(phone)
         if (data.status != 200) {
@@ -30,7 +30,7 @@ export const requestOtp = createAsyncThunk(
 );
 
 export const loginWithOtp = createAsyncThunk(
-    "auth/loginWithOtp",
+    "auth/otp/loginWithOtp",
     async ({ phone, otp }: VerifyOtpAction, thunkApi: any) => {
         const response = await verifyOtp(phone, otp)
         if (response.status != 200) {
@@ -65,6 +65,7 @@ const otpSlice = createSlice({
             })
             .addCase(loginWithOtp.fulfilled, (state, action) => {
                 console.log("OTP verification fulfilled", action.payload)
+                return initialState
             })
             .addCase(loginWithOtp.rejected, (state, action: any) => {
                 console.log("OTP Verification REJECTED", action)
