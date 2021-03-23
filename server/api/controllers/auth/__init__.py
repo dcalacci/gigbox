@@ -79,13 +79,17 @@ class VerifyOtp(Resource):
             return {'token': jwt,
                     'user_id': user_id,
                     'authenticated': True,
-                    'userCreated': True}
+                    'userCreated': True,
+                    'status': 200,
+                    'message': 'Success'}
         except ValidationError as e:
             current_app.logger.info("Could not create user: {}".format(e))
             return {'token': jwt,
                     'user_id': user_id,
                     'authenticated': True,
-                    'userCreated': False}
+                    'userCreated': False,
+                    'status': 200,
+                    'message': 'Success'}
 
 
 class GetSomeResource(Resource):

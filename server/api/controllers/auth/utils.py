@@ -31,7 +31,7 @@ def encode_base32(str, key):
 
 def get_otp(phone):
     """create OTP for a phone, using phone as base32 secret"""
-    totp = pyotp.TOTP(encode_base32(phone, current_app.config['SECRET_KEY']))
+    totp = pyotp.TOTP(encode_base32(phone, current_app.config['SECRET_KEY']), interval=60)
     return totp.now()
 
 
