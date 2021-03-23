@@ -7363,6 +7363,11 @@ react-is@^17.0.1:
   resolved "https://registry.npmjs.org/react-is/-/react-is-17.0.1.tgz"
   integrity sha512-NAnt2iGDXohE5LI7uBnLnqvLQMtzhkiAOLXTmv+qnF9Ky7xAPcX8Up/xWIhxvLVGJvuLiNc4xQLtuqDRzb4fSA==
 
+react-native-fast-toast@^2.2.0:
+  version "2.2.0"
+  resolved "https://registry.yarnpkg.com/react-native-fast-toast/-/react-native-fast-toast-2.2.0.tgz#a94100180d3fd4f91499970e0a42886dfee4351e"
+  integrity sha512-L9eVIC2LtkO60oRl/A3r02BYq0NAFgostXFxhkZCWhWFlBbIPmsIel/xZsawjbdB8lK/c8oUjoPkt9TDAqyOnw==
+
 react-native-gesture-handler@~1.8.0:
   version "1.8.0"
   resolved "https://registry.npmjs.org/react-native-gesture-handler/-/react-native-gesture-handler-1.8.0.tgz"
