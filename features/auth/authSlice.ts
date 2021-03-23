@@ -4,16 +4,13 @@ import { loginWithOtp } from "./otpSlice"
 interface AuthState {
     lastLoggedIn: number | null;
     jwt: string | null;
-    expires: number | null;
     userId: string | null;
     authenticated: boolean
 }
 
-
 const initialState: AuthState = {
     lastLoggedIn: null,
     jwt: null,
-    expires: null,
     userId: null,
     authenticated: false
 }
@@ -33,6 +30,7 @@ const authSlice = createSlice({
                     state.jwt = action.payload.token
                     state.authenticated = true
                     state.userId = action.payload.user_id
+                    state.lastLoggedIn = new Date().getTime()
                 }
             })
             .addCase(loginWithOtp.rejected, (state, action: any) => {
