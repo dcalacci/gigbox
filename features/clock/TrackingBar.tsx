@@ -13,7 +13,6 @@ import {
   stopGettingBackgroundLocation,
 } from "../../tasks";
 
-import { requestOtp } from '../auth/authSlice'
 import EmployerBoxes from "../../components/EmployerBox";
 
 export default function TrackingBar() {
@@ -39,7 +38,6 @@ export default function TrackingBar() {
 
   const onTogglePress = () => {
     console.log(clockState);
-    dispatch(requestOtp('+19082298992'))
     if (!clockState.active) {
       dispatch(startShift())
       startGettingBackgroundLocation();
