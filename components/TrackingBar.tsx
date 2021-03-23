@@ -5,9 +5,8 @@ import { tailwind } from "tailwind";
 
 import { RootState } from "../store/index";
 import Toggle from "../components/Toggle";
-import { clockIn, clockOut } from "../store/clock/actions";
 
-import { ClockState } from "../store/clock/types";
+import { startShift, stopShift, ClockState } from '../features/clock/clockSlice'
 import { formatElapsedTime } from "../utils";
 import {
   startGettingBackgroundLocation,
@@ -38,11 +37,12 @@ export default function TrackingBar() {
 
   const onTogglePress = () => {
     console.log(clockState);
+    //dispatch(requestOtp('9082298992'))
     if (!clockState.active) {
-      dispatch(clockIn());
+      dispatch(startShift())
       startGettingBackgroundLocation();
     } else {
-      dispatch(clockOut());
+      dispatch(stopShift(new Date().getTime()));
       stopGettingBackgroundLocation();
     }
   };
