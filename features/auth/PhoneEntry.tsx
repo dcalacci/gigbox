@@ -4,13 +4,13 @@ import { useSelector, useDispatch } from "react-redux";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { tailwind } from "tailwind";
 import { AsYouType } from 'libphonenumber-js'
-import { RootState } from "../store/index"
-import { requestOtp, loginWithOtp, reset } from "../features/auth/authSlice"
+import { RootState } from "../../store/index"
+import { requestOtp, loginWithOtp, reset } from "./otpSlice"
 
 const PhoneEntry: React.FC = (props) => {
     const [phone, setPhone] = useState<string>("")
     const [otp, setOtp] = useState<string>("")
-    const tokenSent = useSelector((state: RootState): boolean => state.auth.tokenSent)
+    const tokenSent = useSelector((state: RootState): boolean => state.otp.tokenSent)
     const dispatch = useDispatch()
     const ayt = new AsYouType('US')
 
