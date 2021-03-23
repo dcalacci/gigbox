@@ -8,11 +8,6 @@ interface OtpState {
     tokenExpiresIn: number
 }
 
-interface OtpError {
-    status: number
-    message: string
-}
-
 interface VerifyOtpAction {
     phone: string
     otp: string
@@ -44,14 +39,16 @@ const initialState: OtpState = {
     tokenSent: false,
     errorMessage: "",
     tokenExpiresIn: 0
-
 }
 
 const otpSlice = createSlice({
     name: 'auth/otp',
     initialState: initialState,
     reducers: {
-        reset: state => initialState
+        reset: state => initialState,
+        clearErrorMessage(state) {
+            state.errorMessage = ""
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -74,5 +71,5 @@ const otpSlice = createSlice({
     }
 })
 
-export const { reset } = otpSlice.actions
+export const { reset, clearErrorMessage } = otpSlice.actions
 export default otpSlice.reducer
