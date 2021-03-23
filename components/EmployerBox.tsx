@@ -4,7 +4,7 @@ import { View, Text } from "react-native";
 
 import { tailwind } from "tailwind";
 import { RootState } from "../store/index";
-import { ClockState, Employers } from "../store/clock/types";
+import { Employers } from "../features/clock/clockSlice";
 
 type EmployerBoxProps = {
   employer: Employers;

@@ -3,6 +3,7 @@ import { StyleSheet, Text, ScrollView, View } from "react-native";
 import { tailwind } from "tailwind";
 
 import TrackingBar from "../features/clock/TrackingBar";
+import PhoneEntry from "../components/PhoneEntry"
 
 export default function TabOneScreen() {
   return (
@@ -12,12 +13,6 @@ export default function TabOneScreen() {
             style={tailwind("pt-10 bg-white")}
           >
         <Card title={"Hours Worked"} />
-        <Card title={"Miles Driven"} />
-        <Card title={"Miles Driven"} />
-        <Card title={"Miles Driven"} />
-        <Card title={"Miles Driven"} />
-        <Card title={"Miles Driven"} />
-        <Card title={"Miles Driven"} />
       </ScrollView>
     </View>
   );

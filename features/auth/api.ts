@@ -1,5 +1,7 @@
 import { fetchWithQueryParams } from "../../utils"
 
+//TODO: interface for checking if currently authenticated with server (if token is valid)
+
 export interface OtpResponse {
     status: number,
     message: string
@@ -20,13 +22,14 @@ export const getOtp = async (phone: string): Promise<OtpResponse> => {
 export interface VerifyOtpResponse {
     status: number,
     message: string,
-    phone: string,
-    otp: string
+    user_id: string,
+    authenticated: boolean,
+    userCreated: boolean,
 }
 
-export const verifyOtp = async (phone: string, otp: string): Promise<VerifyOtpResponse> => {
+export const verifyOtp = async (phone: string, otp: string): Promise<VerifyOtpResponse | OtpResponse> => {
     const response = await fetchWithQueryParams('http://localhost:5000/api/v1/auth/verify_otp',
-        { phone: phone }, 'POST')
+        { phone, otp }, 'POST')
     const data = response.json()
     return data
 }
