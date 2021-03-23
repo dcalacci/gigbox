@@ -1,5 +1,17 @@
 import { createStore } from "redux";
-import { persistStore, persistReducer } from "redux-persist";
+import { configureStore, getDefaultMiddleware} from "@reduxjs/toolkit";
+// import logger from 'redux-logger'
+// import thunk from 'redux-thunk'
+import {
+  persistStore,
+  persistReducer,
+  FLUSH,
+  REHYDRATE,
+  PAUSE,
+  PERSIST,
+  PURGE,
+  REGISTER
+} from "redux-persist";
 import { ExpoFileSystemStorage } from "./expoFileSystemStorage";
 
 import rootReducer from ".";
@@ -10,10 +22,20 @@ const persistConfig = {
   storage: fsStorage,
 };
 
-// const reduxDevTools = window.__REDUX_DEVTOOLS_EXTENSION_COMPOSE__ || compose;
 const persistedReducer = persistReducer(persistConfig, rootReducer);
-const store = createStore(persistedReducer, window.__REDUX_DEVTOOLS_EXTENSION__ && window.__REDUX_DEVTOOLS_EXTENSION__());
 
-const persistor = persistStore(store);
+const store = configureStore({
+  reducer: persistedReducer,
+  middleware: getDefaultMiddleware({
+    // ignore persist actions, which serialize functions. @reduxjs/toolkit throws a warning when
+    // you serialize non-basic types
+    serializableCheck: {
+      ignoredActions: [FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, REGISTER]
+    }
+  }),
+});
+
+const persistor = persistStore(store,
+  );
 
 export { store, persistor };

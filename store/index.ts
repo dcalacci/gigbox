@@ -1,12 +1,10 @@
 import { combineReducers } from "redux";
-import localStorage from "redux-persist/lib/storage";
-import hardSet from "redux-persist/lib/stateReconciler/hardSet";
-import { ClockReducer } from './clock/reducers'
+import ClockSlice from '../features/clock/clockSlice'
 
 const rootReducer = combineReducers({
-  clock: ClockReducer
+  clock: ClockSlice,
 });
 
-export type RootState = ReturnType<typeof rootReducer>
+export type RootState = ReturnType<typeof rootReducer>;
 
 export default rootReducer;
