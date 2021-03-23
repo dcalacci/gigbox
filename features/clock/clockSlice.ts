@@ -1,5 +1,4 @@
 import { createSlice, createAction } from '@reduxjs/toolkit'
-import { State } from "react-native-gesture-handler";
 
 // TYPES
 export enum Employers {
@@ -38,10 +37,10 @@ export interface ClockState {
 // ACTIONS
 export const startShift = createAction('clock/startShift')
 export const stopShift = createAction<number>('clock/stopShift')
-export const addLocation = createAction<LocationRecord[]>('clock/addLocations')
+export const addLocations = createAction<LocationRecord[]>('clock/addLocations')
 export const setEmployers = createAction<Employers[]>('clock/setEmployers')
 
-export type ClockAction = | typeof startShift | typeof stopShift | typeof addLocation | typeof setEmployers
+export type ClockAction = | typeof startShift | typeof stopShift | typeof addLocations | typeof setEmployers
 
 
 // SLICE
@@ -70,7 +69,7 @@ const clockSlice = createSlice({
             state = initialState
             return state
         },
-        addLocation: (state, action) => {
+        addLocations: (state, action) => {
             state.locations = [...state.locations, ...action.payload]
         }
     }

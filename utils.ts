@@ -22,3 +22,23 @@ export const formatElapsedTime = (startTimestamp: number | null): string => {
     return timestr;
   }
 };
+
+/**
+ * A shim function to encode URL search parameters, because the URLSearchParams
+ * functionality in node-fetch doesn't work on React Native.
+ * see https://stackoverflow.com/questions/37230555/get-with-query-string-with-fetch-in-react-native
+ * @param obj Object to translate into URL parameters
+ * @returns A URL-encoded string with given params
+ */
+function objToQueryString(obj: Object) {
+  const keyValuePairs = [];
+  for (let i = 0; i < Object.keys(obj).length; i += 1) {
+    keyValuePairs.push(`${encodeURIComponent(Object.keys(obj)[i])}=${encodeURIComponent(Object.values(obj)[i])}`);
+  }
+  return keyValuePairs.join('&');
+}
+
+export function fetchWithQueryParams(uri: String, obj: Object, method: string) {
+  const encodedParams = objToQueryString(obj)
+  return fetch(`${uri}?${encodedParams}`, {method: method})
+}

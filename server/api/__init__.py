@@ -18,7 +18,7 @@ def create_app(env):
     api_bp = Blueprint('api', __name__)
     api = Api(api_bp, errors=custom_errors)
 
-    api.add_resource(auth.GetOtp, '/auth/otp')
+    api.add_resource(auth.GetOtp, '/auth/get_otp')
     api.add_resource(auth.VerifyOtp, '/auth/verify_otp')
     api.add_resource(auth.GetSomeResource, '/auth/test_get')
 

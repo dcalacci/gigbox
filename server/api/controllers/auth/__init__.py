@@ -12,7 +12,7 @@ import pyotp
 import jwt
 import bcrypt
 
-from flask import current_app
+from flask import current_app, request
 
 from api.models import User
 from api.controllers.errors import ValidationError, OTPSendError, OTPInvalidError, TextMessageSendError
@@ -26,7 +26,7 @@ class GetOtp(Resource):
         parser.add_argument(
             "phone",
             type=str,
-            help="You need to log in using a phone number.",
+            help="You need to log in using a phone number: {error_msg}",
             required=True,
         )
         args = parser.parse_args()
@@ -46,6 +46,7 @@ class GetOtp(Resource):
 
         # create one-time password with phone as secret, send to user's phone
         return {"message": 'Success',
+                "status": 200,
                 "message_sid": sent_message.sid}
 
 

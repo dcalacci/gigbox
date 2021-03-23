@@ -1,7 +1,7 @@
 import * as Loc from "expo-location";
 import { LocationObject } from "expo-location";
 import * as TaskManager from "expo-task-manager";
-import { addLocations } from "./store/clock/actions";
+import { addLocations } from "./features/clock/clockSlice";
 import { store } from "./store/store";
 
 TaskManager.isTaskRegisteredAsync("gigbox.mileageTracker").then(

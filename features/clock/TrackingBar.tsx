@@ -3,16 +3,18 @@ import { View, Text } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { tailwind } from "tailwind";
 
-import { RootState } from "../store/index";
-import Toggle from "../components/Toggle";
+import { RootState } from "../../store/index";
+import Toggle from "../../components/Toggle";
 
-import { startShift, stopShift, ClockState } from '../features/clock/clockSlice'
-import { formatElapsedTime } from "../utils";
+import { startShift, stopShift, ClockState } from './clockSlice'
+import { formatElapsedTime } from "../../utils";
 import {
   startGettingBackgroundLocation,
   stopGettingBackgroundLocation,
-} from "../tasks";
-import EmployerBoxes from "./EmployerBox";
+} from "../../tasks";
+
+import { requestOtp } from '../auth/authSlice'
+import EmployerBoxes from "../../components/EmployerBox";
 
 export default function TrackingBar() {
   const clockState = useSelector((state: RootState): ClockState => state.clock);
@@ -37,7 +39,7 @@ export default function TrackingBar() {
 
   const onTogglePress = () => {
     console.log(clockState);
-    //dispatch(requestOtp('9082298992'))
+    dispatch(requestOtp('+19082298992'))
     if (!clockState.active) {
       dispatch(startShift())
       startGettingBackgroundLocation();
@@ -53,7 +55,7 @@ export default function TrackingBar() {
   ];
 
   return (
-    <View style ={[tailwind(""), clockState.active ? tailwind("bg-green-500") : null]}>
+    <View style={[tailwind(""), clockState.active ? tailwind("bg-green-500") : null]}>
       <View
         style={[
           tailwind("flex-shrink flex-row justify-around items-center border-b-4 p-3 border-green-600 h-16 bg-white"),
@@ -72,7 +74,7 @@ export default function TrackingBar() {
           <Text style={textStyle}>{elapsedTime}</Text>
         </View>
       </View>
-      <EmployerBoxes hidden={!clockState.active}/>
+      <EmployerBoxes hidden={!clockState.active} />
     </View>
   );
 }
