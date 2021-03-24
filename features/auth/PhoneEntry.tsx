@@ -21,6 +21,7 @@ const PhoneEntry: React.FC = (props) => {
 
     useEffect(() => {
         if (errormsg != "")
+            //TODO: figure out how to type this
             toast.current.show(errormsg);
             dispatch(clearErrorMessage())
     }, [errormsg]);
@@ -47,8 +48,8 @@ const PhoneEntry: React.FC = (props) => {
         }
     }
 
-
-    const TokenInput = () => (
+    return (<SafeAreaView style={tailwind("px-10")}>
+        {tokenSent ?
         <SafeAreaView>
             <Text style={tailwind("text-black text-xl font-semibold")}>
                 Verify your Passcode
@@ -84,9 +85,7 @@ const PhoneEntry: React.FC = (props) => {
                 </Text>
             </Pressable>
         </SafeAreaView>
-    )
-
-    const PhoneInput = () => (
+        :
         <SafeAreaView>
             <Text style={tailwind("text-black text-xl font-semibold")}>
                 Get your One-Time Passcode
@@ -97,11 +96,12 @@ const PhoneEntry: React.FC = (props) => {
             <TextInput style={[tailwind("items-center py-2 px-2 rounded-md border-4"),
             tokenSent ? tailwind("border-green-500") : null
             ]}
+            key={"phoneInput"}
                 value={phone}
                 onChangeText={setFormattedPhone}
                 placeholder={"(555) 555-5555"}
-                keyboardType="phone-pad"
-                autoCompleteType="tel"
+                keyboardType={"phone-pad"}
+                autoCompleteType={"tel"}
                 autoFocus={true}>
             </TextInput>
             <Pressable style={[tailwind("items-center rounded-md py-2 w-full mt-6"),
@@ -113,10 +113,8 @@ const PhoneEntry: React.FC = (props) => {
                 </Text>
             </Pressable>
         </SafeAreaView>
-    )
 
-    return (<SafeAreaView style={tailwind("px-20")}>
-        {tokenSent ? <TokenInput /> : <PhoneInput />}
+        }
         <Toast ref={toast} />
     </SafeAreaView>)
 }
