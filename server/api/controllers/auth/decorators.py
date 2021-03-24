@@ -28,7 +28,7 @@ def login_required(f):
             raise InvalidTokenError()
         g.user = User.find(user_id)
         if g.user is None:
-            current_app.logger.error("Token corresponds to a user that doesn't exist")
+            current_app.logger.error("Token corresponds to a user that doesn't exist: {}".format(user_id))
             raise InvalidTokenError()
         return f(*args, **kwargs)
         # except JWTError as e:
