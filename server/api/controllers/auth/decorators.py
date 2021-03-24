@@ -26,7 +26,7 @@ def login_required(f):
         if user_id is None:
             current_app.logger.error("Token parsed to none")
             raise InvalidTokenError()
-        g.user = User.find(user_id)
+        g.user = User.get(user_id)
         if g.user is None:
             current_app.logger.error("Token corresponds to a user that doesn't exist: {}".format(user_id))
             raise InvalidTokenError()

@@ -141,7 +141,7 @@ class OTPTestCase(ApiTestCase):
             # user ID returned by API is same as the one decoded from the token
             self.assertEqual(obj['user_id'], id)
             # created user ID in database is same as decoded ID in token
-            self.assertEqual(User.find(obj['user_id'])['id'], id)
+            self.assertEqual(User.get(obj['user_id'])['id'], id)
 
     def test_verify_otp_400_if_invalid_otp(self):
         """Verify_otp should return a 400 code if the passcode submitted is incorrect"""
@@ -171,7 +171,7 @@ class OTPTestCase(ApiTestCase):
             # user ID returned by API is same as the one decoded from the token
             self.assertEqual(obj['user_id'], id)
             # created user ID in database is same as decoded ID in token
-            self.assertEqual(User.find(obj['user_id'])['id'], id)
+            self.assertEqual(User.get(obj['user_id'])['id'], id)
 
 
 if __name__ == "__main__":

@@ -66,6 +66,28 @@ class CreateShift(Resource):
         except ValidationError as e:
             current_app.logger.error("Couldn't update Shift: {}".format(e))
 
+    @login_required
+    def get(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('limit',
+                            type=int,
+                            help="You need to specify a number of shifts to pull: {error_msg}",
+                            required=False)
+        parser.add_argument('last',
+                            type=str,
+                            help="last id of the doc you got",
+                            required=False)
+        args = parser.parse_args()
+        limit = args.get('limit', 10)
+        last = args.get('last')
+
+        try:
+            docs = Shift.pageFind(limit, last=None)
+            print("found paged docs:", docs)
+            return docs
+        except ValidationError as e:
+            current_app.logger.error("Couldn't page find shifts: {}".format(e))
+
 
 class ShiftLocation(Resource):
     @login_required
@@ -92,7 +114,8 @@ class ShiftLocation(Resource):
         jobId = args.get('jobId')
 
         try:
-            docs = Locations.create(locs=locations, shiftId=shiftId, userId=g.user['id'], jobId=jobId)
+            docs = Locations.create(
+                locs=locations, shiftId=shiftId, userId=g.user['id'], jobId=jobId)
         except ValidationError as e:
             current_app.logger.info(
                 "Could not create location record: {}".format(e))

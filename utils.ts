@@ -45,7 +45,7 @@ function objToQueryString(obj: Object) {
   return keyValuePairs.join('&');
 }
 
-export function fetchWithQueryParams(uri: String, obj: Object, method: string) {
+export function fetchWithQueryParams(uri: String, obj: Object, method: string, headers: fetch.Headers) {
   const encodedParams = objToQueryString(obj)
-  return fetch(`${uri}?${encodedParams}`, {method: method})
+  return fetch(`${uri}?${encodedParams}`, {method: method, headers: headers})
 }

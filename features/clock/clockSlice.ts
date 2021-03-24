@@ -1,11 +1,9 @@
 import { createSlice, createAction, createAsyncThunk } from '@reduxjs/toolkit'
 import fetch from 'node-fetch'
 import { uri } from '../../utils'
-import { store } from '../../store/store'
-import { LocationObject } from "expo-location";
 
 import { ShiftResponse, createShift } from './api'
-import { State } from 'react-native-gesture-handler';
+
 // TYPES
 export enum Employers {
     Instacart = "Instacart",
@@ -92,17 +90,17 @@ export const saveLocations = createAsyncThunk(
     async (locations: Location[], thunkApi: any): Promise<any> => {
         const state = thunkApi.getState()
         const response = await fetch(`${uri}/api/v1/shifts/locations`,
-        {
-            method: 'POST',
-            headers: new fetch.Headers({
-                'Content-Type': 'application/json',
-                authorization: state.auth.jwt
-            }),
-            body: JSON.stringify({
-                locations,
-                shiftId: state.clock.shift.id
+            {
+                method: 'POST',
+                headers: new fetch.Headers({
+                    'Content-Type': 'application/json',
+                    authorization: state.auth.jwt
+                }),
+                body: JSON.stringify({
+                    locations,
+                    shiftId: state.clock.shift.id
+                })
             })
-        })
         const data = await response.json()
         if (data.status == 200)
             return data.locations
@@ -137,7 +135,8 @@ const clockSlice = createSlice({
                 state.shift = initialState.shift
             })
             .addCase(saveLocations.fulfilled, (state, action) => {
-                console.log("adding locations:", action)
+                // not sure why but the mutation shortcut (locations.push(...)) from redux-toolkit didn't work here,
+                // so we use deconstruction to recreate our state
                 state.shift.locations = [...state.shift.locations, ...action.payload]
             })
     }

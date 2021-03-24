@@ -12,7 +12,9 @@ def create_tables(conn, r, DB_NAME):
             for base in cls[1].__bases__:
                 if base.__name__ == "RethinkDBModel":
                     table_name = getattr(cls[1], '_table')
+                    index_name = getattr(cls[1], '_index')
                     r.db(DB_NAME).table_create(table_name).run(conn)
+                    r.db(DB_NAME).table(table_name).indexCreate(index_name)
                     cprint("Created table '{}'...".format(table_name), 'green', attrs=['bold'])
         print("Created tables for testing")
     except Exception as e:

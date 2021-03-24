@@ -23,8 +23,13 @@ def initialize_db(app):
 class RethinkDBModel(object):
     
     @classmethod
-    def find(cls, id): 
+    def get(cls, id): 
         return r.table(cls._table).get(id).run(conn)
+
+    @classmethod
+    def pageFind(cls, limit, last):
+        expr = r.table(cls._table) if not last else r.table(cls._table).between(last, null, left_bound='open')
+        return [d for d in expr.order_by(index=cls._index).run(conn)]
        
     @classmethod
     def filter(cls, predicate):
@@ -47,6 +52,7 @@ class RethinkDBModel(object):
 
 class User(RethinkDBModel):
     _table = 'users'
+    _index = 'id'
 
     @classmethod
     def create(cls, **kwargs):
@@ -64,6 +70,7 @@ class User(RethinkDBModel):
 
 class Shift(RethinkDBModel):
     _table = 'shifts'
+    _index = 'startTime'
 
     @classmethod
     def create(cls, **kwargs):
@@ -93,8 +100,10 @@ class Shift(RethinkDBModel):
         r.table(cls._table).insert(doc).run(conn)
         return doc
 
+
 class Locations(RethinkDBModel):
     _table = 'locations'
+    _index = 'point'
 
     @classmethod
     def create(cls, **kwargs):
@@ -102,6 +111,7 @@ class Locations(RethinkDBModel):
         shiftId = kwargs.get("shiftId")
         userId = kwargs.get("userId")
 
+        # give all location objects same user id and shift ID, and meka reql Point out of the coordinates.
         [l.update({'userId': userId, 'shiftId': shiftId, 'point': r.point(*l['point']['coordinates'])}) for l in locs]
 
         res = r.table(cls._table).insert(locs, return_changes=True).run(conn)

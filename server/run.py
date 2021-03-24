@@ -11,6 +11,7 @@ manager.add_command('runserver', Server(host='0.0.0.0', port=5000))
 
 r = RethinkDB()
 
+
 @manager.command
 def migrate():
     try:
@@ -22,11 +23,15 @@ def migrate():
             for base in cls[1].__bases__:
                 if base.__name__ == "RethinkDBModel":
                     table_name = getattr(cls[1], '_table')
-                    r.db('gigbox').table_create(table_name).run(conn)
+                    index_name = getattr(cls[1], '_index')
+                    r.db(db_name).table_create(table_name).run(conn)
+                    r.db(db_name).table(table_name).index_create(index_name)
                     print("Created table '{}'...".format(table_name))
         print("Running RethinkDB migration command")
     except Exception as e:
-        cprint("An error occured --> {}".format(e.message), 'red', attrs=['bold'])
+        cprint("An error occured --> {}".format(e.message),
+               'red', attrs=['bold'])
+
 
 if __name__ == '__main__':
     manager.run()
