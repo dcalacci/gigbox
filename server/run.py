@@ -1,4 +1,4 @@
-from flask_script import Manager
+from flask_script import Server, Manager
 import inspect
 import importlib
 from rethinkdb import RethinkDB
@@ -7,6 +7,7 @@ from termcolor import cprint
 
 app = create_app('development')
 manager = Manager(app)
+manager.add_command('runserver', Server(host='0.0.0.0', port=5000))
 
 r = RethinkDB()
 
