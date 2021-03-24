@@ -31,8 +31,4 @@ def login_required(f):
             current_app.logger.error("Token corresponds to a user that doesn't exist: {}".format(user_id))
             raise InvalidTokenError()
         return f(*args, **kwargs)
-        # except JWTError as e:
-        #     current_app.logger.error("Error parsing token: {}".format(e))
-        #     abort(
-        #         400, message="There was a problem while trying to parse your token")
     return func

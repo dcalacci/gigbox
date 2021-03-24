@@ -3,7 +3,7 @@ import { TextInput, Text, Pressable } from "react-native";
 import { useSelector, useDispatch } from "react-redux";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { tailwind } from "tailwind";
-import Toast from "react-native-fast-toast";
+import { useToast } from 'react-native-fast-toast'
 import { AsYouType, parsePhoneNumber } from 'libphonenumber-js'
 import { RootState } from "../../store/index"
 import { requestOtp, loginWithOtp, reset, clearErrorMessage } from "./otpSlice"
@@ -17,12 +17,12 @@ const PhoneEntry: React.FC = (props) => {
     const dispatch = useDispatch()
 
     const ayt = new AsYouType('US')
-    const toast = useRef(null);
+    const toast = useToast()
 
     useEffect(() => {
         if (errormsg != "")
             //TODO: figure out how to type this
-            toast.current.show(errormsg);
+            toast?.show(errormsg);
             dispatch(clearErrorMessage())
     }, [errormsg]);
 
@@ -115,7 +115,6 @@ const PhoneEntry: React.FC = (props) => {
         </SafeAreaView>
 
         }
-        <Toast ref={toast} />
     </SafeAreaView>)
 }
 
