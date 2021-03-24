@@ -91,25 +91,12 @@ class ShiftLocation(Resource):
         shiftId = args.get('shiftId')
         jobId = args.get('jobId')
 
-        locs = []
-
-        print("Got locations:", locations)
-
-        for l in locations:
-            loc = {
-                'timestamp': l['timestamp'],
-                'lng': l['lng'],
-                'lat': l['lat'],
-            }
-            locs.append(loc)
-        
         try:
-            docs = Locations.create(locs=locs, shiftId=shiftId, userId=g.user['id'], jobId=jobId)
+            docs = Locations.create(locs=locations, shiftId=shiftId, userId=g.user['id'], jobId=jobId)
         except ValidationError as e:
             current_app.logger.info(
                 "Could not create location record: {}".format(e))
             docs = []
-        print("Sending docs:", docs)
 
         return {
             'status': 200,

@@ -6,6 +6,9 @@ import { grantLocationPermissions, denyLocationPermissions } from './features/au
 import { store } from "./store/store";
 import * as Permissions from "expo-permissions"
 
+
+//TODO: #6 occasionally tasks show up as undefined, or as being not registered on app reload.
+// not sure why this is.
 TaskManager.isTaskRegisteredAsync("gigbox.mileageTracker").then(
   (isRegistered) => {
     if (isRegistered) {
@@ -20,8 +23,11 @@ TaskManager.isTaskRegisteredAsync("gigbox.mileageTracker").then(
         if (state.clock.shift.active) {
           let locs = data.locations.map((location: LocationObject) => {
             let obj = {
-              lat: location.coords.latitude,
-              lng: location.coords.longitude,
+              point: {
+                coordinates: [
+                  location.coords.longitude,
+                  location.coords.latitude]
+              },
               timestamp: location.timestamp,
               accuracy: location.coords.accuracy,
             };

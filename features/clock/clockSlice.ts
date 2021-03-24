@@ -19,8 +19,9 @@ export enum Employers {
 
 export interface Location {
     timestamp: string;
-    lng: number;
-    lat: number;
+    point: {
+        coordinates: [number, number]
+    }
     accuracy: number;
     shiftId: string | null;
     jobId: string | null;

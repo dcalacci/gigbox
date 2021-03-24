@@ -101,18 +101,13 @@ class Locations(RethinkDBModel):
         locs = kwargs.get("locs")
         shiftId = kwargs.get("shiftId")
         userId = kwargs.get("userId")
-        # timestamp = kwargs.get("timestamp")
-        # lng = kwargs.get("lng")
-        # lat = kwargs.get("lat")
-        # shiftId = kwargs.get("shiftId")
-        # job_id = kwargs.get("job_id")
-        # user_id = kwargs.get("user_id")
 
-        [l.update({'userId': userId, 'shiftId': shiftId}) for l in locs]
+        [l.update({'userId': userId, 'shiftId': shiftId, 'point': r.point(*l['point']['coordinates'])}) for l in locs]
 
         res = r.table(cls._table).insert(locs, return_changes=True).run(conn)
+
         if res['inserted'] != len(locs):
-            raise ValidationError("Tried to insert a repeat Location?", res, locs)
+            raise ValidationError("Number of rows inserted different than number of records sent, oops", res)
         
         new_docs = [c['new_val'] for c in res['changes']]
         return new_docs
