@@ -2,7 +2,7 @@
 import os
 from rethinkdb import RethinkDB
 from uuid import uuid4
-from flask import current_app
+from flask import current_app, g
 from datetime import datetime
 
 from api.controllers.errors import ValidationError, DatabaseProcessError
@@ -67,26 +67,29 @@ class Shift(RethinkDBModel):
 
     @classmethod
     def create(cls, **kwargs):
-        start_time = kwargs.get("start_time")
-        end_time = kwargs.get("end_time")
-        user_id = kwargs.get("user_id")
+        startTime = kwargs.get("startTime")
+        endTime = kwargs.get("endTime")
+        userId = kwargs.get("userId")
         locations = kwargs.get("locations")
+        active = kwargs.get("active")
 
-        docs = list(r.table('users').filter({'id': user_id}).run(conn))
+        docs = list(r.table('users').filter({'id': userId}).run(conn))
         if not len(docs):
-            raise ValidationError("Could not find the specified user")
+            raise ValidationError("Could not find the specified user: {}".format(userId))
         # TODO: ensure start time is earlier than end time
 
         doc = {
             'id': uuid4().hex,
-            'date_created': r.now(),
-            'date_modified': r.now(),
-            'start_time': start_time,
-            'end_time': end_time,
+            'dateCreated': r.now().to_iso8601().run(conn),
+            'dateModified': r.now().to_iso8601().run(conn),
+            'startTime': startTime,
+            'endTime': endTime,
             'locations': locations,
-            'user_id': user_id
+            'active': active,
+            'userId': userId
         }
         r.table(cls._table).insert(doc).run(conn)
+        return doc
 
 class Location(RethinkDBModel):
     _table = 'locations'
@@ -96,7 +99,7 @@ class Location(RethinkDBModel):
         timestamp = kwargs.get("timestamp")
         lng = kwargs.get("lng")
         lat = kwargs.get("lat")
-        shift_id = kwargs.get("shift_id")
+        shiftId = kwargs.get("shift_id")
         job_id = kwargs.get("job_id")
         user_id = kwargs.get("user_id")
 
@@ -104,7 +107,7 @@ class Location(RethinkDBModel):
             'id': uuid4().hex,
             'timestamp': timestamp,
             'point': r.point(lng, lat),
-            'shift_id': shift_id,
-            'job_id': job_id,
-            'user_id': user_id
+            'shiftId': shift_id,
+            'jobId': job_id,
+            'userId': user_id
         }

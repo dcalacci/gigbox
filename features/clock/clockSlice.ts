@@ -1,5 +1,7 @@
-import { createSlice, createAction } from '@reduxjs/toolkit'
+import { createSlice, createAction, createAsyncThunk } from '@reduxjs/toolkit'
+import { LocationObject } from "expo-location";
 
+import { CreateShiftResponse, createShift } from './api'
 // TYPES
 export enum Employers {
     Instacart = "Instacart",
@@ -18,9 +20,10 @@ export interface LocationRecord {
     accuracy: number;
 }
 
-export interface PreviousShift {
+export interface Shift {
     startTime: number;
-    endTime: number;
+    endTime: number | null;
+    active: boolean;
     milesTracked: number;
     employers: Employers[];
     locations: LocationRecord[];
@@ -31,7 +34,7 @@ export interface ClockState {
     employers: Employers[];
     locations: LocationRecord[];
     active: boolean;
-    previousShifts: PreviousShift[];
+    previousShifts: Shift[];
 }
 
 // ACTIONS
@@ -42,6 +45,24 @@ export const setEmployers = createAction<Employers[]>('clock/setEmployers')
 
 export type ClockAction = | typeof startShift | typeof stopShift | typeof addLocations | typeof setEmployers
 
+export const makeShift = createAsyncThunk(
+    'clock/createShift',
+    async (shift: Shift, thunkApi: any): Promise<CreateShiftResponse> => {
+        const data = await createShift(shift)
+        if (data.status != 200) {
+            return thunkApi.rejectWithValue(data)
+        }
+        console.log("created shift:", shift)
+        return data
+    }
+)
+
+// export const saveLocationsToShift = createAsyncThunk(
+//     'clock/addLocations',
+//     async (shiftId: string, locations: LocationObject[]): Promise<AddLocationsResponse> => {
+//         const data = addLocationsToShift(shiftId, locations)
+//     }
+// )
 
 // SLICE
 const initialState: ClockState = {
@@ -72,6 +93,12 @@ const clockSlice = createSlice({
         addLocations: (state, action) => {
             state.locations = [...state.locations, ...action.payload]
         }
+    }, 
+    extraReducers: (builder) => {
+        builder
+        .addCase(makeShift.fulfilled, (state, action) => {
+            console.log("make shift fulfilled:", action)
+        })
     }
 })
 

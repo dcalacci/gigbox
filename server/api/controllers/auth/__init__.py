@@ -74,6 +74,8 @@ class VerifyOtp(Resource):
             raise OTPInvalidError()
         user_id = encode_base32(phone, key=current_app.config['SECRET_KEY'])
         jwt = create_jwt(user_id)
+        #TODO: #4 check if user exists. if it doesn't, and we couldn't create the user, we shouldnt mark 
+        # them as authenticated.
         try:
             User.create(id=user_id)
             return {'token': jwt,
