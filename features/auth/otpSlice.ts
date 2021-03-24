@@ -57,8 +57,14 @@ const otpSlice = createSlice({
                 state.tokenSent = true
             })
             .addCase(requestOtp.rejected, (state, action: any) => {
-                console.log("REJECTED", action)
-                state.errorMessage = action.payload.message
+                console.log("Request failed:", action)
+                if (action.payload) {
+                    // error message from our API
+                    state.errorMessage = action.payload.message
+                }
+                else {
+                    state.errorMessage = "Couldn't send OTP code. Check your connection and try again."
+                }
             })
             .addCase(loginWithOtp.fulfilled, (state, action) => {
                 console.log("OTP verification fulfilled", action.payload)

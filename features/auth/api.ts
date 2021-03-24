@@ -1,4 +1,10 @@
 import { fetchWithQueryParams } from "../../utils"
+import Constants from "expo-constants";
+
+const { manifest } = Constants;
+
+const uri = manifest.debuggerHost ? `http://${manifest?.debuggerHost?.split(':').shift()}:5000` : 'http://localhost:5000';
+console.log(`API URI: ${uri}`)
 
 //TODO: interface for checking if currently authenticated with server (if token is valid)
 
@@ -13,7 +19,7 @@ export interface OtpResponse {
  * @returns A promise that resolves to an OtpResponse
  */
 export const getOtp = async (phone: string): Promise<OtpResponse> => {
-    const response = await fetchWithQueryParams('http://localhost:5000/api/v1/auth/get_otp',
+    const response = await fetchWithQueryParams(`${uri}/api/v1/auth/get_otp`,
         { phone: phone }, 'POST')
     const data = response.json()
     return data
@@ -34,7 +40,7 @@ export interface VerifyOtpResponse {
  * @returns a VerifyOtpResponse with OTP login data
  */
 export const verifyOtp = async (phone: string, otp: string): Promise<VerifyOtpResponse | OtpResponse> => {
-    const response = await fetchWithQueryParams('http://localhost:5000/api/v1/auth/verify_otp',
+    const response = await fetchWithQueryParams(`${uri}/api/v1/auth/verify_otp`,
         { phone, otp }, 'POST')
     const data = response.json()
     return data
