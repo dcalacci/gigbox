@@ -5,7 +5,7 @@ from flask import current_app, request
 
 from api.controllers.errors import ValidationError
 from api.controllers.auth import login_required
-from api.models import Shift, Location
+from api.models import Shift, Locations
 
 
 class CreateShift(Resource):
@@ -51,7 +51,7 @@ class CreateShift(Resource):
         shiftId = args.get('shiftId')
         try:
             updated = Shift.update(shiftId, fields)
-            #TODO: check if it is updated, change response accordingly.
+            # TODO: check if it is updated, change response accordingly.
             if len(updated['changes']) > 0:
                 return {
                     'status': 200,
@@ -67,47 +67,50 @@ class CreateShift(Resource):
             current_app.logger.error("Couldn't update Shift: {}".format(e))
 
 
-class AddLocationsToShift(Resource):
+class ShiftLocation(Resource):
     @login_required
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('locations',
-                            type = list,
-                            help = "You need to send a list of locations: {error_msg}",
-                            location = 'json',
-                            required = True)
+                            type=list,
+                            help="You need to send a list of locations: {error_msg}",
+                            location='json',
+                            required=True)
         parser.add_argument('shiftId',
-                            type = str,
-                            location = 'json',
-                            help = "You need to specify a valid shift ID to add locations to: {error_msg}",
-                            required = True)
+                            type=str,
+                            location='json',
+                            help="You need to specify a valid shift ID to add locations to: {error_msg}",
+                            required=True)
         parser.add_argument('jobId',
-                            type = str,
-                            location = 'json',
-                            help = "You can add a Job ID here",
-                            required = False)
-        args=parser.parse_args()
-        locations=args.get('locations')
-        shiftId=args.get('shiftId')
-        jobId=args.get('jobid')
+                            type=str,
+                            location='json',
+                            help="You can add a Job ID here",
+                            required=False)
+        args = parser.parse_args()
+        locations = args.get('locations')
+        shiftId = args.get('shiftId')
+        jobId = args.get('jobId')
 
-        docs=[]
+        locs = []
+
+        print("Got locations:", locations)
 
         for l in locations:
-            try:
-                doc=Location.create(
-                    timestamp=l.timestamp,
-                    lng=l.lng,
-                    lat=l.lat,
-                    shiftId=shiftId,
-                    jobId=jobId,
-                    userId=g.user['id']
-                )
-                docs.append(doc)
-            except ValidationError as e:
-                current_app.logger.info(
-                    "Could not create location record: {}".format(e))
-                docs.append({})
+            loc = {
+                'timestamp': l['timestamp'],
+                'lng': l['lng'],
+                'lat': l['lat'],
+            }
+            locs.append(loc)
+        
+        try:
+            docs = Locations.create(locs=locs, shiftId=shiftId, userId=g.user['id'], jobId=jobId)
+        except ValidationError as e:
+            current_app.logger.info(
+                "Could not create location record: {}".format(e))
+            docs = []
+        print("Sending docs:", docs)
+
         return {
             'status': 200,
             'locations': docs

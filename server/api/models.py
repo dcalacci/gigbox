@@ -93,23 +93,26 @@ class Shift(RethinkDBModel):
         r.table(cls._table).insert(doc).run(conn)
         return doc
 
-class Location(RethinkDBModel):
+class Locations(RethinkDBModel):
     _table = 'locations'
 
     @classmethod
     def create(cls, **kwargs):
-        timestamp = kwargs.get("timestamp")
-        lng = kwargs.get("lng")
-        lat = kwargs.get("lat")
-        shiftId = kwargs.get("shift_id")
-        job_id = kwargs.get("job_id")
-        user_id = kwargs.get("user_id")
+        locs = kwargs.get("locs")
+        shiftId = kwargs.get("shiftId")
+        userId = kwargs.get("userId")
+        # timestamp = kwargs.get("timestamp")
+        # lng = kwargs.get("lng")
+        # lat = kwargs.get("lat")
+        # shiftId = kwargs.get("shiftId")
+        # job_id = kwargs.get("job_id")
+        # user_id = kwargs.get("user_id")
 
-        doc = {
-            'id': uuid4().hex,
-            'timestamp': timestamp,
-            'point': r.point(lng, lat),
-            'shiftId': shift_id,
-            'jobId': job_id,
-            'userId': user_id
-        }
+        [l.update({'userId': userId, 'shiftId': shiftId}) for l in locs]
+
+        res = r.table(cls._table).insert(locs, return_changes=True).run(conn)
+        if res['inserted'] != len(locs):
+            raise ValidationError("Tried to insert a repeat Location?", res, locs)
+        
+        new_docs = [c['new_val'] for c in res['changes']]
+        return new_docs

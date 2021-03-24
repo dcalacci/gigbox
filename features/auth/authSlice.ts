@@ -6,13 +6,21 @@ interface AuthState {
     jwt: string | null;
     userId: string | null;
     authenticated: boolean
+    permissions: {
+        location: boolean;
+        notification: boolean;
+    }
 }
 
 const initialState: AuthState = {
     lastLoggedIn: null,
     jwt: null,
     userId: null,
-    authenticated: false
+    authenticated: false,
+    permissions: {
+        location: false,
+        notification: false
+    }
 }
 
 //TODO: Split up OTP from general authentication state
@@ -21,7 +29,13 @@ const authSlice = createSlice({
     name: 'auth',
     initialState: initialState,
     reducers: {
-        reset: state => initialState
+        reset: state => initialState,
+        grantLocationPermissions(state) {
+            state.permissions.location = true
+        },
+        denyLocationPermissions(state) {
+            state.permissions.location = false
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -39,5 +53,5 @@ const authSlice = createSlice({
     }
 })
 
-export const { reset } = authSlice.actions
+export const { reset, grantLocationPermissions, denyLocationPermissions } = authSlice.actions
 export default authSlice.reducer

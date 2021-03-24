@@ -22,7 +22,7 @@ def create_app(env):
     api.add_resource(auth.VerifyOtp, '/auth/verify_otp')
     api.add_resource(auth.GetSomeResource, '/auth/test_get')
     api.add_resource(shifts.CreateShift, '/shifts')
-    api.add_resource(shifts.AddLocationsToShift, '/shifts/locations')
+    api.add_resource(shifts.ShiftLocation, '/shifts/locations')
 
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 

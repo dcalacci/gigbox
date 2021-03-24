@@ -17,11 +17,15 @@ export enum Employers {
     Favor = "Favor",
 }
 
-export interface LocationRecord {
-    lat: number;
+export interface Location {
+    timestamp: string;
     lng: number;
-    timestamp: number;
+    lat: number;
     accuracy: number;
+    shiftId: string | null;
+    jobId: string | null;
+    userId: string | null;
+    id: string;
 }
 
 export interface Shift {
@@ -34,7 +38,7 @@ export interface Shift {
     active: boolean;
     milesTracked: number;
     employers: Employers[];
-    locations: LocationRecord[];
+    locations: Location[];
 }
 export interface ClockState {
     shift: Shift
@@ -82,12 +86,29 @@ export const clockOut = createAsyncThunk(
     }
 )
 
-// export const saveLocationsToShift = createAsyncThunk(
-//     'clock/addLocations',
-//     async (shiftId: string, locations: LocationObject[]): Promise<AddLocationsResponse> => {
-//         const data = addLocationsToShift(shiftId, locations)
-//     }
-// )
+export const saveLocations = createAsyncThunk(
+    'clock/addLocations',
+    async (locations: Location[], thunkApi: any): Promise<any> => {
+        const state = thunkApi.getState()
+        const response = await fetch(`${uri}/api/v1/shifts/locations`,
+        {
+            method: 'POST',
+            headers: new fetch.Headers({
+                'Content-Type': 'application/json',
+                authorization: state.auth.jwt
+            }),
+            body: JSON.stringify({
+                locations,
+                shiftId: state.clock.shift.id
+            })
+        })
+        const data = await response.json()
+        if (data.status == 200)
+            return data.locations
+        else
+            return thunkApi.rejectWithValue(data)
+    }
+)
 
 // SLICE
 const initialState: ClockState = {
@@ -103,9 +124,6 @@ const clockSlice = createSlice({
     initialState: initialState,
     reducers: {
         reset: (state: ClockState): ClockState => initialState,
-        addLocations: (state, action) => {
-            state.shift.locations = [...state.shift.locations, ...action.payload]
-        }
     },
     extraReducers: (builder) => {
         builder
@@ -116,6 +134,10 @@ const clockSlice = createSlice({
                 // move shift to previous shifts, and change current shift to default
                 state.previousShifts.push(action.payload.shift)
                 state.shift = initialState.shift
+            })
+            .addCase(saveLocations.fulfilled, (state, action) => {
+                console.log("adding locations:", action)
+                state.shift.locations = [...state.shift.locations, ...action.payload]
             })
     }
 })

@@ -1,8 +1,10 @@
 import * as Loc from "expo-location";
 import { LocationObject } from "expo-location";
 import * as TaskManager from "expo-task-manager";
-// import { addLocations } from "./features/clock/clockSlice";
+import { saveLocations, Location } from "./features/clock/clockSlice";
+import { grantLocationPermissions, denyLocationPermissions } from './features/auth/authSlice'
 import { store } from "./store/store";
+import * as Permissions from "expo-permissions"
 
 TaskManager.isTaskRegisteredAsync("gigbox.mileageTracker").then(
   (isRegistered) => {
@@ -14,30 +16,45 @@ TaskManager.isTaskRegisteredAsync("gigbox.mileageTracker").then(
           console.log("error message:", error.message);
           return;
         }
-        let locs = data.locations.map((location: LocationObject) => {
-          let obj = {
-            lat: location.coords.latitude,
-            lng: location.coords.longitude,
-            timestamp: location.timestamp,
-            accuracy: location.coords.accuracy,
-          };
-          return obj;
-        });
         const state = store.getState();
         if (state.clock.shift.active) {
-          // store.dispatch(addLocations(locs));
+          let locs = data.locations.map((location: LocationObject) => {
+            let obj = {
+              lat: location.coords.latitude,
+              lng: location.coords.longitude,
+              timestamp: location.timestamp,
+              accuracy: location.coords.accuracy,
+            };
+            return obj;
+          }) as Location[];
+          console.log("dispatching save locations, ...", locs)
+          store.dispatch(saveLocations(locs))
         }
       });
     }
   }
 );
+
+const askPermissions = async () => {
+  const state = store.getState();
+  const { status, granted } = await Permissions.askAsync(
+    Permissions.LOCATION
+  );
+  if (status === "granted") {
+    store.dispatch(grantLocationPermissions())
+  } else {
+    store.dispatch(denyLocationPermissions())
+  }
+};
+
 /**
  * Creates a new background location task using Expo's `startLocationUpdatesAsync`.
  *
  * The task is titled "gigbox.mileageTracker", uses Loc.Accuracy.Balanced, and
  * includes a foreground notification service.
  */
-export const startGettingBackgroundLocation = () => {
+export const startGettingBackgroundLocation = async () => {
+  await askPermissions()
   Loc.startLocationUpdatesAsync("gigbox.mileageTracker", {
     accuracy: Loc.Accuracy.Balanced,
     timeInterval: 10000,
