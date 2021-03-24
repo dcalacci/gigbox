@@ -1,19 +1,17 @@
 import { fetchWithQueryParams, uri } from "../../utils"
 import { Shift } from '../../features/clock/clockSlice'
-import { store } from '../../store/store'
 import fetch from 'node-fetch'
 
-export interface CreateShiftResponse {
+export interface ShiftResponse {
     shiftCreated: boolean;
     status: number
     shift: Shift
 }
 
-export const createShift = async (startTime: string): Promise<CreateShiftResponse> => {
-    const state = store.getState()
+export const createShift = async (startTime: string, jwt: string): Promise<ShiftResponse> => {
     const headers = new fetch.Headers({
         'Content-Type': 'application/json',
-        authorization: state.auth.jwt
+        authorization: jwt
 
     })
     const response = await fetch(`${uri}/api/v1/shifts`,
@@ -30,4 +28,5 @@ export const createShift = async (startTime: string): Promise<CreateShiftRespons
         shift: data.shift
     }
 }
+
 //TODO: #5 abstract out authenticated API endpoints with JSON bodies to make writing APi code easier on the frontend

@@ -24,7 +24,12 @@ const EmployerBox: React.FC<EmployerBoxProps> = ({ employer }) => {
 
 const EmployerBoxes: React.FC<EmployerBoxesProps> = ({ hidden }) => {
   const activeEmployers = useSelector(
-    (state: RootState): Employers[] => state.clock.employers
+    (state: RootState): Employers[] => {
+      if (state.clock.shift.employers)
+        return state.clock.shift.employers
+      else
+        return []
+    }
   );
 
   return (

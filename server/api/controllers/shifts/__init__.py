@@ -35,36 +35,67 @@ class CreateShift(Resource):
         except ValidationError as e:
             current_app.logger.info("Could not create shift: {}".format(e))
 
+    @login_required
+    def put(self):
+        parser = reqparse.RequestParser()
+        parser.add_argument('fields',
+                            type=dict,
+                            help="you need to send a dict of attributes to update: {error_msg}",
+                            required=True)
+        parser.add_argument('shiftId',
+                            type=str,
+                            help="Id of the shift to update",
+                            required=True)
+        args = parser.parse_args()
+        fields = args.get('fields')
+        shiftId = args.get('shiftId')
+        try:
+            updated = Shift.update(shiftId, fields)
+            #TODO: check if it is updated, change response accordingly.
+            if len(updated['changes']) > 0:
+                return {
+                    'status': 200,
+                    'shift': updated['changes'][0],
+                    'updated': True
+                }
+            else:
+                return {
+                    'status': 200,
+                    'updated': False
+                }
+        except ValidationError as e:
+            current_app.logger.error("Couldn't update Shift: {}".format(e))
+
 
 class AddLocationsToShift(Resource):
     @login_required
     def post(self):
         parser = reqparse.RequestParser()
         parser.add_argument('locations',
-                            type=list,
-                            help="You need to send a list of locations: {error_msg}",
-                            location='json',
-                            required=True)
+                            type = list,
+                            help = "You need to send a list of locations: {error_msg}",
+                            location = 'json',
+                            required = True)
         parser.add_argument('shiftId',
-                            type=str,
-                            location='json',
-                            help="You need to specify a valid shift ID to add locations to: {error_msg}",
-                            required=True)
+                            type = str,
+                            location = 'json',
+                            help = "You need to specify a valid shift ID to add locations to: {error_msg}",
+                            required = True)
         parser.add_argument('jobId',
-                            type=str,
-                            location='json',
-                            help="You can add a Job ID here",
-                            required=False)
-        args = parser.parse_args()
-        locations = args.get('locations')
-        shiftId = args.get('shiftId')
-        jobId = args.get('jobid')
+                            type = str,
+                            location = 'json',
+                            help = "You can add a Job ID here",
+                            required = False)
+        args=parser.parse_args()
+        locations=args.get('locations')
+        shiftId=args.get('shiftId')
+        jobId=args.get('jobid')
 
-        docs = []
+        docs=[]
 
         for l in locations:
             try:
-                doc = Location.create(
+                doc=Location.create(
                     timestamp=l.timestamp,
                     lng=l.lng,
                     lat=l.lat,
@@ -74,7 +105,8 @@ class AddLocationsToShift(Resource):
                 )
                 docs.append(doc)
             except ValidationError as e:
-                current_app.logger.info("Could not create location record: {}".format(e))
+                current_app.logger.info(
+                    "Could not create location record: {}".format(e))
                 docs.append({})
         return {
             'status': 200,

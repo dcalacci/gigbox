@@ -32,10 +32,10 @@ class RethinkDBModel(object):
 
     @classmethod
     def update(cls, id, fields):
-        status = r.table(cls._table).get(id).update(fields).run(conn)
+        status = r.table(cls._table).get(id).update(fields, return_changes=True).run(conn)
         if status['errors']:
             raise DatabaseProcessError("Could not complete the update action")
-        return True
+        return status
 
     @classmethod
     def delete(cls, id):
@@ -72,6 +72,7 @@ class Shift(RethinkDBModel):
         userId = kwargs.get("userId")
         locations = kwargs.get("locations")
         active = kwargs.get("active")
+        employers = kwargs.get("employers")
 
         docs = list(r.table('users').filter({'id': userId}).run(conn))
         if not len(docs):
@@ -86,7 +87,8 @@ class Shift(RethinkDBModel):
             'endTime': endTime,
             'locations': locations,
             'active': active,
-            'userId': userId
+            'userId': userId,
+            'employers': employers
         }
         r.table(cls._table).insert(doc).run(conn)
         return doc
