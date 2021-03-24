@@ -9,7 +9,7 @@ export interface CreateShiftResponse {
     shift: Shift
 }
 
-export const createShift = async (shift: Shift): Promise<CreateShiftResponse> => {
+export const createShift = async (startTime: string): Promise<CreateShiftResponse> => {
     const state = store.getState()
     const headers = new fetch.Headers({
         'Content-Type': 'application/json',
@@ -20,22 +20,14 @@ export const createShift = async (shift: Shift): Promise<CreateShiftResponse> =>
         {
             method: 'POST',
             headers: headers,
-            body: JSON.stringify(shift),
+            body: JSON.stringify({ startTime })
         })
-    console.log("response:", response)
     const data = await response.json()
     console.log("Response data:", data)
     return {
         shiftCreated: true,
         status: 200,
-        shift: {
-            startTime: data.startTime,
-            endTime: data.endTime,
-            active: data.active,
-            milesTracked: 0, //TODO
-            employers: [],
-            locations: []
-        }
+        shift: data.shift
     }
 }
 //TODO: #5 abstract out authenticated API endpoints with JSON bodies to make writing APi code easier on the frontend

@@ -6,7 +6,7 @@ import { tailwind } from "tailwind";
 import { RootState } from "../../store/index";
 import Toggle from "../../components/Toggle";
 
-import { makeShift, startShift, stopShift, ClockState } from './clockSlice'
+import { clockIn, startShift, stopShift, ClockState } from './clockSlice'
 import { formatElapsedTime } from "../../utils";
 import {
   startGettingBackgroundLocation,
@@ -39,15 +39,7 @@ export default function TrackingBar() {
   const onTogglePress = () => {
     console.log(clockState);
     if (!clockState.active) {
-      dispatch(startShift())
-      dispatch(makeShift({
-        startTime: clockState.startTime,
-        endTime: null,
-        active: true,
-        milesTracked: 0,
-        employers: [],
-        locations: []
-      }))
+      dispatch(clockIn(new Date().toISOString()))
       startGettingBackgroundLocation();
     } else {
       dispatch(stopShift(new Date().getTime()));

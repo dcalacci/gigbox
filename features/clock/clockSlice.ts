@@ -21,15 +21,19 @@ export interface LocationRecord {
 }
 
 export interface Shift {
-    startTime: number;
-    endTime: number | null;
+    id: string;
+    dateCreated: string;
+    dateModified: string;
+    userId: string;
+    startTime: string;
+    endTime: string| null;
     active: boolean;
     milesTracked: number;
     employers: Employers[];
     locations: LocationRecord[];
 }
 export interface ClockState {
-    startTime: number;
+    startTime: string;
     milesTracked: number;
     employers: Employers[];
     locations: LocationRecord[];
@@ -45,17 +49,19 @@ export const setEmployers = createAction<Employers[]>('clock/setEmployers')
 
 export type ClockAction = | typeof startShift | typeof stopShift | typeof addLocations | typeof setEmployers
 
-export const makeShift = createAsyncThunk(
+export const clockIn = createAsyncThunk(
     'clock/createShift',
-    async (shift: Shift, thunkApi: any): Promise<CreateShiftResponse> => {
-        const data = await createShift(shift)
+    async (startTime: string, thunkApi: any): Promise<CreateShiftResponse> => {
+        const data = await createShift(startTime)
         if (data.status != 200) {
             return thunkApi.rejectWithValue(data)
         }
-        console.log("created shift:", shift)
+        console.log("created shift:", data)
         return data
     }
 )
+
+
 
 // export const saveLocationsToShift = createAsyncThunk(
 //     'clock/addLocations',
@@ -66,7 +72,7 @@ export const makeShift = createAsyncThunk(
 
 // SLICE
 const initialState: ClockState = {
-    startTime: new Date().getTime(),
+    startTime: new Date().toISOString(),
     // milesTracked: 0,
     employers: [Employers.Instacart, Employers.Postmates],
     active: false,
@@ -80,10 +86,6 @@ const clockSlice = createSlice({
     initialState: initialState,
     reducers: {
         reset: (state: ClockState): ClockState => initialState,
-        startShift: (state) => {
-            state.startTime = new Date().getTime()
-            state.active = true
-        },
         stopShift: (state, action) => {
             console.log("STOPPED SHIFT")
             //TODO: send previous shift to database
@@ -96,8 +98,10 @@ const clockSlice = createSlice({
     }, 
     extraReducers: (builder) => {
         builder
-        .addCase(makeShift.fulfilled, (state, action) => {
+        .addCase(clockIn.fulfilled, (state, action) => {
             console.log("make shift fulfilled:", action)
+            state.startTime = action.payload.shift.startTime
+            state.active = action.payload.shift.active
         })
     }
 })

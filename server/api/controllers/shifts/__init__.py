@@ -18,10 +18,10 @@ class CreateShift(Resource):
                             help="You need to send a start time: {error_msg}",
                             required=True)
         args = parser.parse_args()
-        start_time = args.get('startTime')
+        startTime = args.get('startTime')
         try:
             doc = Shift.create(
-                startTime=start_time,
+                startTime=startTime,
                 userId=g.user['id'],
                 locations=[],
                 endTime="",
