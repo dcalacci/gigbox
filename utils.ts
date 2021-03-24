@@ -23,6 +23,13 @@ export const formatElapsedTime = (startTimestamp: number | null): string => {
   }
 };
 
+import Constants from "expo-constants";
+
+const { manifest } = Constants;
+
+export const uri = manifest.debuggerHost ? `http://${manifest?.debuggerHost?.split(':').shift()}:5000` : 'http://localhost:5000';
+console.log(`API URI: ${uri}`)
+
 /**
  * A shim function to encode URL search parameters, because the URLSearchParams
  * functionality in node-fetch doesn't work on React Native.

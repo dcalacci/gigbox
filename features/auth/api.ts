@@ -1,11 +1,4 @@
-import { fetchWithQueryParams } from "../../utils"
-import Constants from "expo-constants";
-
-const { manifest } = Constants;
-
-const uri = manifest.debuggerHost ? `http://${manifest?.debuggerHost?.split(':').shift()}:5000` : 'http://localhost:5000';
-console.log(`API URI: ${uri}`)
-
+import { fetchWithQueryParams, uri} from "../../utils"
 //TODO: interface for checking if currently authenticated with server (if token is valid)
 
 export interface OtpResponse {
