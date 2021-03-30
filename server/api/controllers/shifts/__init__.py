@@ -83,6 +83,7 @@ class CreateShift(Resource):
 
         try:
             docs = Shift.pageFind(limit, last=None)
+            locs = Locations.
             print("found paged docs:", docs)
             return docs
         except ValidationError as e:
