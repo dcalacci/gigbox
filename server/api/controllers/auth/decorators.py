@@ -8,7 +8,8 @@ from functools import wraps
 
 from api.controllers.auth.utils import decode_jwt
 from api.controllers.errors import InvalidTokenError
-from api.models import User
+from api.database.base import db_session
+from api.database.model import User
 
 
 def login_required(f):
@@ -26,9 +27,11 @@ def login_required(f):
         if user_id is None:
             current_app.logger.error("Token parsed to none")
             raise InvalidTokenError()
-        g.user = User.get(user_id)
+        g.user = db_session.query(User).get(uid=user_id)
+        # g.user = User.get(user_id)
         if g.user is None:
-            current_app.logger.error("Token corresponds to a user that doesn't exist: {}".format(user_id))
+            current_app.logger.error(
+                "Token corresponds to a user that doesn't exist: {}".format(user_id))
             raise InvalidTokenError()
         return f(*args, **kwargs)
     return func
