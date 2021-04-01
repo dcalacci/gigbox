@@ -3,18 +3,20 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_graphql import GraphQLView
 
-from api.database import base
-from api.database.base import db_session
+from api.database.model import User, Shift, Location, db
 from api.controllers.errors import custom_errors
 from api.controllers import auth
 from api.schema import schema
 from config import Config
 
-db = SQLAlchemy()
 
-
+#TODO: IMPORTANT
+# Change requirements.txt to reflect sqlalchemy version<1.4:
+# https://stackoverflow.com/questions/65610809/retrieving-data-from-rds-gives-attributeerror-sqlalchemy-cimmutabledict-immuta
 def create_app(env):
     app = Flask(__name__)
+    app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = True
 
     app.config.from_object(get_environment_config())
     db.init_app(app)
@@ -32,12 +34,14 @@ def create_app(env):
     @app.before_first_request
     def initialize_database():
         """ Create db tables"""
-        print('Create database {}'.format(base.db_name))
-        base.Base.metadata.create_all(base.engine)
+        app.logger.info("Before first request")
+        db.create_all()
+        db.session.commit()
+        app.logger.info("Session Committed.")
 
     @app.teardown_appcontext
     def shutdown_session(exception=None):
-        db_session.remove()
+        db.session.remove()
 
     @app.route("/")
     def test():

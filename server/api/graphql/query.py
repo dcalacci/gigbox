@@ -12,6 +12,12 @@ class Query(graphene.ObjectType):
     shifts = graphene.relay.Node.Field(Shift)
     shiftList = SQLAlchemyConnectionField(Shift)
 
+    locations = graphene.relay.Node.Field(Location)
+    locationList = SQLAlchemyConnectionField(Location)
+
+    users = graphene.relay.Node.Field(User)
+    userList = SQLAlchemyConnectionField(User)
+
     # getShifts = graphene.List(lambda: Shift,
     #                           uid=graphene.String,
     #                           include_locations=graphene.Boolean,

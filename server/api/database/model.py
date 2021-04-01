@@ -1,8 +1,12 @@
 # Models
+import graphene_sqlalchemy as gsqa
+from geoalchemy2.types import Geometry
+from geoalchemy2 import func
+import graphene
 from flask_sqlalchemy import SQLAlchemy
 from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
-from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy import Column, DateTime, Integer, Boolean, String, ForeignKey
+from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import func  # for datetimes
 from sqlalchemy.dialects.postgresql import UUID
@@ -11,48 +15,85 @@ from geoalchemy2.shape import from_shape
 from shapely import geometry
 from uuid import uuid4
 
-from .base import Base
-
+db = SQLAlchemy()
 
 # using uuids like https://stackoverflow.com/questions/183042/how-can-i-use-uuids-in-sqlalchemy
+# using db.Model to enable flask-sqlalchemy magic:
+# https://stackoverflow.com/questions/22698478/what-is-the-difference-between-the-declarative-base-and-db-model
 
-class User(Base):
+# enable postgis with
+# https://morphocode.com/how-to-install-postgis-on-mac-os-x/
+
+
+# For converting geometry to WKT, see:
+# https://github.com/graphql-python/graphene-sqlalchemy/issues/140
+# and for types generally, see:
+# https://github.com/graphql-python/graphene-sqlalchemy/issues/53
+# I found that I had to add it here for our database migrations to work properly.
+
+class Geometry_WKT(graphene.Scalar):
+    '''Geometry WKT custom type.'''
+    name = "Geometry WKT"
+
+    @staticmethod
+    def serialize(geom):
+        return db.scalar(geom.ST_AsText())
+
+    @staticmethod
+    def parse_literal(node):
+        if isinstance(node, gsqa.language.ast.StringValue):
+            return db.scalar(func.ST_GeomFromText(node.value))
+
+    @staticmethod
+    def parse_value(value):
+        return db.scalar(func.ST_GeomFromText(value))
+
+
+@gsqa.converter.convert_sqlalchemy_type.register(Geometry)
+def _convert_geometry(thetype, column, registry=None):
+    return Geometry_WKT(description=gsqa.converter.get_column_doc(column),
+                        required=not(gsqa.converter.is_column_nullable(column)))
+
+
+class User(db.Model):
+
     __tablename__ = 'users'
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    shifts = relationship('Shift')
-    date_created = Column(DateTime, server_default=func.now())
+    # id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    id = db.Column(db.String, primary_key=True, unique=True, index=True)
+    shifts = db.relationship('Shift')
+    date_created = db.Column(DateTime, server_default=func.now())
 
     def __init__(self, uid):
         self.id = uid
 
     def __repr__(self):
-        return f"{self.uid}"
+        return f"{self.id}"
 
 
-class Shift(Base):
+class Shift(db.Model):
     __tablename__ = 'shifts'
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    start_time = Column(DateTime, nullable=False)
-    end_time = Column(DateTime, nullable=True)
-    user_id = Column(Integer, ForeignKey('users.id'))
-    active = Column(Boolean, nullable=False)
-    date_modified = Column(DateTime, onupdate=func.now())
-    date_created = Column(DateTime, default=func.now())
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    start_time = db.Column(DateTime, nullable=False)
+    end_time = db.Column(DateTime, nullable=True)
+    user_id = db.Column(db.String, ForeignKey(User.id))
+    active = db.Column(Boolean, nullable=False)
+    date_modified = db.Column(DateTime, onupdate=func.now())
+    date_created = db.Column(DateTime, default=func.now())
     # if this shift is deleted, delete its related location data
-    locations = relationship("Location",
-                             backref=backref('shift',
-                                             cascade='all, delete'))
+    locations = db.relationship("Location",
+                                backref=backref('shift',
+                                                cascade='all, delete'))
 
     def __repr__(self):
         return f"Shift from {self.start_time} to {self.end_time} for user {self.user_id}"
 
 
-class Location(Base):
+class Location(db.Model):
     __tablename__ = 'locations'
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    geom = Column(Geometry('POINT'), nullable=False)
-    timestamp = Column(DateTime, nullable=False)
-    shift_id = Column(UUID(as_uuid=True), ForeignKey(Shift.id))
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    geom = db.Column(Geometry('POINT'))
+    timestamp = db.Column(DateTime, nullable=False)
+    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id))
 
     def __init__(self, timestamp, lng, lat, shift_id):
         self.timestamp = timestamp

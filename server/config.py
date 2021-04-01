@@ -48,7 +48,7 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://" + os.environ["DB_USERNAME"] + ":"  \
+    SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["DB_USERNAME"] + ":"  \
                               + os.environ["DB_PASSWORD"] + "@" \
                               + os.environ["DB_HOST"] + ":" \
                               + os.environ["DB_PORT"] + "/" \
@@ -58,7 +58,7 @@ class DevelopmentConfig(Config):
 
 class TestingConfig(Config):
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = "mysql+pymysql://" + os.environ["DB_USERNAME"] + ":" \
+    SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["DB_USERNAME"] + ":" \
                               + os.environ["DB_PASSWORD"] + "@" \
                               + os.environ["DB_HOST"] + ":" \
                               + os.environ["DB_PORT"] + "/" \

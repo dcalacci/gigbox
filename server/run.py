@@ -1,9 +1,7 @@
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 from flask_script import Server, Manager
-from api.database.base import db_session
-from api.database.base import Base
-from api import create_app
+from api import create_app, db
 from termcolor import cprint
 
 app = create_app('development')
@@ -12,7 +10,7 @@ manager = Manager(app)
 
 # app.config.from_object(os.environ['APP_SETTINGS'])
 
-migrate = Migrate(app, Base)
+migrate = Migrate(app, db)
 manager = Manager(app)
 
 manager.add_command('db', MigrateCommand)

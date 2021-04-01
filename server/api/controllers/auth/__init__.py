@@ -14,8 +14,7 @@ import bcrypt
 
 from flask import current_app, request
 
-from api.database.model import User
-from api.database.base import db_session
+from api.database.model import User, db
 from api.controllers.errors import ValidationError, OTPSendError, OTPInvalidError, TextMessageSendError
 from api.controllers.auth.utils import get_otp, create_jwt, decode_jwt, encode_base32, send_text
 from api.controllers.auth.decorators import login_required
@@ -79,8 +78,10 @@ class VerifyOtp(Resource):
         # them as authenticated.
         try:
             user = User(uid=user_id)
-            db_session.add(user)
-            db_session.commit()
+            db.session.add(user)
+            db.session.commit()
+
+            current_app.logger.info("New user created: {}".format(user))
             return {'token': jwt,
                     'user_id': user_id,
                     'authenticated': True,

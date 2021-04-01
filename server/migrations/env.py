@@ -30,6 +30,17 @@ target_metadata = current_app.extensions['migrate'].db.metadata
 # my_important_option = config.get_main_option("my_important_option")
 # ... etc.
 
+# 03-2021 Added to exlcude spatial tables as in this gist:
+# https://gist.github.com/utek/6163250
+exclude_tables = config.get_main_option('exclude', '').split(',')
+
+
+def include_object(object, name, type_, *args, **kwargs):
+    if type_ == 'table' and name in exclude_tables:
+        return False
+    else:
+        return True
+
 
 def run_migrations_offline():
     """Run migrations in 'offline' mode.
@@ -45,7 +56,8 @@ def run_migrations_offline():
     """
     url = config.get_main_option("sqlalchemy.url")
     context.configure(
-        url=url, target_metadata=target_metadata, literal_binds=True
+        url=url, target_metadata=target_metadata, literal_binds=True,
+        include_object=include_object
     )
 
     with context.begin_transaction():
@@ -75,8 +87,10 @@ def run_migrations_online():
     with connectable.connect() as connection:
         context.configure(
             connection=connection,
+            compare_type=True,
             target_metadata=target_metadata,
             process_revision_directives=process_revision_directives,
+            include_object=include_object,
             **current_app.extensions['migrate'].configure_args
         )
 
