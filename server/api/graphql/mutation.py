@@ -3,7 +3,7 @@ from shapely import geometry
 from datetime import datetime
 from api import db
 from api.graphql.object import User, Shift, Location, LocationInput
-from api.database.model import User as UserModel, Shift as ShiftModel, Location as LocationModel
+from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel
 
 # we use a traditional REST endpoint to create JWT tokens and for first login
 # So, honestly, unsure if we need a Createuser mutation. We will only ever create

@@ -3,7 +3,7 @@ from graphene import relay, Field, UUID, String
 from graphene_sqlalchemy import SQLAlchemyObjectType
 from graphene_sqlalchemy.types import ORMField
 import base64
-from api.database.model import User as UserModel, Shift as ShiftModel, Location as LocationModel, Geometry_WKT
+from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Geometry_WKT
 
 
 class User(SQLAlchemyObjectType):

@@ -3,7 +3,7 @@ from graphene import relay
 from graphene_sqlalchemy import SQLAlchemyConnectionField
 
 from api.graphql.object import User, Shift, Location
-from api.database.model import User as UserModel
+from api.models import User as UserModel
 
 
 class Query(graphene.ObjectType):

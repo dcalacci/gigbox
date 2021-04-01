@@ -3,7 +3,7 @@ from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_graphql import GraphQLView
 
-from api.database.model import User, Shift, Location, db
+from api.models import User, Shift, Location, db
 from api.controllers.errors import custom_errors
 from api.controllers import auth
 from api.schema import schema

@@ -8,7 +8,7 @@ from functools import wraps
 
 from api.controllers.auth.utils import decode_jwt
 from api.controllers.errors import InvalidTokenError
-from api.database.model import User
+from api.models import User
 from api import db
 
 

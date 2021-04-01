@@ -14,7 +14,7 @@ import bcrypt
 
 from flask import current_app, request
 
-from api.database.model import User, db
+from api.models import User, db
 from api.controllers.errors import ValidationError, OTPSendError, OTPInvalidError, TextMessageSendError
 from api.controllers.auth.utils import get_otp, create_jwt, decode_jwt, encode_base32, send_text
 from api.controllers.auth.decorators import login_required
