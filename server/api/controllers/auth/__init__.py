@@ -14,6 +14,7 @@ import bcrypt
 
 from flask import current_app, request
 
+from api.utils import get_or_create
 from api.models import User, db
 from api.controllers.errors import ValidationError, OTPSendError, OTPInvalidError, TextMessageSendError
 from api.controllers.auth.utils import get_otp, create_jwt, decode_jwt, encode_base32, send_text
@@ -77,15 +78,16 @@ class VerifyOtp(Resource):
         # TODO: #4 check if user exists. if it doesn't, and we couldn't create the user, we shouldnt mark
         # them as authenticated.
         try:
-            user = User(uid=user_id)
-            db.session.add(user)
-            db.session.commit()
+            user, created = get_or_create(db.session, User, id=user_id)
 
-            current_app.logger.info("New user created: {}".format(user))
+            # user = User(uid=user_id)
+            # db.session.add(user)
+            # db.session.commit()
+            current_app.logger.info("User created or found: {}".format(user))
             return {'token': jwt,
                     'user_id': user_id,
                     'authenticated': True,
-                    'userCreated': True,
+                    'userCreated': created,
                     'status': 200,
                     'message': 'Success'}
         except ValidationError as e:

@@ -9,11 +9,13 @@ from sqlalchemy import Column, DateTime, Integer, Boolean, String, ForeignKey
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import func  # for datetimes
+from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import UUID
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import from_shape
 from shapely import geometry
 from uuid import uuid4
+import os
 
 db = SQLAlchemy()
 
@@ -30,6 +32,15 @@ db = SQLAlchemy()
 # and for types generally, see:
 # https://github.com/graphql-python/graphene-sqlalchemy/issues/53
 # I found that I had to add it here for our database migrations to work properly.
+db_uri = "postgresql://" + os.environ["DB_USERNAME"] + ":" \
+    + os.environ["DB_PASSWORD"] + "@" \
+    + os.environ["DB_HOST"] + ":" \
+    + os.environ["DB_PORT"] + "/" \
+    + os.environ["DB_DATABASE"]
+engine = create_engine(db_uri)
+
+# have to import scalar from engine, not db....
+
 
 class Geometry_WKT(graphene.Scalar):
     '''Geometry WKT custom type.'''
@@ -37,16 +48,16 @@ class Geometry_WKT(graphene.Scalar):
 
     @staticmethod
     def serialize(geom):
-        return db.scalar(geom.ST_AsText())
+        return engine.scalar(geom.ST_AsText())
 
     @staticmethod
     def parse_literal(node):
         if isinstance(node, gsqa.language.ast.StringValue):
-            return db.scalar(func.ST_GeomFromText(node.value))
+            return engine.scalar(func.ST_GeomFromText(node.value))
 
     @staticmethod
     def parse_value(value):
-        return db.scalar(func.ST_GeomFromText(value))
+        return engine.scalar(func.ST_GeomFromText(value))
 
 
 @gsqa.converter.convert_sqlalchemy_type.register(Geometry)
@@ -60,11 +71,13 @@ class User(db.Model):
     __tablename__ = 'users'
     # id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     id = db.Column(db.String, primary_key=True, unique=True, index=True)
+    uid = db.Column(db.String, unique=True, index=True)
     shifts = db.relationship('Shift')
     date_created = db.Column(DateTime, server_default=func.now())
 
-    def __init__(self, uid):
-        self.id = uid
+    def __init__(self, id):
+        self.id = id
+        self.uid = id
 
     def __repr__(self):
         return f"{self.id}"
@@ -73,7 +86,7 @@ class User(db.Model):
 class Shift(db.Model):
     __tablename__ = 'shifts'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    start_time = db.Column(DateTime, nullable=False)
+    start_time = db.Column(DateTime, default=func.now())
     end_time = db.Column(DateTime, nullable=True)
     user_id = db.Column(db.String, ForeignKey(User.id))
     active = db.Column(Boolean, nullable=False)

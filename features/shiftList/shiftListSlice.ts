@@ -1,7 +1,6 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { Headers } from 'node-fetch';
 import { fetchWithQueryParams, uri } from '../../utils';
-import { Shift } from '../clock/clockSlice';
 
 interface GetListInput {
     limit: number;
@@ -27,12 +26,12 @@ export const getShiftList = createAsyncThunk(
 );
 
 interface ShiftListState {
-    shifts: Shift[];
+    shifts: any[];
     lastFetched: string;
 }
 
 const initialState: ShiftListState = {
-    shifts: [] as Shift[],
+    shifts: [] as any[],
     lastFetched: '',
 };
 

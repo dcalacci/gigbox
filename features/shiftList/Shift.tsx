@@ -3,7 +3,6 @@ import { View, Text, SafeAreaView } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { RootState } from '../../store/index';
-import { Shift } from '../clock/clockSlice';
 import { getShiftList } from './shiftListSlice';
 import { FlatList } from 'react-native-gesture-handler';
 
@@ -20,7 +19,7 @@ const ShiftCard = (props: any) => {
 };
 
 export default function ShiftList() {
-    const shifts = useSelector((state: RootState): Shift[] => state.shiftList.shifts);
+    const shifts = useSelector((state: RootState): any[] => state.shiftList.shifts);
     const dispatch = useDispatch();
 
     useEffect(() => {

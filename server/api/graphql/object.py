@@ -9,13 +9,13 @@ from api.models import User as UserModel, Shift as ShiftModel, Location as Locat
 class User(SQLAlchemyObjectType):
     class Meta:
         model = UserModel
-        interfaces = (relay.Node,)
+        # interfaces = (relay.Node,)
 
 
 class Shift(SQLAlchemyObjectType):
     class Meta:
         model = ShiftModel
-        interfaces = (relay.Node,)
+        # interfaces = (relay.Node,)
 
     # resolve locations for this shift
     locations = graphene.List(lambda: Location)
@@ -29,7 +29,7 @@ class Shift(SQLAlchemyObjectType):
 class Location(SQLAlchemyObjectType):
     class Meta:
         model = LocationModel
-        interfaces = (relay.Node,)
+        # interfaces = (relay.Node,)
 
     geom = Field(Geometry_WKT)
     # We might want instead of WKT to change it to JSON. We can use a simple thing like
@@ -45,4 +45,4 @@ class Location(SQLAlchemyObjectType):
 class LocationInput(graphene.InputObjectType):
     lat = graphene.Float()
     lng = graphene.Float()
-    timestamp = graphene.String()
+    timestamp = graphene.Float()

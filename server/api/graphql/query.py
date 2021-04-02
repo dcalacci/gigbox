@@ -3,20 +3,26 @@ from graphene import relay
 from graphene_sqlalchemy import SQLAlchemyConnectionField
 
 from api.graphql.object import User, Shift, Location
-from api.models import User as UserModel
+from api.models import User as UserModel, Shift as ShiftModel
 
 
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
 
-    shifts = graphene.relay.Node.Field(Shift)
-    shiftList = SQLAlchemyConnectionField(Shift)
+    # shifts = graphene.relay.Node.Field(Shift)
+    # shiftList = SQLAlchemyConnectionField(Shift)
 
-    locations = graphene.relay.Node.Field(Location)
-    locationList = SQLAlchemyConnectionField(Location)
+    # locations = graphene.relay.Node.Field(Location)
+    # locationList = SQLAlchemyConnectionField(Location)
 
-    users = graphene.relay.Node.Field(User)
-    userList = SQLAlchemyConnectionField(User)
+    # users = graphene.relay.Node.Field(User)
+    # userList = SQLAlchemyConnectionField(User)
+
+    getActiveShift = graphene.Field(Shift, userId=graphene.String())
+
+    def resolve_getActiveShift(self, info, userId):
+        print("Getting shift for user:", userId)
+        return ShiftModel.query.filter_by(active=True, user_id=userId).first()
 
     # getShifts = graphene.List(lambda: Shift,
     #                           uid=graphene.String,

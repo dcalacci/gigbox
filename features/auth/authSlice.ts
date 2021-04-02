@@ -1,15 +1,15 @@
-import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
-import { loginWithOtp } from "./otpSlice"
+import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
+import { loginWithOtp } from './otpSlice';
 
-interface AuthState {
+export interface AuthState {
     lastLoggedIn: number | null;
     jwt: string | null;
     userId: string | null;
-    authenticated: boolean
+    authenticated: boolean;
     permissions: {
         location: boolean;
         notification: boolean;
-    }
+    };
 }
 
 const initialState: AuthState = {
@@ -19,9 +19,9 @@ const initialState: AuthState = {
     authenticated: false,
     permissions: {
         location: false,
-        notification: false
-    }
-}
+        notification: false,
+    },
+};
 
 //TODO: Split up OTP from general authentication state
 
@@ -29,29 +29,30 @@ const authSlice = createSlice({
     name: 'auth',
     initialState: initialState,
     reducers: {
-        reset: state => initialState,
+        reset: (state) => initialState,
         grantLocationPermissions(state) {
-            state.permissions.location = true
+            state.permissions.location = true;
         },
         denyLocationPermissions(state) {
-            state.permissions.location = false
-        }
+            state.permissions.location = false;
+        },
     },
     extraReducers: (builder) => {
         builder
             .addCase(loginWithOtp.fulfilled, (state, action: any) => {
                 if (action.payload.authenticated) {
-                    state.jwt = action.payload.token
-                    state.authenticated = true
-                    state.userId = action.payload.user_id
-                    state.lastLoggedIn = new Date().getTime()
+                    state.jwt = action.payload.token;
+                    state.authenticated = true;
+                    state.userId = action.payload.user_id;
+                    state.lastLoggedIn = new Date().getTime();
                 }
             })
             .addCase(loginWithOtp.rejected, (state, action: any) => {
-                console.log("OTP Verification REJECTED", action)
-            })
-    }
-})
+                console.log('OTP Verification REJECTED', action);
+            });
+    },
+});
 
-export const { reset, grantLocationPermissions, denyLocationPermissions } = authSlice.actions
-export default authSlice.reducer
+export const { reset, grantLocationPermissions, denyLocationPermissions } = authSlice.actions;
+export default authSlice.reducer;
+

@@ -5,7 +5,6 @@
 import unittest
 import os
 import datetime
-from rethinkdb import RethinkDB, errors
 from flask import current_app
 import jwt
 
@@ -34,7 +33,7 @@ class ApiTestCase(unittest.TestCase):
     def setUp(self):
         self.app = create_app('testing')
         self.client = self.app.test_client
-        self.r = RethinkDB()
+        self.db = SqlAlchemy()
         self.conn = self.r.connect()
         # Create testing database if it doesnt exist
         if self.app.config['DATABASE_NAME'] not in self.r.db_list().run(self.conn):

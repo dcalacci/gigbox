@@ -21,14 +21,18 @@ def create_app(env):
     app.config.from_object(get_environment_config())
     db.init_app(app)
 
+    # class DummyMiddleware(object):
+    #     def resolve(self, next, root, info, **kwargs):
+    #         print("DummyMiddleware", next, kwargs, root, info)
+    #         return next(root, info, **kwargs)
+
+    # dummy_middleware = DummyMiddleware()
+
     # OR app.schema import schema..
     app.add_url_rule(
         '/graphql',
-        view_func=GraphQLView.as_view(
-            'graphql',
-            schema=schema,
-            graphiql=True
-        )
+        view_func=GraphQLView.as_view("graphql", schema=schema, graphiql=True)
+        # middleware=[dummy_middleware])
     )
 
     @app.before_first_request
