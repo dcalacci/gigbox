@@ -9,8 +9,9 @@ import { request, gql } from 'graphql-request';
 import { graphqlUri } from './utils';
 
 interface Location {
-    lat: number;
-    lng: number;
+    point: {
+        coordinates: [number, number];
+    };
     timestamp: number;
 }
 
