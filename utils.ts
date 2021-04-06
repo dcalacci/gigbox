@@ -23,6 +23,7 @@ export const formatElapsedTime = (startTimestamp: number | null): string => {
 };
 
 import Constants from 'expo-constants';
+import { GraphQLClient } from 'graphql-request';
 
 const { manifest } = Constants;
 
@@ -31,6 +32,12 @@ export const uri = manifest.debuggerHost
     : 'http://localhost:5000';
 export const graphqlUri = `${uri}/graphql`;
 console.log(`API URI: ${uri}`);
+
+export function getClient(store): GraphQLClient {
+    let client = new GraphQLClient(graphqlUri);
+    client.setHeader('authorization', store.getState().auth.jwt);
+    return client;
+}
 
 /**
  * A shim function to encode URL search parameters, because the URLSearchParams
@@ -60,4 +67,3 @@ export function fetchWithQueryParams(
     const encodedParams = objToQueryString(obj);
     return fetch(`${uri}?${encodedParams}`, { method: method, headers: headers });
 }
-

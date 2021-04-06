@@ -2,6 +2,7 @@ from graphene import Mutation, Float, DateTime, Field, String, Boolean, List, ID
 from shapely import geometry
 from datetime import datetime
 from dateutil import parser
+from flask import g
 import base64
 from api import db
 from api.graphql.object import User, Shift, Location, LocationInput
@@ -42,11 +43,10 @@ class CreateShift(Mutation):
         start_time = String(required=False)
         end_time = String(required=False)
         active = Boolean(required=True)
-        user_id = String(
-            required=True, description="ID of the user who worked this shift")
         locations = List(LocationInput, required=False)
 
-    def mutate(self, info, active, user_id, **kwargs):
+    def mutate(self, info, active, **kwargs):
+        user_id = g.user
         end_time = kwargs.get('end_time', None)
         start_time = kwargs.get('start_time', None)
         locations = kwargs.get('locations', [])
@@ -95,6 +95,9 @@ class AddLocationsToShift(Mutation):
     def mutate(self, info, shift_id, locations):
 
         shift = ShiftModel.query.filter_by(id=shift_id).first()
+        # ensure the user owns this shift
+        assert shift.user_id == g.user
+        # TODO: throw a helpful error.
         for l in locations:
             shift.locations.append(LocationModel(
                 datetime.fromtimestamp(float(l.timestamp)/1000), l.lng, l.lat, shift_id))

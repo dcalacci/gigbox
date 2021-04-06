@@ -18,6 +18,7 @@ def login_required(f):
     '''
     @wraps(f)
     def func(*args, **kwargs):
+        print(request.headers)
 
         if 'authorization' not in request.headers:
             current_app.logger.error("No authorization header found.")
@@ -27,7 +28,7 @@ def login_required(f):
         if user_id is None:
             current_app.logger.error("Token parsed to none")
             raise InvalidTokenError()
-        g.user = db.session.query(User).get(uid=user_id)
+        g.user = str(db.session.query(User).get(user_id))
         # g.user = User.get(user_id)
         if g.user is None:
             current_app.logger.error(

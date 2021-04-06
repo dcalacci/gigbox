@@ -6,7 +6,7 @@ import { store } from './store/store';
 import * as Permissions from 'expo-permissions';
 
 import { request, gql } from 'graphql-request';
-import { graphqlUri } from './utils';
+import { graphqlUri, getClient } from './utils';
 
 interface Location {
     point: {
@@ -16,15 +16,16 @@ interface Location {
 }
 
 export const hasActiveShift = async () => {
-    const userId = store.getState().auth.userId;
-    const data = await request(
-        graphqlUri,
-        gql`query {
-                getActiveShift(userId: "${userId}") {
+    const client = getClient(store);
+    const data = await client.request(
+        gql`
+            query {
+                getActiveShift {
                     id
                     active
                 }
-            }`
+            }
+        `
     );
 
     // returns null if there's no active shift
@@ -33,6 +34,7 @@ export const hasActiveShift = async () => {
 };
 
 export const addLocationsToShift = async (shiftId: string, locations: Location[]) => {
+    const client = getClient(store);
     const locs = locations.map((l) => {
         return {
             lat: l.point.coordinates[1],
@@ -46,7 +48,7 @@ export const addLocationsToShift = async (shiftId: string, locations: Location[]
     };
     const mutation = `mutation AddLocations($ShiftId: ID!, $Locations: [LocationInput]!) {
         addLocationsToShift(shiftId: $ShiftId, locations: $Locations) { shift { id, locations { geom, timestamp }} }}`;
-    return await request(graphqlUri, mutation, variables);
+    return await client.request(mutation, variables);
 };
 
 //TODO: #6 occasionally tasks show up as undefined, or as being not registered on app reload.

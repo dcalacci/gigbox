@@ -42,7 +42,6 @@ export default function TrackingBar() {
 
     if (shiftStatus.isLoading) console.log('Tracking bar loading...');
     if (shiftStatus.isError) console.log(`tracking bar Error! ${shiftStatus.error}`);
-    console.log('Shiftstatus:', shiftStatus);
 
     const activeShift = shiftStatus.data?.getActiveShift ? shiftStatus.data.getActiveShift.active : false
 

@@ -1,64 +1,59 @@
 import { request, gql } from 'graphql-request';
-import { graphqlUri } from '../../utils';
+import { graphqlUri, getClient } from '../../utils';
 import { store } from '../../store/store';
 
-//TODO: our user ID changes after login for some reason, perhaps from redux-persist.
-// not sure why or what's going on.
+//TODO: get userId and JWT as part of authentication headers and include this authentication in the graphql endpoints
 
-//TODO: use exported types for output of this
 export const fetchActiveShift = () => {
-    const userId = store.getState().auth.userId;
-    return request(
-        graphqlUri,
-        gql`query {
-                getActiveShift(userId: "${userId}") {
-                    id
-                    active
-                    startTime
-                    locations {
+    const client = getClient(store);
+    const query = gql`
+        query {
+            getActiveShift {
+                id
+                active
+                startTime
+                locations {
                     id
                     geom
                     timestamp
-                    }
                 }
-            }`
-    );
+            }
+        }
+    `;
+    return client.request(query);
 };
 
 export const endShift = (shiftId: string) => {
-    const userId = store.getState().auth.userId;
-    const jwt = store.getState().auth.jwt;
-
-    console.log('Ending shift!');
-    return request(
-        graphqlUri,
-        gql`mutation {
+    const client = getClient(store);
+    const query = gql`mutation {
                 endShift(shiftId: "${shiftId}") {
                     shift {
                         id
                         endTime
                         active
                     }
-                }
-            }`
-    );
+    }
+            }`;
+
+    console.log('Ending shift!');
+    return client.request(query);
 };
 
 export const createShift = () => {
-    const userId = store.getState().auth.userId;
-    const jwt = store.getState().auth.jwt;
+    const client = getClient(store);
 
-    console.log('Creating shift!');
-    return request(
-        graphqlUri,
-        gql`mutation {
-                createShift(active: true, userId: "${userId}") {
-                    shift {
-                        id
-                        endTime
-                        active
-                    }
+    const query = gql`
+        mutation {
+            createShift(active: true) {
+                shift {
+                    id
+                    endTime
+                    active
                 }
-            }`
-    );
+            }
+        }
+    `;
+    console.log('Creating shift!');
+
+    return client.request(query);
 };

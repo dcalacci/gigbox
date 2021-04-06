@@ -8,6 +8,7 @@ from api.controllers.errors import custom_errors
 from api.controllers import auth
 from api.schema import schema
 from config import Config
+from api.controllers.auth.decorators import login_required
 
 
 #TODO: IMPORTANT
@@ -29,9 +30,14 @@ def create_app(env):
     # dummy_middleware = DummyMiddleware()
 
     # OR app.schema import schema..
+    # @app.route('/graphql', methods=['GET', 'POST'])
+    def graphql_endpoint():
+        view = GraphQLView.as_view("graphql", schema=schema, graphiql=True)
+        return login_required(view)
+
     app.add_url_rule(
         '/graphql',
-        view_func=GraphQLView.as_view("graphql", schema=schema, graphiql=True)
+        view_func=graphql_endpoint()
         # middleware=[dummy_middleware])
     )
 
@@ -46,10 +52,6 @@ def create_app(env):
     @app.teardown_appcontext
     def shutdown_session(exception=None):
         db.session.remove()
-
-    @app.route("/")
-    def test():
-        return "Test ok!"
 
     api_bp = Blueprint('api', __name__)
     api = Api(api_bp, errors=custom_errors)
