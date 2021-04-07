@@ -13,15 +13,17 @@ from api.models import User as UserModel, Shift as ShiftModel
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
 
+    allShifts = SQLAlchemyConnectionField(Shift)
+
     shifts = graphene.List(Shift,
-                           first=graphene.Int(),
-                           skip=graphene.Int(),
+                           cursor=graphene.Int(),
+                           n=graphene.Int(),
                            after=graphene.DateTime(),
                            before=graphene.DateTime())
 
     # doing pagination as in https://www.howtographql.com/graphql-python/8-pagination/
     @login_required
-    def resolve_shifts(self, info, first=None, skip=None, after=None, before=None):
+    def resolve_shifts(self, info,  cursor=None, n=None, after=None, before=None):
         qs = ShiftModel.query
 
         if after:
@@ -30,12 +32,14 @@ class Query(graphene.ObjectType):
         if before:
             qs = qs.filter(ShiftModel.start_time < before)
 
-        if skip:
-            qs = qs[skip:]
+        if cursor:
+            qs = qs[cursor:]
 
-        if first:
-            qs = qs[:first]
+        if n:
+            qs = qs[:n]
         return qs
+        # return {"shifts": qs,
+        #         "nextCursor": cursor + n}
 
     # userList = SQLAlchemyConnectionField(User)
 

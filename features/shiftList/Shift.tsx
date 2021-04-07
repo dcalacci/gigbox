@@ -3,39 +3,56 @@ import { View, Text, SafeAreaView } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { RootState } from '../../store/index';
-import { getShiftList } from './shiftListSlice';
 import { FlatList } from 'react-native-gesture-handler';
 
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from 'react-query';
+import { getShifts } from './api';
+
 const ShiftCard = (props: any) => {
-    console.log('shift: ', props.item);
     return (
-        <View key={props.item.id}>
+        <View key={props.item.node.id}>
             <Text>
-                Start time: {props.item.startTime}
-                End Time: {props.item.endTime}
+                Start time: {props.item.node.startTime}
+                End Time: {props.item.node.endTime}
             </Text>
         </View>
     );
 };
 
 export default function ShiftList() {
-    const shifts = useSelector((state: RootState): any[] => state.shiftList.shifts);
-    const dispatch = useDispatch();
+    const queryClient = useQueryClient();
+    const n = 10;
+    const fetchShifts = ({ pageParam = null }) => {
+        return getShifts(n, pageParam);
+    };
+    const {
+        data,
+        error,
+        fetchNextPage,
+        hasNextPage,
+        isFetching,
+        isFetchingNextPage,
+        status,
+    } = useInfiniteQuery('shifts', fetchShifts, {
+        getNextPageParam: (lastPage, pages) => {
+            console.log(lastPage, data, error);
+            return lastPage.allShifts.pageInfo.endCursor;
+        },
+    });
 
-    useEffect(() => {
-        console.log('GETTING SHIFT LIST');
-        dispatch(getShiftList({ limit: 10, last: null }));
-        //TODO GetShiftsFromServer
-    }, []);
-
-    return (
+    const flattened_data = data?.pages.map((a) => a.allShifts.edges).flat();
+    console.log('flattened:', flattened_data);
+    return status === 'loading' ? (
+        <Text>Loading...</Text>
+    ) : status === 'error' ? (
+        <Text>Error: {error.message}</Text>
+    ) : (
         <SafeAreaView>
             <FlatList
-                data={shifts}
+                data={flattened_data}
                 renderItem={ShiftCard}
-                keyExtractor={(shift) => shift.id}
+                keyExtractor={(shift) => shift.node.id}
             ></FlatList>
         </SafeAreaView>
     );
 }
-
