@@ -5,8 +5,8 @@ from dateutil import parser
 from flask import g
 import base64
 from api import db
-from api.graphql.object import User, Shift, Location, LocationInput
-from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel
+from api.graphql.object import User, Shift, Location, LocationInput, EmployerInput
+from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Employer as EmployerModel
 
 # we use a traditional REST endpoint to create JWT tokens and for first login
 # So, honestly, unsure if we need a Createuser mutation. We will only ever create
@@ -104,6 +104,27 @@ class AddLocationsToShift(Mutation):
         db.session.add(shift)
         db.session.commit()
         return AddLocationsToShift(shift=shift)
+
+
+class SetShiftEmployers(Mutation):
+    shift = Field(lambda: Shift,
+                  description="Shift to update")
+
+    class Arguments:
+        shift_id = ID(
+            required=True,
+            description="ID of the shift to set employers for")
+        employers = List(EmployerInput)
+
+    def mutate(self, info, shift_id, employers):
+        shift = db.session.get(shift_id)
+        assert shift.user_id == g.user
+        for e in employers:
+            shift.employers.append(EmployerModel(
+                name=e.name, shift_id=shift.id))
+        db.session.add(shift)
+        db.session.commit()
+        return SetShiftEmployers()
 
 
 class Mutation(ObjectType):

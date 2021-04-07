@@ -47,7 +47,7 @@ export const createShift = () => {
             createShift(active: true) {
                 shift {
                     id
-                    endTime
+                    startTime
                     active
                 }
             }

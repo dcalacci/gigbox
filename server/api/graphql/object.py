@@ -3,7 +3,7 @@ from graphene import relay, Field, UUID, String
 from graphene_sqlalchemy import SQLAlchemyObjectType
 from graphene_sqlalchemy.types import ORMField
 import base64
-from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Geometry_WKT
+from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Employer as EmployerModel, Geometry_WKT, EmployerNames
 
 
 class User(SQLAlchemyObjectType):
@@ -19,11 +19,22 @@ class Shift(SQLAlchemyObjectType):
 
     # resolve locations for this shift
     locations = graphene.List(lambda: Location)
+    employers = graphene.List(lambda: Employer)
 
     def resolve_locations(self, info):
         query = Location.get_query(info=info)
         query = query.filter(LocationModel.shift_id == self.id)
         return query.all()
+
+    def resolve_employers(self, info):
+        query = Employer.get_query(info=info)
+        query = query.filter(EmployerModel.shift_id == self.id)
+        return query.all()
+
+
+class Employer(SQLAlchemyObjectType):
+    class Meta:
+        model = EmployerModel
 
 
 class Location(SQLAlchemyObjectType):
@@ -40,6 +51,10 @@ class Location(SQLAlchemyObjectType):
     #     return {"lat": shp.y,
     #             "lng": shp.x}
     timestamp = ORMField(model_attr='timestamp')
+
+
+class EmployerInput(graphene.InputObjectType):
+    name = graphene.Enum.from_enum(EmployerNames)
 
 
 class LocationInput(graphene.InputObjectType):

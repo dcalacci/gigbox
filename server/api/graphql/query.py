@@ -1,8 +1,11 @@
 import graphene
 from graphene import relay
 from graphene_sqlalchemy import SQLAlchemyConnectionField
+from dateutil import parser
+from graphql import GraphQLError
 from flask import g
 
+from api.controllers.auth.decorators import login_required
 from api.graphql.object import User, Shift, Location
 from api.models import User as UserModel, Shift as ShiftModel
 
@@ -10,17 +13,35 @@ from api.models import User as UserModel, Shift as ShiftModel
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
 
-    # shifts = graphene.relay.Node.Field(Shift)
-    # shiftList = SQLAlchemyConnectionField(Shift)
+    shifts = graphene.List(Shift,
+                           first=graphene.Int(),
+                           skip=graphene.Int(),
+                           after=graphene.DateTime(),
+                           before=graphene.DateTime())
 
-    # locations = graphene.relay.Node.Field(Location)
-    # locationList = SQLAlchemyConnectionField(Location)
+    # doing pagination as in https://www.howtographql.com/graphql-python/8-pagination/
+    @login_required
+    def resolve_shifts(self, info, first=None, skip=None, after=None, before=None):
+        qs = ShiftModel.query
 
-    # users = graphene.relay.Node.Field(User)
+        if after:
+            qs = qs.filter(ShiftModel.start_time > after)
+
+        if before:
+            qs = qs.filter(ShiftModel.start_time < before)
+
+        if skip:
+            qs = qs[skip:]
+
+        if first:
+            qs = qs[:first]
+        return qs
+
     # userList = SQLAlchemyConnectionField(User)
 
     getActiveShift = graphene.Field(Shift)
 
+    @login_required
     def resolve_getActiveShift(self, info):
         userId = str(g.user)
         print("Getting shift for user:", userId)

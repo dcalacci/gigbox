@@ -33,7 +33,8 @@ def create_app(env):
     # @app.route('/graphql', methods=['GET', 'POST'])
     def graphql_endpoint():
         view = GraphQLView.as_view("graphql", schema=schema, graphiql=True)
-        return login_required(view)
+        return view
+        # return login_required(view)
 
     app.add_url_rule(
         '/graphql',

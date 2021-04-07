@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { tailwind } from 'tailwind';
+import { useToast } from 'react-native-fast-toast';
 
 import { RootState } from '../../store/index';
 import Toggle from '../../components/Toggle';
@@ -16,13 +17,12 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { fetchActiveShift, endShift, createShift } from './api';
 
-import EmployerBoxes from '../../components/EmployerBox';
-
 export default function TrackingBar() {
+    const toast = useToast();
     const queryClient = useQueryClient();
     const auth = useSelector((state: RootState): AuthState => state.auth);
     const shiftStatus = useQuery('activeShift', fetchActiveShift, {
-        placeholderData: { getActiveShift: {active: false}}
+        /* placeholderData: { getActiveShift: { active: false } }, */
     });
     const endActiveShift = useMutation(endShift, {
         onSuccess: (data, variables, context) => {
@@ -41,9 +41,14 @@ export default function TrackingBar() {
     const dispatch = useDispatch();
 
     if (shiftStatus.isLoading) console.log('Tracking bar loading...');
-    if (shiftStatus.isError) console.log(`tracking bar Error! ${shiftStatus.error}`);
+    if (shiftStatus.isError) {
+        console.log(`tracking bar Error! ${shiftStatus.error}`);
+        toast?.show(`Problem loading shifts: ${shiftStatus.error}`);
+    }
 
-    const activeShift = shiftStatus.data?.getActiveShift ? shiftStatus.data.getActiveShift.active : false
+    const activeShift = shiftStatus.data?.getActiveShift
+        ? shiftStatus.data.getActiveShift.active
+        : false;
 
     const [elapsedTime, setElapsedTime] = useState<string>(formatElapsedTime(null));
 
@@ -72,28 +77,36 @@ export default function TrackingBar() {
 
     const textStyle = [tailwind('text-lg'), activeShift ? tailwind('font-semibold') : null];
 
-    return (
-        <View style={[tailwind(''), activeShift ? tailwind('bg-green-500') : null]}>
-            <View
-                style={[
-                    tailwind(
-                        'flex-shrink flex-row justify-around items-center border-b-4 p-3 border-green-600 h-16 bg-white'
-                    ),
-                    activeShift ? tailwind('bg-green-500') : null,
-                ]}
-            >
-                <Toggle
-                    title={activeShift ? 'Tracking Shift' : 'Clock In'}
-                    activeText="On"
-                    inactiveText="Off"
-                    value={activeShift}
-                    onToggle={onTogglePress}
-                />
-                <View style={tailwind('flex-grow-0')}>
-                    <Text style={textStyle}>0.0mi</Text>
-                    <Text style={textStyle}>{elapsedTime}</Text>
+    if (!shiftStatus.isLoading && !shiftStatus.isError) {
+        return (
+            <View style={[tailwind(''), activeShift ? tailwind('bg-green-500') : null]}>
+                <View
+                    style={[
+                        tailwind(
+                            'flex-shrink flex-row justify-around items-center border-b-4 p-3 border-green-600 h-16 bg-white'
+                        ),
+                        activeShift ? tailwind('bg-green-500') : null,
+                    ]}
+                >
+                    <Toggle
+                        title={activeShift ? 'Tracking Shift' : 'Clock In'}
+                        activeText="On"
+                        inactiveText="Off"
+                        value={activeShift}
+                        onToggle={onTogglePress}
+                    />
+                    <View style={tailwind('flex-grow-0')}>
+                        <Text style={textStyle}>0.0mi</Text>
+                        <Text style={textStyle}>{elapsedTime}</Text>
+                    </View>
                 </View>
             </View>
-        </View>
-    );
+        );
+    } else {
+        return (
+            <View>
+                <Text>Loading...</Text>
+            </View>
+        );
+    }
 }

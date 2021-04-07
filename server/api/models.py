@@ -44,34 +44,6 @@ engine = create_engine(db_uri)
 # have to import scalar from engine, not db....
 
 
-class EmployerNames(enum.Enum):
-    DOORDASH = "DoorDash"
-    INSTACART = "Instacart"
-    SHIPT = "Shipt"
-    GRUBHUB = "GrubHub"
-    UBEREATS = "UberEats"
-
-
-class Employer(db.Model):
-    __tablename__ = "employers"
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.Enum(EmployerNames))
-
-    def __init__(self, name):
-        self.name = name
-
-
-@listens_for(Employer.__table__, 'after_create')
-def insert_initial_values(*args, **kwargs):
-    print("Adding employer data...")
-    db.session.add(Employer(name=EmployerNames.DOORDASH))
-    db.session.add(Employer(name=EmployerNames.INSTACART))
-    db.session.add(Employer(name=EmployerNames.SHIPT))
-    db.session.add(Employer(name=EmployerNames.UBEREATS))
-    db.session.add(Employer(name=EmployerNames.GRUBHUB))
-    db.session.commit()
-
-
 class Geometry_WKT(graphene.Scalar):
     '''Geometry WKT custom type.'''
     name = "Geometry WKT"
@@ -126,6 +98,8 @@ class Shift(db.Model):
     locations = db.relationship("Location",
                                 backref=backref('shift',
                                                 cascade='all, delete'))
+    employers = db.relationship("Employer",
+                                backref=backref('shift', cascade="all, delete"))
 
     # I looked for a way to enforce the idea that only one shift per user ID could
     # be active at a time, but didn't figure out a way to enforce it in sqlalchemy...
@@ -134,6 +108,36 @@ class Shift(db.Model):
 
     def __repr__(self):
         return f"Shift from {self.start_time} to {self.end_time} for user {self.user_id}"
+
+
+class EmployerNames(enum.Enum):
+    DOORDASH = "DoorDash"
+    INSTACART = "Instacart"
+    SHIPT = "Shipt"
+    GRUBHUB = "GrubHub"
+    UBEREATS = "UberEats"
+
+
+class Employer(db.Model):
+    __tablename__ = "employers"
+    id = db.Column(db.Integer, primary_key=True)
+    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id))
+    name = db.Column(db.Enum(EmployerNames))
+
+    def __init__(self, name, shift_id):
+        self.name = name
+        self.shift_id = shift_id
+
+
+@listens_for(Employer.__table__, 'after_create')
+def insert_initial_values(*args, **kwargs):
+    print("Adding employer data...")
+    db.session.add(Employer(name=EmployerNames.DOORDASH))
+    db.session.add(Employer(name=EmployerNames.INSTACART))
+    db.session.add(Employer(name=EmployerNames.SHIPT))
+    db.session.add(Employer(name=EmployerNames.UBEREATS))
+    db.session.add(Employer(name=EmployerNames.GRUBHUB))
+    db.session.commit()
 
 
 class Location(db.Model):

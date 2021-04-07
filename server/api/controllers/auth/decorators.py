@@ -1,6 +1,7 @@
 # api/controllers/auth/decorators.py
 # Decorators for API functions to ensure users are logged in and accessing resources they are
 # authorized for.
+from graphql import GraphQLError
 from flask import current_app
 from flask_restful import reqparse, abort, Resource
 from flask import Blueprint, request, jsonify, g
