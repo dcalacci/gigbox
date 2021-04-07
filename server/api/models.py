@@ -11,10 +11,12 @@ from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import func  # for datetimes
 from sqlalchemy import create_engine
 from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.event import listens_for
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import from_shape
 from shapely import geometry
 from uuid import uuid4
+import enum
 import os
 
 db = SQLAlchemy()
@@ -40,6 +42,34 @@ db_uri = "postgresql://" + os.environ["DB_USERNAME"] + ":" \
 engine = create_engine(db_uri)
 
 # have to import scalar from engine, not db....
+
+
+class EmployerNames(enum.Enum):
+    DOORDASH = "DoorDash"
+    INSTACART = "Instacart"
+    SHIPT = "Shipt"
+    GRUBHUB = "GrubHub"
+    UBEREATS = "UberEats"
+
+
+class Employer(db.Model):
+    __tablename__ = "employers"
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.Enum(EmployerNames))
+
+    def __init__(self, name):
+        self.name = name
+
+
+@listens_for(Employer.__table__, 'after_create')
+def insert_initial_values(*args, **kwargs):
+    print("Adding employer data...")
+    db.session.add(Employer(name=EmployerNames.DOORDASH))
+    db.session.add(Employer(name=EmployerNames.INSTACART))
+    db.session.add(Employer(name=EmployerNames.SHIPT))
+    db.session.add(Employer(name=EmployerNames.UBEREATS))
+    db.session.add(Employer(name=EmployerNames.GRUBHUB))
+    db.session.commit()
 
 
 class Geometry_WKT(graphene.Scalar):
