@@ -1,10 +1,12 @@
 from graphene import Mutation, Float, DateTime, Field, String, Boolean, List, ID, ObjectType
+from graphql_relay.node.node import from_global_id
 from shapely import geometry
 from datetime import datetime
 from dateutil import parser
 from flask import g
 import base64
 from api import db
+from api.controllers.auth.decorators import login_required
 from api.graphql.object import User, Shift, Location, LocationInput, EmployerInput
 from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Employer as EmployerModel
 
@@ -45,6 +47,7 @@ class CreateShift(Mutation):
         active = Boolean(required=True)
         locations = List(LocationInput, required=False)
 
+    @login_required
     def mutate(self, info, active, **kwargs):
         user_id = g.user
         end_time = kwargs.get('end_time', None)
@@ -71,9 +74,11 @@ class EndShift(Mutation):
     class Arguments:
         shift_id = String(required=True, description="ID of the shift to end")
 
+    @login_required
     def mutate(self, info, shift_id):
+        shift_id = from_global_id(shift_id)[1]
         end_time = datetime.utcnow()
-        shift = db.session.query(ShiftModel).get(shift_id)
+        shift = db.session.query(ShiftModel).filter_by(id=shift_id).first()
         shift.end_time = end_time
         shift.active = False
         db.session.add(shift)
@@ -92,7 +97,9 @@ class AddLocationsToShift(Mutation):
         # locationinput should be lat,lng,timestamp
         locations = List(LocationInput)
 
+    @login_required
     def mutate(self, info, shift_id, locations):
+        shift_id = from_global_id(shift_id)[1]
 
         shift = ShiftModel.query.filter_by(id=shift_id).first()
         # ensure the user owns this shift
@@ -117,6 +124,8 @@ class SetShiftEmployers(Mutation):
         employers = List(EmployerInput)
 
     def mutate(self, info, shift_id, employers):
+
+        shift_id = from_global_id(shift_id)[1]
         shift = db.session.get(shift_id)
         assert shift.user_id == g.user
         for e in employers:

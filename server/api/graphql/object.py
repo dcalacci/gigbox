@@ -15,7 +15,8 @@ class User(SQLAlchemyObjectType):
 class Shift(SQLAlchemyObjectType):
     class Meta:
         model = ShiftModel
-        interfaces = (graphene.Node, relay.Node)
+        # interfaces = (graphene.Node, relay.Node)
+        interfaces = [graphene.Node]
         # interfaces = (relay.Node,)
 
     # resolve locations for this shift
