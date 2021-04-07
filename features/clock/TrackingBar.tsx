@@ -27,6 +27,7 @@ export default function TrackingBar() {
     const endActiveShift = useMutation(endShift, {
         onSuccess: (data, variables, context) => {
             queryClient.invalidateQueries('activeShift');
+            queryClient.invalidateQueries('shifts');
             stopGettingBackgroundLocation();
         },
     });
@@ -34,6 +35,7 @@ export default function TrackingBar() {
     const createActiveShift = useMutation(createShift, {
         onSuccess: (data, variables, context) => {
             queryClient.invalidateQueries('activeShift');
+            queryClient.invalidateQueries('shifts');
             startGettingBackgroundLocation();
         },
     });

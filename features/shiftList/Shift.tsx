@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, FunctionComponent } from 'react';
 import { View, Text, SafeAreaView } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 
@@ -9,10 +9,10 @@ import moment from 'moment';
 
 import { tailwind } from 'tailwind';
 import { getShifts } from './api';
-import { RootState } from '../../store/index';
+
 const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
     const calendarStart = moment(props.item.node.startTime).calendar();
-    const endTime = moment(props.item.node.endTime).format('LT');
+    const endTime = props.item.node.endTime ? moment(props.item.node.endTime).format('LT') : "Now"
     const timeString = `${calendarStart} to ${endTime}`;
     return (
         <View style={tailwind('flex-1 w-full p-2 mb-10')} key={props.item.node.id}>
@@ -38,6 +38,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
 };
 
 export default function ShiftList() {
+    const [refreshing, setRefreshing] = useState(false)
     const queryClient = useQueryClient();
     const n = 10;
     const fetchShifts = ({ pageParam = null }) => {
@@ -58,6 +59,13 @@ export default function ShiftList() {
         },
     });
 
+
+    const onRefresh = () =>  {
+        console.log("invalidating all shift queries...")
+        setRefreshing(true)
+        queryClient.invalidateQueries('shifts')
+    }
+
     const flattened_data = data?.pages.map((a) => a.allShifts.edges).flat();
     console.log('flattened:', flattened_data);
     return status === 'loading' ? (
@@ -69,6 +77,8 @@ export default function ShiftList() {
             <FlatList
                 data={flattened_data}
                 renderItem={ShiftCard}
+                onRefresh={onRefresh}
+                refreshing={refreshing}
                 keyExtractor={(shift) => shift.node.id}
             ></FlatList>
         </SafeAreaView>

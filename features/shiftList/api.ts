@@ -6,7 +6,7 @@ export const getShifts = (first: Number, after: String) => {
     const client = getClient(store);
     const query = gql`
         query FetchShifts($first: Int, $after: String) {
-            allShifts(first: $first, after: $after, sort: startTime_asc) {
+            allShifts(first: $first, after: $after, sort: START_TIME_DESC) {
                 pageInfo {
                     hasNextPage
                     endCursor
@@ -25,6 +25,7 @@ export const getShifts = (first: Number, after: String) => {
             }
         }
     `;
+    const sort = 'startTime_asc';
     const variables = {
         first,
         after,
