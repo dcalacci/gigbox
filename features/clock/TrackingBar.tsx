@@ -16,6 +16,7 @@ import {
 } from '../../tasks';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { fetchActiveShift, endShift, createShift } from './api';
+import { log } from '../../utils';
 
 export default function TrackingBar() {
     const toast = useToast();
@@ -30,6 +31,21 @@ export default function TrackingBar() {
             queryClient.invalidateQueries('shifts');
             stopGettingBackgroundLocation();
         },
+
+        onMutate: async (data) => {
+            await queryClient.cancelQueries('activeShift');
+            const previousShift = queryClient.getQueryData('activeShift');
+            log.info('Providing mutate with optimistic data...');
+            queryClient.setQueryData('activeShift', () => ({
+                getActiveShift: { active: false, startTime: new Date() },
+            }));
+            return { previousShift };
+        },
+        onError: (err, newShift, context) => {
+            log.error(`Problem ending shift: ${err}`)
+            queryClient.setQueryData('activeShift', context.previousShift);
+            toast?.show("Encountered a problem ending your shift... Try again?");
+        }
     });
 
     const createActiveShift = useMutation(createShift, {
@@ -38,13 +54,31 @@ export default function TrackingBar() {
             queryClient.invalidateQueries('shifts');
             startGettingBackgroundLocation();
         },
+
+        onMutate: async (data) => {
+            await queryClient.cancelQueries('activeShift');
+            const previousShift = queryClient.getQueryData('activeShift');
+            log.info('Providing mutate with optimistic data...');
+            queryClient.setQueryData('activeShift', () => ({
+                getActiveShift: { active: true, startTime: new Date() },
+            }));
+            return { previousShift };
+        },
+        onError: (err, newShift, context) => {
+            log.error(`Problem starting shift: ${err}, ${context}`)
+            queryClient.setQueryData('activeShift', context.previousShift);
+            toast?.show("Couldn't start a shift. Try again?");
+        },
+        onSettled: () => {
+            queryClient.invalidateQueries('activeShift');
+        },
     });
 
     const dispatch = useDispatch();
 
-    if (shiftStatus.isLoading) console.log('Tracking bar loading...');
+    if (shiftStatus.isLoading) log.info('Tracking bar loading...');
     if (shiftStatus.isError) {
-        console.log(`tracking bar Error! ${shiftStatus.error}`);
+        log.error(`tracking bar Error! ${shiftStatus.error}`);
         toast?.show(`Problem loading shifts: ${shiftStatus.error}`);
     }
 
@@ -72,7 +106,7 @@ export default function TrackingBar() {
         if (!activeShift) {
             createActiveShift.mutate();
         } else {
-            console.log('Ending shift ', shiftStatus.data.getActiveShift.id);
+            log.info('Ending shift ', shiftStatus.data.getActiveShift.id);
             endActiveShift.mutate(shiftStatus.data.getActiveShift.id);
         }
     };

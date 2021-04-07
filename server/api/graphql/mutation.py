@@ -88,8 +88,9 @@ class EndShift(Mutation):
 
 class AddLocationsToShift(Mutation):
     """Adds a list of locations to a given shift"""
-    shift = Field(lambda: Shift,
-                  description="Shift that was updated")
+    location = Field(lambda: Location,
+                     description="latest location added to shift")
+    ok = Field(lambda: Boolean)
 
     class Arguments:
         shift_id = ID(
@@ -110,7 +111,7 @@ class AddLocationsToShift(Mutation):
                 datetime.fromtimestamp(float(l.timestamp)/1000), l.lng, l.lat, shift_id))
         db.session.add(shift)
         db.session.commit()
-        return AddLocationsToShift(shift=shift)
+        return AddLocationsToShift(location=shift.locations[-1], ok=True)
 
 
 class SetShiftEmployers(Mutation):

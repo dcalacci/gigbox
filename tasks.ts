@@ -6,7 +6,7 @@ import { store } from './store/store';
 import * as Permissions from 'expo-permissions';
 
 import { request, gql } from 'graphql-request';
-import { graphqlUri, getClient } from './utils';
+import { log, getClient } from './utils';
 
 interface Location {
     point: {
@@ -46,8 +46,17 @@ export const addLocationsToShift = async (shiftId: string, locations: Location[]
         ShiftId: shiftId,
         Locations: locs,
     };
-    const mutation = `mutation AddLocations($ShiftId: ID!, $Locations: [LocationInput]!) {
-        addLocationsToShift(shiftId: $ShiftId, locations: $Locations) { shift { id, locations { geom, timestamp }} }}`;
+    const mutation = gql`
+        mutation AddLocations($ShiftId: ID!, $Locations: [LocationInput]!) {
+            addLocationsToShift(shiftId: $ShiftId, locations: $Locations) {
+                location {
+                    geom
+                    timestamp
+                }
+                ok
+            }
+        }
+    `;
     return await client.request(mutation, variables);
 };
 
@@ -56,11 +65,11 @@ export const addLocationsToShift = async (shiftId: string, locations: Location[]
 export const registerMileageTask = () => {
     TaskManager.isTaskRegisteredAsync('gigbox.mileageTracker').then((isRegistered) => {
         if (isRegistered) {
-            console.log('gigbox mileage task already registered.');
+            log.debug('gigbox mileage task already registered.');
         } else {
             TaskManager.defineTask('gigbox.mileageTracker', async ({ data, error }) => {
                 if (error) {
-                    console.log('error message:', error.message);
+                    log.error('problem defining mileage tracker task:', error.message);
                     return;
                 }
                 const shiftResponse = await hasActiveShift();
@@ -76,7 +85,10 @@ export const registerMileageTask = () => {
                         };
                         return obj;
                     }) as Location[];
+                    //TODO: reduce the amount of data coming back from server to make response time better
+                    // i.e. get only latest location point, or just an 'ok'
                     const data = await addLocationsToShift(shiftResponse.id, locs);
+                    log.info('Sent location data:', data);
                     //TODO: collect errors in adding locations, or save them to a cache
                 }
             });
@@ -112,13 +124,13 @@ export const startGettingBackgroundLocation = async () => {
             notificationColor: '#ffffff',
         },
         activityType: Loc.ActivityType.AutomotiveNavigation,
-    }).then(() => console.log('Location task registered.'));
+    }).then(() => log.info('Location task registered.'));
 };
 
 /**
  * Stops background location task
  */
 export const stopGettingBackgroundLocation = () => {
-    console.log('Stopping location updates...');
+    log.info('Stopping location updates...');
     Loc.stopLocationUpdatesAsync('gigbox.mileageTracker');
 };

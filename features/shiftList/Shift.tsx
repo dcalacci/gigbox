@@ -7,12 +7,13 @@ import { FlatList } from 'react-native-gesture-handler';
 
 import moment from 'moment';
 
+import { log } from '../../utils'
 import { tailwind } from 'tailwind';
 import { getShifts } from './api';
 
 const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
     const calendarStart = moment(props.item.node.startTime).calendar();
-    const endTime = props.item.node.endTime ? moment(props.item.node.endTime).format('LT') : "Now"
+    const endTime = props.item.node.endTime ? moment(props.item.node.endTime).format('LT') : 'Now';
     const timeString = `${calendarStart} to ${endTime}`;
     return (
         <View style={tailwind('flex-1 w-full p-2 mb-10')} key={props.item.node.id}>
@@ -26,7 +27,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                     'self-start bg-transparent border mt-1 ml-1 mr-4 p-1 w-full h-full'
                 )}
             >
-                <View style={tailwind("p-2")}>
+                <View style={tailwind('p-2')}>
                     <Text style={tailwind('text-black text-xl font-bold')}>
                         {moment(props.item.node.startTime).fromNow()}
                     </Text>
@@ -38,7 +39,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
 };
 
 export default function ShiftList() {
-    const [refreshing, setRefreshing] = useState(false)
+    const [refreshing, setRefreshing] = useState(false);
     const queryClient = useQueryClient();
     const n = 10;
     const fetchShifts = ({ pageParam = null }) => {
@@ -54,33 +55,40 @@ export default function ShiftList() {
         status,
     } = useInfiniteQuery('shifts', fetchShifts, {
         getNextPageParam: (lastPage, pages) => {
-            console.log(lastPage, data, error);
             return lastPage.allShifts.pageInfo.endCursor;
         },
     });
 
-
-    const onRefresh = () =>  {
-        console.log("invalidating all shift queries...")
-        setRefreshing(true)
-        queryClient.invalidateQueries('shifts')
-    }
+    // TODO: unclear why this refresh does not work but our job list one does
+    const onRefresh = () => {
+        log.info('invalidating all shift queries...');
+        setRefreshing(true);
+        queryClient.invalidateQueries('shifts');
+    };
 
     const flattened_data = data?.pages.map((a) => a.allShifts.edges).flat();
-    console.log('flattened:', flattened_data);
-    return status === 'loading' ? (
-        <Text>Loading...</Text>
-    ) : status === 'error' ? (
-        <Text>Error: {error.message}</Text>
-    ) : (
-        <SafeAreaView>
-            <FlatList
-                data={flattened_data}
-                renderItem={ShiftCard}
-                onRefresh={onRefresh}
-                refreshing={refreshing}
-                keyExtractor={(shift) => shift.node.id}
-            ></FlatList>
-        </SafeAreaView>
-    );
+    /* console.log('flattened:', flattened_data); */
+    /* return status === 'loading' ? ( */
+    /*     <Text>Loading...</Text> */
+    /* ) : status === 'error' ? ( */
+    /*     <Text>Error: {error.message}</Text> */
+    /* ) : ( */
+    /*         ); */
+    if (status === 'loading') {
+        return <Text> Loading...</Text>;
+    } else if (status === 'error') {
+        return <Text>Error: {error.message}</Text>;
+    } else {
+        return (
+            <SafeAreaView>
+                <FlatList
+                    data={flattened_data}
+                    renderItem={ShiftCard}
+                    onRefresh={onRefresh}
+                    refreshing={refreshing}
+                    keyExtractor={(shift) => shift.node.id}
+                ></FlatList>
+            </SafeAreaView>
+        );
+    }
 }

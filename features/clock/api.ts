@@ -1,5 +1,5 @@
 import { request, gql } from 'graphql-request';
-import { graphqlUri, getClient } from '../../utils';
+import { log, getClient } from '../../utils';
 import { store } from '../../store/store';
 
 //TODO: get userId and JWT as part of authentication headers and include this authentication in the graphql endpoints
@@ -52,7 +52,7 @@ export const createShift = () => {
             }
         }
     `;
-    console.log('Creating shift!');
+    log.info('Submitted create shift query...');
 
     return client.request(query);
 };

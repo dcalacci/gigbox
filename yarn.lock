@@ -7587,6 +7587,11 @@ react-native-iphone-x-helper@^1.3.0:
   resolved "https://registry.npmjs.org/react-native-iphone-x-helper/-/react-native-iphone-x-helper-1.3.1.tgz"
   integrity sha512-HOf0jzRnq2/aFUcdCJ9w9JGzN3gdEg0zFE4FyYlp4jtidqU03D5X7ZegGKfT1EWteR0gPBGp9ye5T5FvSWi9Yg==
 
+react-native-logs@^3.0.3:
+  version "3.0.3"
+  resolved "https://registry.yarnpkg.com/react-native-logs/-/react-native-logs-3.0.3.tgz#10bc6a24010dad2bcf9b3b7eacc27f6a3796ed01"
+  integrity sha512-Fnkoe9f1taxY8MiONGdPVaQPDml01i7oSYY+pxk/2fthJv24Z/Tlw22p8dgkuJ3SiwBHc71WlzQ4asKR5FPKbw==
+
 react-native-maps@^0.27.1:
   version "0.27.1"
   resolved "https://registry.npmjs.org/react-native-maps/-/react-native-maps-0.27.1.tgz"
