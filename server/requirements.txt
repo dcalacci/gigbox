@@ -6,16 +6,10 @@ backcall==0.2.0
 click==7.1.2
 decorator==4.4.2
 Flask==1.1.2
-Flask-GraphQL==2.0.1
+Flask-GraphQL
 Flask-Migrate==2.7.0
 Flask-Script==2.0.6
-Flask-SQLAlchemy==2.4.4
 GeoAlchemy2==0.8.4
-graphene==2.1.8
-graphene-sqlalchemy==2.3.0
-graphql-core==2.3.2
-graphql-relay==2.0.1
-graphql-server-core==1.2.0
 greenlet==1.0.0
 ipython==7.21.0
 ipython-genutils==0.2.0
@@ -39,7 +33,6 @@ Rx==1.6.1
 Shapely==1.7.1
 singledispatch==3.6.1
 six==1.15.0
-SQLAlchemy==1.4.0
 starlette==0.13.8
 toml==0.10.2
 traitlets==5.0.5

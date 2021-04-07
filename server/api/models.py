@@ -5,7 +5,7 @@ from geoalchemy2 import func
 import graphene
 from flask_sqlalchemy import SQLAlchemy
 from graphene_sqlalchemy import SQLAlchemyObjectType, SQLAlchemyConnectionField
-from sqlalchemy import Column, DateTime, Integer, Boolean, String, ForeignKey
+from sqlalchemy import Column, DateTime, Integer, Boolean, String, ForeignKey, Index
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import func  # for datetimes
@@ -100,6 +100,8 @@ class Shift(db.Model):
                                                 cascade='all, delete'))
     employers = db.relationship("Employer",
                                 backref=backref('shift', cascade="all, delete"))
+
+    __table_args__ = (Index('index', "id", "start_time"), )
 
     # I looked for a way to enforce the idea that only one shift per user ID could
     # be active at a time, but didn't figure out a way to enforce it in sqlalchemy...

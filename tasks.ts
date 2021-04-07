@@ -76,10 +76,8 @@ export const registerMileageTask = () => {
                         };
                         return obj;
                     }) as Location[];
-                    console.log('dispatching save locations, ...', locs, shiftResponse.id);
                     const data = await addLocationsToShift(shiftResponse.id, locs);
-                    console.log('dispatch result:', data);
-                    // store.dispatch(saveLocations(locs));
+                    //TODO: collect errors in adding locations, or save them to a cache
                 }
             });
         }

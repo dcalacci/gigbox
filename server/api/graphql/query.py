@@ -13,7 +13,8 @@ from api.models import User as UserModel, Shift as ShiftModel
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
 
-    allShifts = SQLAlchemyConnectionField(Shift)
+    allShifts = SQLAlchemyConnectionField(Shift, sort=Shift.sort_argument())
+    print("Allshift field args:", allShifts.args)
 
     shifts = graphene.List(Shift,
                            cursor=graphene.Int(),

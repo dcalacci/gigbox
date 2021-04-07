@@ -35,7 +35,6 @@ export const endShift = (shiftId: string) => {
     }
             }`;
 
-    console.log('Ending shift!');
     return client.request(query);
 };
 

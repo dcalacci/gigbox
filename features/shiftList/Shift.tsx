@@ -2,19 +2,37 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, SafeAreaView } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 
-import { RootState } from '../../store/index';
+import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from 'react-query';
 import { FlatList } from 'react-native-gesture-handler';
 
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from 'react-query';
-import { getShifts } from './api';
+import moment from 'moment';
 
-const ShiftCard = (props: any) => {
+import { tailwind } from 'tailwind';
+import { getShifts } from './api';
+import { RootState } from '../../store/index';
+const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
+    const calendarStart = moment(props.item.node.startTime).calendar();
+    const endTime = moment(props.item.node.endTime).format('LT');
+    const timeString = `${calendarStart} to ${endTime}`;
     return (
-        <View key={props.item.node.id}>
-            <Text>
-                Start time: {props.item.node.startTime}
-                End Time: {props.item.node.endTime}
-            </Text>
+        <View style={tailwind('flex-1 w-full p-2 mb-10')} key={props.item.node.id}>
+            <View
+                style={tailwind(
+                    'self-start absolute bg-transparent border-2 border-green-500 w-full h-full'
+                )}
+            ></View>
+            <View
+                style={tailwind(
+                    'self-start bg-transparent border mt-1 ml-1 mr-4 p-1 w-full h-full'
+                )}
+            >
+                <View style={tailwind("p-2")}>
+                    <Text style={tailwind('text-black text-xl font-bold')}>
+                        {moment(props.item.node.startTime).fromNow()}
+                    </Text>
+                    <Text style={tailwind('text-black text-xl font-bold')}>{timeString}</Text>
+                </View>
+            </View>
         </View>
     );
 };
