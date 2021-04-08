@@ -11,9 +11,6 @@ from config import Config
 from api.controllers.auth.decorators import login_required
 
 
-#TODO: IMPORTANT
-# Change requirements.txt to reflect sqlalchemy version<1.4:
-# https://stackoverflow.com/questions/65610809/retrieving-data-from-rds-gives-attributeerror-sqlalchemy-cimmutabledict-immuta
 def create_app(env):
     app = Flask(__name__)
     app.config['SQLALCHEMY_COMMIT_ON_TEARDOWN'] = True

@@ -23,8 +23,6 @@ const initialState: AuthState = {
     },
 };
 
-//TODO: Split up OTP from general authentication state
-
 const authSlice = createSlice({
     name: 'auth',
     initialState: initialState,
