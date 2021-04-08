@@ -2,6 +2,8 @@ import graphene
 from graphene import relay, Field, UUID, String
 from graphene_sqlalchemy import SQLAlchemyObjectType
 from graphene_sqlalchemy.types import ORMField
+from datetime import datetime
+from dateutil import relativedelta
 import base64
 from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Employer as EmployerModel, Geometry_WKT, EmployerNames
 
@@ -55,6 +57,25 @@ class Location(SQLAlchemyObjectType):
     timestamp = ORMField(model_attr='timestamp')
 
 
+class WeeklySummary(graphene.ObjectType):
+    # earnings = graphene.Float()
+    # expenses = graphene.Float()
+    miles = graphene.Float()
+    # num_jobs = graphene.Int()
+    num_shifts = graphene.Int()
+
+#     def resolve_num_shifts(self, info):
+#         dt_weekago = datetime.now() + relativedelta(weeks=-1)
+#         query = Shift.get_query(info=info)
+#         return query.filter(Shift.start_time > dt_weekago).count()
+
+#     def resolve_miles(self, info):
+#         dt_weekago = datetime.now() + relativedelta(weeks=-1)
+#         query = Location.get_query(info=info)
+#         return query.filter(Location.timestamp > dt_weekago).count()
+
+
+# INPUTS
 class EmployerInput(graphene.InputObjectType):
     name = graphene.Enum.from_enum(EmployerNames)
 

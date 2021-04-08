@@ -1,13 +1,14 @@
 import graphene
 from graphene import relay
 from graphene_sqlalchemy import SQLAlchemyConnectionField
-from dateutil import parser
+from dateutil import parser, relativedelta
+from datetime import datetime
 from graphql import GraphQLError
 from flask import g
 
 from api.controllers.auth.decorators import login_required
-from api.graphql.object import User, Shift, Location
-from api.models import User as UserModel, Shift as ShiftModel
+from api.graphql.object import User, Shift, Location, WeeklySummary
+from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel
 
 
 class Query(graphene.ObjectType):
@@ -52,14 +53,24 @@ class Query(graphene.ObjectType):
         print("Getting shift for user:", userId)
         return ShiftModel.query.filter_by(active=True, user_id=userId).first()
 
-    # getShifts = graphene.List(lambda: Shift,
-    #                           uid=graphene.String,
-    #                           include_locations=graphene.Boolean,
-    #                           after_time=graphene.DateTime)
+    getWeeklySummary = graphene.Field(WeeklySummary)
 
-    # def resolve_getShifts(
-    #         self, info, uid, include_locations, after_time
-    # ):
-    #     # TODO: add UID to context in flask graphql API route
-    #     uid = info.context['uid']
-    #     query = Shift.get_query(info=info)
+    @login_required
+    def resolve_getWeeklySummary(self, info):
+        userId = str(g.user)
+        print("Getting weekly summary for user:", userId)
+        dt_weekago = datetime.now() + relativedelta.relativedelta(weeks=-1)
+
+        shiftQuery = Shift.get_query(info=info)
+        n_shifts = (shiftQuery
+                    .filter(ShiftModel.user_id == userId)
+                    .filter(
+                        ShiftModel.start_time > dt_weekago).count())
+
+        locQuery = Location.get_query(info=info)
+        n_locs = (locQuery
+                  # TODO: add user_id to location points. needed for things like mileage.
+                  # .filter()
+                  .filter(LocationModel.timestamp > dt_weekago).count())
+
+        return WeeklySummary(miles=n_locs, num_shifts=n_shifts)
