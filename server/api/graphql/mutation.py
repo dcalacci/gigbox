@@ -49,7 +49,6 @@ class CreateShift(Mutation):
 
     @login_required
     def mutate(self, info, active, **kwargs):
-        user_id = g.user
         end_time = kwargs.get('end_time', None)
         start_time = kwargs.get('start_time', None)
         locations = kwargs.get('locations', [])
@@ -57,7 +56,7 @@ class CreateShift(Mutation):
             start_time = parser.parse(start_time)
         shift = ShiftModel(start_time=start_time,
                            end_time=end_time,
-                           user_id=user_id,
+                           user_id=g.user,
                            active=active)
         for l in locations:
             shift.locations.append(Location(l.timestamp, l.lng, l.lat))
@@ -78,7 +77,8 @@ class EndShift(Mutation):
     def mutate(self, info, shift_id):
         shift_id = from_global_id(shift_id)[1]
         end_time = datetime.utcnow()
-        shift = db.session.query(ShiftModel).filter_by(id=shift_id).first()
+        shift = db.session.query(ShiftModel).filter_by(
+            id=shift_id, user_id=g.user).first()
         shift.end_time = end_time
         shift.active = False
         db.session.add(shift)
@@ -101,10 +101,8 @@ class AddLocationsToShift(Mutation):
     @login_required
     def mutate(self, info, shift_id, locations):
         shift_id = from_global_id(shift_id)[1]
-
-        shift = ShiftModel.query.filter_by(id=shift_id).first()
         # ensure the user owns this shift
-        assert shift.user_id == g.user
+        shift = ShiftModel.query.filter_by(id=shift_id, user_id=g.user).first()
         # TODO: throw a helpful error.
         for l in locations:
             shift.locations.append(LocationModel(

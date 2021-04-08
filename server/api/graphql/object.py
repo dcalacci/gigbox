@@ -44,7 +44,6 @@ class Employer(SQLAlchemyObjectType):
 class Location(SQLAlchemyObjectType):
     class Meta:
         model = LocationModel
-        # interfaces = (relay.Node,)
 
     geom = Field(Geometry_WKT)
     # We might want instead of WKT to change it to JSON. We can use a simple thing like
@@ -55,6 +54,7 @@ class Location(SQLAlchemyObjectType):
     #     return {"lat": shp.y,
     #             "lng": shp.x}
     timestamp = ORMField(model_attr='timestamp')
+    accuracy = ORMField(model_attr="accuracy")
 
 
 class WeeklySummary(graphene.ObjectType):
@@ -84,3 +84,4 @@ class LocationInput(graphene.InputObjectType):
     lat = graphene.Float()
     lng = graphene.Float()
     timestamp = graphene.Float()
+    accuracy = graphene.Float()
