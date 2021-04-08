@@ -146,6 +146,7 @@ class Location(db.Model):
     __tablename__ = 'locations'
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     geom = db.Column(Geometry('POINT'))
+    accuracy = db.Column(db.Float)
     timestamp = db.Column(DateTime, nullable=False)
     shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id))
 

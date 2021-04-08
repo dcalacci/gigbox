@@ -13,6 +13,7 @@ interface Location {
         coordinates: [number, number];
     };
     timestamp: number;
+    accuracy: number;
 }
 
 export const hasActiveShift = async () => {
@@ -40,6 +41,7 @@ export const addLocationsToShift = async (shiftId: string, locations: Location[]
             lat: l.point.coordinates[1],
             lng: l.point.coordinates[0],
             timestamp: l.timestamp,
+            accuracy: l.accuracy,
         };
     });
     const variables = {
@@ -74,6 +76,8 @@ export const registerMileageTask = () => {
                 }
                 const shiftResponse = await hasActiveShift();
                 const locations = data.locations;
+                //TODO: We no longer need to transform these into our own objects.
+                // make this simpler and just pass native Expo LocationObjects
                 if (shiftResponse.active) {
                     let locs = locations.map((location: LocationObject) => {
                         let obj = {
