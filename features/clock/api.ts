@@ -1,32 +1,58 @@
-import { fetchWithQueryParams, uri } from "../../utils"
-import { Shift } from '../../features/clock/clockSlice'
-import fetch from 'node-fetch'
+import { request, gql } from 'graphql-request';
+import { log, getClient } from '../../utils';
+import { store } from '../../store/store';
 
-export interface ShiftResponse {
-    shiftCreated: boolean;
-    status: number
-    shift: Shift
-}
+//TODO: get userId and JWT as part of authentication headers and include this authentication in the graphql endpoints
 
-export const createShift = async (startTime: string, jwt: string): Promise<ShiftResponse> => {
-    const headers = new fetch.Headers({
-        'Content-Type': 'application/json',
-        authorization: jwt
+export const fetchActiveShift = () => {
+    const client = getClient(store);
+    const query = gql`
+        query {
+            getActiveShift {
+                id
+                active
+                startTime
+                locations {
+                    id
+                    geom
+                    timestamp
+                }
+            }
+        }
+    `;
+    return client.request(query);
+};
 
-    })
-    const response = await fetch(`${uri}/api/v1/shifts`,
-        {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({ startTime })
-        })
-    const data = await response.json()
-    console.log("Response data:", data)
-    return {
-        shiftCreated: true,
-        status: 200,
-        shift: data.shift
+export const endShift = (shiftId: string) => {
+    const client = getClient(store);
+    const query = gql`mutation {
+                endShift(shiftId: "${shiftId}") {
+                    shift {
+                        id
+                        endTime
+                        active
+                    }
     }
-}
+            }`;
 
-//TODO: #5 abstract out authenticated API endpoints with JSON bodies to make writing APi code easier on the frontend
+    return client.request(query);
+};
+
+export const createShift = () => {
+    const client = getClient(store);
+
+    const query = gql`
+        mutation {
+            createShift(active: true) {
+                shift {
+                    id
+                    startTime
+                    active
+                }
+            }
+        }
+    `;
+    log.info('Submitted create shift query...');
+
+    return client.request(query);
+};
