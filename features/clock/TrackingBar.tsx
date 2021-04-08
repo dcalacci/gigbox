@@ -28,6 +28,9 @@ export default function TrackingBar() {
     const endActiveShift = useMutation(endShift, {
         onSuccess: (data, variables, context) => {
             queryClient.invalidateQueries('activeShift');
+            // update weekly summary data
+            queryClient.invalidateQueries('weeklySummary');
+            // update shift list
             queryClient.invalidateQueries('shifts');
             stopGettingBackgroundLocation();
         },
