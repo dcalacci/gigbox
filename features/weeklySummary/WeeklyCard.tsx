@@ -24,7 +24,7 @@ const WeeklyCard: FunctionComponent<WeeklyCardProps> = ({}) => {
                 <Text style={tailwind('text-green-500 text-3xl font-bold underline')}>
                     This week
                 </Text>
-                <Text style={tailwind('text-black')}> Collected {summary.miles} location points</Text>
+                <Text style={tailwind('text-black')}> Traveled {summary.miles.toFixed(1)} miles.</Text>
                 <Text> Tracked {summary.numShifts} shifts.</Text>
             </View>
         );

@@ -96,11 +96,14 @@ export default function TrackingBar() {
     useEffect(() => {
         if (activeShift) {
             let interval = setInterval(() => {
-                const clockTime = new Date(shiftStatus.data.getActiveShift.startTime).getTime();
-                const startTimestamp = activeShift ? clockTime : null;
+                const clockInTime = shiftStatus.data.getActiveShift.startTime
+                const startTimestamp = activeShift  ? clockInTime : null;
                 setElapsedTime(formatElapsedTime(startTimestamp));
             }, 1000);
             return () => clearInterval(interval);
+        } else {
+            // otherwise set it to zero
+            setElapsedTime(formatElapsedTime(null));
         }
         registerMileageTask();
     });
