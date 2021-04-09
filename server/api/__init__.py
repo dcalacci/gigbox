@@ -43,6 +43,12 @@ def create_app(env):
     def initialize_database():
         """ Create db tables"""
         app.logger.info("Before first request")
+        try:
+            app.logger.info("Creating postgis extension...")
+            db.engine.execute('create extension postgis')
+        except:
+            app.logger.debug("POSTGIS extension already created...")
+        app.logger.info("Creating all tables...")
         db.create_all()
         db.session.commit()
         app.logger.info("Session Committed.")
@@ -56,6 +62,7 @@ def create_app(env):
 
     api.add_resource(auth.GetOtp, '/auth/get_otp')
     api.add_resource(auth.VerifyOtp, '/auth/verify_otp')
+    api.add_resource(auth.LoggedIn, '/auth/login')
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
     @app.route("/")

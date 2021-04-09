@@ -64,16 +64,6 @@ class WeeklySummary(graphene.ObjectType):
     # num_jobs = graphene.Int()
     num_shifts = graphene.Int()
 
-#     def resolve_num_shifts(self, info):
-#         dt_weekago = datetime.now() + relativedelta(weeks=-1)
-#         query = Shift.get_query(info=info)
-#         return query.filter(Shift.start_time > dt_weekago).count()
-
-#     def resolve_miles(self, info):
-#         dt_weekago = datetime.now() + relativedelta(weeks=-1)
-#         query = Location.get_query(info=info)
-#         return query.filter(Location.timestamp > dt_weekago).count()
-
 
 # INPUTS
 class EmployerInput(graphene.InputObjectType):

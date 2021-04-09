@@ -1,14 +1,35 @@
 import graphene
 from graphene import relay
 from graphene_sqlalchemy import SQLAlchemyConnectionField
+from geoalchemy2.shape import to_shape
+from api.routing.mapmatch import match
 from dateutil import parser, relativedelta
 from datetime import datetime
 from graphql import GraphQLError
 from flask import g
 
+# import numpy as np
 from api.controllers.auth.decorators import login_required
 from api.graphql.object import User, Shift, Location, WeeklySummary
 from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel
+
+
+def get_shift_distance(shift, info):
+    locs = Location.get_query(info=info).filter(
+        LocationModel.shift_id == shift.id).order_by(LocationModel.timestamp.asc())
+    # current_app.logger.info("Found locs...")
+    coords = [{'lat': to_shape(s.geom).y,
+               'lng': to_shape(s.geom).x,
+               'timestamp': s.timestamp} for s in locs]
+
+    res = match(coords).json()
+    # print("matchings:", res.json()['matchings'])
+    # print("tracepoints:", res.json()['tracepoints'])
+    # res_json = json.loads(res)
+    if 'matchings' in res:
+        total_distance = res['matchings'][0]['distance']
+        return total_distance
+    return 0
 
 
 class Query(graphene.ObjectType):
@@ -50,7 +71,6 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_getActiveShift(self, info):
         userId = str(g.user)
-        print("Getting shift for user:", userId)
         return ShiftModel.query.filter_by(active=True, user_id=userId).first()
 
     getWeeklySummary = graphene.Field(WeeklySummary)
@@ -58,19 +78,21 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_getWeeklySummary(self, info):
         userId = str(g.user)
-        print("Getting weekly summary for user:", userId)
         dt_weekago = datetime.now() + relativedelta.relativedelta(weeks=-1)
 
         shiftQuery = Shift.get_query(info=info)
-        n_shifts = (shiftQuery
-                    .filter(ShiftModel.user_id == userId)
-                    .filter(
-                        ShiftModel.start_time > dt_weekago).count())
+        shifts = (shiftQuery
+                  .filter(ShiftModel.user_id == userId)
+                  .filter(
+                      ShiftModel.start_time > dt_weekago))
+        n_shifts = shifts.count()
+
+        distances = [get_shift_distance(shift, info) for shift in shifts]
+        distance_miles = sum(distances) * 0.0006213712
 
         locQuery = Location.get_query(info=info)
+        shift_ids = [shift.id for shift in shifts]
         n_locs = (locQuery
-                  # TODO: add user_id to location points. needed for things like mileage.
-                  # .filter()
-                  .filter(LocationModel.timestamp > dt_weekago).count())
+                  .filter(LocationModel.shift_id.in_(shift_ids))).count()
 
-        return WeeklySummary(miles=n_locs, num_shifts=n_shifts)
+        return WeeklySummary(miles=distance_miles, num_shifts=n_shifts)
