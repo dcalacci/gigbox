@@ -19,8 +19,6 @@ def login_required(f):
     '''
     @wraps(f)
     def func(*args, **kwargs):
-        print(request.headers)
-
         if 'authorization' not in request.headers:
             current_app.logger.error("No authorization header found.")
             raise InvalidTokenError()

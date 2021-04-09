@@ -1,14 +1,17 @@
 from graphene import Mutation, Float, DateTime, Field, String, Boolean, List, ID, ObjectType
 from graphql_relay.node.node import from_global_id
 from shapely import geometry
+from geoalchemy2.shape import to_shape
 from datetime import datetime
 from dateutil import parser
-from flask import g
+from flask import g, current_app
+import json
 import base64
 from api import db
 from api.controllers.auth.decorators import login_required
 from api.graphql.object import User, Shift, Location, LocationInput, EmployerInput
-from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Employer as EmployerModel
+from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Employer as EmployerModel, Geometry_WKT, _convert_geometry
+from api.routing.mapmatch import match
 
 # we use a traditional REST endpoint to create JWT tokens and for first login
 # So, honestly, unsure if we need a Createuser mutation. We will only ever create
@@ -75,6 +78,7 @@ class EndShift(Mutation):
 
     @login_required
     def mutate(self, info, shift_id):
+        print("SHIFT ID:", shift_id)
         shift_id = from_global_id(shift_id)[1]
         end_time = datetime.utcnow()
         shift = db.session.query(ShiftModel).filter_by(
@@ -83,6 +87,19 @@ class EndShift(Mutation):
         shift.active = False
         db.session.add(shift)
         db.session.commit()
+
+        # locs = db.session.query(LocationModel).filter_by(
+        #     shift_id=shift_id).order_by(LocationModel.timestamp.asc())
+        # current_app.logger.info("Found locs...")
+        # coords = [{'lat': to_shape(s.geom).y,
+        #            'lng': to_shape(s.geom).x,
+        #            'timestamp': s.timestamp} for s in locs]
+        # res = match(coords).json()
+        # print("matchings:", res.json()['matchings'])
+        # print("tracepoints:", res.json()['tracepoints'])
+        # # res_json = json.loads(res)
+        # total_distance = res['matchings']['distance']
+
         return EndShift(shift=shift)
 
 
@@ -98,7 +115,7 @@ class AddLocationsToShift(Mutation):
         # locationinput should be lat,lng,timestamp
         locations = List(LocationInput)
 
-    @login_required
+    @ login_required
     def mutate(self, info, shift_id, locations):
         shift_id = from_global_id(shift_id)[1]
         # ensure the user owns this shift

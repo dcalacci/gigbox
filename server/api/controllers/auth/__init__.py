@@ -100,7 +100,10 @@ class VerifyOtp(Resource):
                     'message': 'Success'}
 
 
-class GetSomeResource(Resource):
+class LoggedIn(Resource):
     @login_required
-    def get(self):
-        return {'message': "right on, man"}
+    def post(self):
+        return {'status': 200,
+                'user_id': g.user,
+                'authenticated': True,
+                'message': 'Success'}
