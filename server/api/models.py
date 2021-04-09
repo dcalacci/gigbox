@@ -131,15 +131,16 @@ class Employer(db.Model):
         self.shift_id = shift_id
 
 
-@listens_for(Employer.__table__, 'after_create')
-def insert_initial_values(*args, **kwargs):
-    print("Adding employer data...")
-    db.session.add(Employer(name=EmployerNames.DOORDASH))
-    db.session.add(Employer(name=EmployerNames.INSTACART))
-    db.session.add(Employer(name=EmployerNames.SHIPT))
-    db.session.add(Employer(name=EmployerNames.UBEREATS))
-    db.session.add(Employer(name=EmployerNames.GRUBHUB))
-    db.session.commit()
+# This isn't needed yet -- for a future feature
+# @listens_for(Employer.__table__, 'after_create')
+# def insert_initial_values(*args, **kwargs):
+#     print("Adding employer data...")
+#     db.session.add(Employer(name=EmployerNames.DOORDASH))
+#     db.session.add(Employer(name=EmployerNames.INSTACART))
+#     db.session.add(Employer(name=EmployerNames.SHIPT))
+#     db.session.add(Employer(name=EmployerNames.UBEREATS))
+#     db.session.add(Employer(name=EmployerNames.GRUBHUB))
+#     db.session.commit()
 
 
 class Location(db.Model):

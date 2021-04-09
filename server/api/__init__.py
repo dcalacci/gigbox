@@ -43,6 +43,9 @@ def create_app(env):
     def initialize_database():
         """ Create db tables"""
         app.logger.info("Before first request")
+        app.logger.info("Creating postgis extension...")
+        db.engine.execute('create extension postgis')
+        app.logger.info("Creating all tables...")
         db.create_all()
         db.session.commit()
         app.logger.info("Session Committed.")
