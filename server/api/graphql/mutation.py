@@ -80,7 +80,7 @@ class EndShift(Mutation):
     def mutate(self, info, shift_id):
         print("SHIFT ID:", shift_id)
         shift_id = from_global_id(shift_id)[1]
-        end_time = datetime.utcnow()
+        end_time = datetime.now()
         shift = db.session.query(ShiftModel).filter_by(
             id=shift_id, user_id=g.user).first()
         shift.end_time = end_time
