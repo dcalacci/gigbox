@@ -8,6 +8,7 @@ from api.controllers.errors import custom_errors
 from api.controllers import auth
 from api.schema import schema
 from config import Config
+from graphene_file_upload.flask import FileUploadGraphQLView
 from api.controllers.auth.decorators import login_required
 
 
@@ -29,7 +30,8 @@ def create_app(env):
     # OR app.schema import schema..
     # @app.route('/graphql', methods=['GET', 'POST'])
     def graphql_endpoint():
-        view = GraphQLView.as_view("graphql", schema=schema, graphiql=True)
+        view = FileUploadGraphQLView.as_view(
+            "graphql", schema=schema, graphiql=True)
         return view
         # return login_required(view)
 

@@ -2,6 +2,7 @@ import graphene
 from graphene import relay, Field, UUID, String
 from graphene_sqlalchemy import SQLAlchemyObjectType
 from graphene_sqlalchemy.types import ORMField
+from graphene_file_upload.scalars import Upload
 from datetime import datetime
 from dateutil import relativedelta
 import base64
@@ -63,6 +64,11 @@ class WeeklySummary(graphene.ObjectType):
     miles = graphene.Float()
     # num_jobs = graphene.Int()
     num_shifts = graphene.Int()
+
+
+class ScreenshotData(graphene.ObjectType):
+    is_gig_app = graphene.Boolean()
+    employer = graphene.Enum.from_enum(EmployerNames)
 
 
 # INPUTS
