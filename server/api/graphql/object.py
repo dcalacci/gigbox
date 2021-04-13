@@ -6,7 +6,14 @@ from graphene_file_upload.scalars import Upload
 from datetime import datetime
 from dateutil import relativedelta
 import base64
-from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Employer as EmployerModel, Geometry_WKT, EmployerNames
+from api.models import (
+    User as UserModel,
+    Shift as ShiftModel,
+    Location as LocationModel,
+    Employer as EmployerModel,
+    Geometry_WKT,
+    EmployerNames,
+)
 
 
 class User(SQLAlchemyObjectType):
@@ -54,7 +61,7 @@ class Location(SQLAlchemyObjectType):
     #     shp = to_shape(root.geom)
     #     return {"lat": shp.y,
     #             "lng": shp.x}
-    timestamp = ORMField(model_attr='timestamp')
+    timestamp = ORMField(model_attr="timestamp")
     accuracy = ORMField(model_attr="accuracy")
 
 

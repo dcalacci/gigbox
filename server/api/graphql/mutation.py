@@ -1,16 +1,48 @@
-from graphene import Mutation, Float, DateTime, Field, String, Boolean, List, ID, ObjectType
+import os
+import random
+import cv2
+import numpy as np
+from graphene import (
+    Mutation,
+    Float,
+    DateTime,
+    Field,
+    String,
+    Boolean,
+    List,
+    ID,
+    ObjectType,
+)
 from graphql_relay.node.node import from_global_id
 from shapely import geometry
 from geoalchemy2.shape import to_shape
 from datetime import datetime
 from dateutil import parser
 from flask import g, current_app
+
+from graphene_file_upload.scalars import Upload
 import json
 import base64
 from api import db
 from api.controllers.auth.decorators import login_required
-from api.graphql.object import User, Shift, Location, LocationInput, EmployerInput
-from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Employer as EmployerModel, Geometry_WKT, _convert_geometry
+from api.graphql.object import (
+    User,
+    Shift,
+    Location,
+    LocationInput,
+    EmployerInput,
+    ScreenshotData,
+    Employer,
+)
+from api.models import (
+    User as UserModel,
+    Shift as ShiftModel,
+    Location as LocationModel,
+    Employer as EmployerModel,
+    Geometry_WKT,
+    _convert_geometry,
+    EmployerNames,
+)
 from api.routing.mapmatch import match
 
 # we use a traditional REST endpoint to create JWT tokens and for first login
@@ -24,6 +56,7 @@ from api.routing.mapmatch import match
 
 class CreateUser(Mutation):
     """Mutation to create a user. must be given a UID"""
+
     user = Field(lambda: User, description="User created by this mutation")
 
     class Arguments:
@@ -39,8 +72,8 @@ class CreateUser(Mutation):
 
 class CreateShift(Mutation):
     """Creates a shift"""
-    shift = Field(lambda: Shift,
-                  description="Shift that was created")
+
+    shift = Field(lambda: Shift, description="Shift that was created")
 
     # For optional fields in graphene mutations, see:
     # https://github.com/graphql-python/graphene/issues/769#issuecomment-397596754
@@ -52,15 +85,14 @@ class CreateShift(Mutation):
 
     @login_required
     def mutate(self, info, active, **kwargs):
-        end_time = kwargs.get('end_time', None)
-        start_time = kwargs.get('start_time', None)
-        locations = kwargs.get('locations', [])
+        end_time = kwargs.get("end_time", None)
+        start_time = kwargs.get("start_time", None)
+        locations = kwargs.get("locations", [])
         if start_time:
             start_time = parser.parse(start_time)
-        shift = ShiftModel(start_time=start_time,
-                           end_time=end_time,
-                           user_id=g.user,
-                           active=active)
+        shift = ShiftModel(
+            start_time=start_time, end_time=end_time, user_id=g.user, active=active
+        )
         for l in locations:
             shift.locations.append(Location(l.timestamp, l.lng, l.lat))
         db.session.add(shift)
@@ -70,8 +102,8 @@ class CreateShift(Mutation):
 
 class EndShift(Mutation):
     """Ends a shift"""
-    shift = Field(lambda: Shift,
-                  description="Shift that is being ended")
+
+    shift = Field(lambda: Shift, description="Shift that is being ended")
 
     class Arguments:
         shift_id = String(required=True, description="ID of the shift to end")
@@ -81,8 +113,9 @@ class EndShift(Mutation):
         print("SHIFT ID:", shift_id)
         shift_id = from_global_id(shift_id)[1]
         end_time = datetime.now()
-        shift = db.session.query(ShiftModel).filter_by(
-            id=shift_id, user_id=g.user).first()
+        shift = (
+            db.session.query(ShiftModel).filter_by(id=shift_id, user_id=g.user).first()
+        )
         shift.end_time = end_time
         shift.active = False
         db.session.add(shift)
@@ -105,38 +138,79 @@ class EndShift(Mutation):
 
 class AddLocationsToShift(Mutation):
     """Adds a list of locations to a given shift"""
-    location = Field(lambda: Location,
-                     description="latest location added to shift")
+
+    location = Field(lambda: Location, description="latest location added to shift")
     ok = Field(lambda: Boolean)
 
     class Arguments:
-        shift_id = ID(
-            required=True, description="ID of the shift to add locations to")
+        shift_id = ID(required=True, description="ID of the shift to add locations to")
         # locationinput should be lat,lng,timestamp
         locations = List(LocationInput)
 
-    @ login_required
+    @login_required
     def mutate(self, info, shift_id, locations):
         shift_id = from_global_id(shift_id)[1]
         # ensure the user owns this shift
         shift = ShiftModel.query.filter_by(id=shift_id, user_id=g.user).first()
         # TODO: throw a helpful error.
         for l in locations:
-            shift.locations.append(LocationModel(
-                datetime.fromtimestamp(float(l.timestamp)/1000), l.lng, l.lat, shift_id))
+            shift.locations.append(
+                LocationModel(
+                    # turn it into seconds
+                    datetime.fromtimestamp(float(l.timestamp) / 1000),
+                    l.lng,
+                    l.lat,
+                    shift_id,
+                )
+            )
         db.session.add(shift)
         db.session.commit()
         return AddLocationsToShift(location=shift.locations[-1], ok=True)
 
 
+class GetScreenshotData(Mutation):
+    class Arguments:
+        file = Upload(required=True)
+
+    # True if successfully saved and processed image
+    success = Field(lambda: Boolean)
+    # True if we identify it as an app screenshot
+    isApp = Field(lambda: Boolean)
+    # employer details if parsed as an app image
+    employer = Field(lambda: String)
+
+    @login_required
+    def mutate(self, info, file, **kwargs):
+        # do something with your file
+        print("Got a file:", file)
+        f_array = np.asarray(bytearray(file.read()))
+        image = cv2.imdecode(f_array, 0)
+        filename = "/tmp/{}.png".format(os.getpid() + random.randint(1, 100))
+        print("cv2 parsed image:", image)
+        return GetScreenshotData(success=True, isApp=True, employer="SHIPT")
+
+
+def image_to_text(image_filename):
+    image = cv2.imread(image_filename)
+    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+    # scale 1.5x
+    gray = cv2.resize(gray, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
+    # enhancer = ImageEnhance.Contrast(gray)
+    # gray = enhancer.enhance(2)
+    # gray = gray.convert('1')
+    # random filename
+    filename = "/tmp/{}.png".format(os.getpid() + random.randint(1, 100))
+    cv2.imwrite(filename, gray)
+    text = pytesseract.image_to_string(Image.open(filename), config="--psm 6")
+    os.remove(filename)
+    return text
+
+
 class SetShiftEmployers(Mutation):
-    shift = Field(lambda: Shift,
-                  description="Shift to update")
+    shift = Field(lambda: Shift, description="Shift to update")
 
     class Arguments:
-        shift_id = ID(
-            required=True,
-            description="ID of the shift to set employers for")
+        shift_id = ID(required=True, description="ID of the shift to set employers for")
         employers = List(EmployerInput)
 
     def mutate(self, info, shift_id, employers):
@@ -145,8 +219,7 @@ class SetShiftEmployers(Mutation):
         shift = db.session.get(shift_id)
         assert shift.user_id == g.user
         for e in employers:
-            shift.employers.append(EmployerModel(
-                name=e.name, shift_id=shift.id))
+            shift.employers.append(EmployerModel(name=e.name, shift_id=shift.id))
         db.session.add(shift)
         db.session.commit()
         return SetShiftEmployers()
@@ -154,8 +227,10 @@ class SetShiftEmployers(Mutation):
 
 class Mutation(ObjectType):
     """Mutations which can be performed by this API."""
+
     # Person mutation
     createUser = CreateUser.Field()
     createShift = CreateShift.Field()
     endShift = EndShift.Field()
     addLocationsToShift = AddLocationsToShift.Field()
+    getScreenshotData = GetScreenshotData.Field()

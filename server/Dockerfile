@@ -1,10 +1,11 @@
 # pull official base image
 FROM python:3.9-buster
 
+ENV PYTHONPATH /usr/lib/python3/dist-packages
 ## install dependencies
 RUN apt-get update && \
     apt-get upgrade -y && \
-    apt-get install -y netcat-openbsd gcc postgresql-client libgeos-dev && \
+    apt-get install -y netcat-openbsd gcc postgresql-client libgeos-dev python3-opencv && \
     apt-get clean
 
 
