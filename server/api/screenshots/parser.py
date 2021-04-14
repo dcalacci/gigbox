@@ -7,11 +7,13 @@ import pytesseract
 
 
 def predict_app(image_text):
-    ## TODO: implement layoutLM pipeline for classification
+    # TODO: implement layoutLM pipeline for classification
     if "instacart" in image_text.lower():
         return "INSTACART"
-    else:
+    elif "Shop" in image_text.lower():
         return "SHIPT"
+    else:
+        return False
 
 
 def image_to_df(image):
@@ -21,7 +23,8 @@ def image_to_df(image):
     w_scale = 1000 / width
     h_scale = 1000 / height
 
-    ocr_df = pytesseract.image_to_data(i, output_type="data.frame", config="--psm 6")
+    ocr_df = pytesseract.image_to_data(
+        i, output_type="data.frame", config="--psm 6")
     ocr_df = ocr_df.dropna().assign(
         left_scaled=ocr_df.left * w_scale,
         width_scaled=ocr_df.width * w_scale,
@@ -31,8 +34,8 @@ def image_to_df(image):
         bottom_scaled=lambda x: x.top_scaled + x.height_scaled,
     )
 
-    ## 4/14/21 - not sure why we used this to transform float into int.
-    ## int...should check when testing full OCR pipeline.
+    # 4/14/21 - not sure why we used this to transform float into int.
+    # int...should check when testing full OCR pipeline.
     # float_cols = ocr_df.select_dtypes("float").columns
     # ocr_df[float_cols] = ocr_df[float_cols].round(0).astype(int)
     return ocr_df

@@ -5,6 +5,7 @@ import pytesseract
 import numpy as np
 import json
 import base64
+import binascii
 from graphene import (
     Mutation,
     Float,
@@ -116,7 +117,8 @@ class EndShift(Mutation):
         shift_id = from_global_id(shift_id)[1]
         end_time = datetime.now()
         shift = (
-            db.session.query(ShiftModel).filter_by(id=shift_id, user_id=g.user).first()
+            db.session.query(ShiftModel).filter_by(
+                id=shift_id, user_id=g.user).first()
         )
         shift.end_time = end_time
         shift.active = False
@@ -141,11 +143,13 @@ class EndShift(Mutation):
 class AddLocationsToShift(Mutation):
     """Adds a list of locations to a given shift"""
 
-    location = Field(lambda: Location, description="latest location added to shift")
+    location = Field(lambda: Location,
+                     description="latest location added to shift")
     ok = Field(lambda: Boolean)
 
     class Arguments:
-        shift_id = ID(required=True, description="ID of the shift to add locations to")
+        shift_id = ID(
+            required=True, description="ID of the shift to add locations to")
         # locationinput should be lat,lng,timestamp
         locations = List(LocationInput)
 
@@ -170,9 +174,10 @@ class AddLocationsToShift(Mutation):
         return AddLocationsToShift(location=shift.locations[-1], ok=True)
 
 
-class GetScreenshotData(Mutation):
+class AddScreenshotToShift(Mutation):
     class Arguments:
-        file = Upload(required=True)
+        shift_id = ID(required=True)
+        asset = Upload(required=True)
 
     # True if successfully saved and processed image
     success = Field(lambda: Boolean)
@@ -182,25 +187,30 @@ class GetScreenshotData(Mutation):
     employer = Field(lambda: String)
     data = Field(lambda: String)
 
-    @login_required
-    def mutate(self, info, file, **kwargs):
-        # do something with your file
-        print("Got a file:", file)
-        f_array = np.asarray(bytearray(file.read()))
+    # @login_required
+    def mutate(self, info, shift_id, asset, **kwargs):
+        shift_id = from_global_id(shift_id)[1]
+        print("SHIFT ID:", shift_id)
+        decoded = base64.decodebytes(bytes(asset, 'utf-8'))
+        f_array = np.asarray(bytearray(decoded))
         image = cv2.imdecode(f_array, 0)
         # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         text = parse_image(image)
         app = predict_app(text)
         df = image_to_df(image)
-        ## TODO: save image, OCR data in postgres
-        return GetScreenshotData(success=True, isApp=True, employer="SHIPT", data=text)
+        # TODO: save image, OCR data in postgres
+        # TODO: non-app images should be rejected
+        return AddScreenshotToShift(
+            success=True, isApp=True, employer="SHIPT", data=text
+        )
 
 
 class SetShiftEmployers(Mutation):
     shift = Field(lambda: Shift, description="Shift to update")
 
     class Arguments:
-        shift_id = ID(required=True, description="ID of the shift to set employers for")
+        shift_id = ID(
+            required=True, description="ID of the shift to set employers for")
         employers = List(EmployerInput)
 
     def mutate(self, info, shift_id, employers):
@@ -208,7 +218,8 @@ class SetShiftEmployers(Mutation):
         shift = db.session.get(shift_id)
         assert shift.user_id == g.user
         for e in employers:
-            shift.employers.append(EmployerModel(name=e.name, shift_id=shift.id))
+            shift.employers.append(EmployerModel(
+                name=e.name, shift_id=shift.id))
         db.session.add(shift)
         db.session.commit()
         return SetShiftEmployers()
@@ -222,4 +233,4 @@ class Mutation(ObjectType):
     createShift = CreateShift.Field()
     endShift = EndShift.Field()
     addLocationsToShift = AddLocationsToShift.Field()
-    getScreenshotData = GetScreenshotData.Field()
+    addScreenshotToShift = AddScreenshotToShift.Field()

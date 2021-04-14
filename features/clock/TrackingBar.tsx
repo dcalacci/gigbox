@@ -4,6 +4,10 @@ import { useSelector, useDispatch } from 'react-redux';
 import { tailwind } from 'tailwind';
 import { useToast } from 'react-native-fast-toast';
 
+import * as Permissions from 'expo-permissions';
+import * as MediaLibrary from 'expo-media-library';
+import { Asset } from 'expo-media-library';
+
 import { RootState } from '../../store/index';
 import Toggle from '../../components/Toggle';
 
@@ -15,8 +19,15 @@ import {
     registerMileageTask,
 } from '../../tasks';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { fetchActiveShift, endShift, createShift } from './api';
+import { fetchActiveShift, endShift, createShift, addScreenshotToShift } from './api';
 import { log } from '../../utils';
+
+const processScreenshots = (screenshots: Asset[], activeShift: any) => {
+    //TODO: process screenshots into jobs / send to server
+    /* log.info(' MEDIA LIBRARY CHANGED; incremental changes:', screenshots.length); */
+    log.info('screenshot 0:', screenshots[0]);
+    log.info('Adding screenshot to shift: ', activeShift);
+};
 
 export default function TrackingBar() {
     const toast = useToast();
@@ -45,16 +56,17 @@ export default function TrackingBar() {
             return { previousShift };
         },
         onError: (err, newShift, context) => {
-            log.error(`Problem ending shift: ${err}`)
+            log.error(`Problem ending shift: ${err}`);
             queryClient.setQueryData('activeShift', context.previousShift);
-            toast?.show("Encountered a problem ending your shift... Try again?");
-        }
+            toast?.show('Encountered a problem ending your shift... Try again?');
+        },
     });
 
     const createActiveShift = useMutation(createShift, {
         onSuccess: (data, variables, context) => {
             queryClient.invalidateQueries('activeShift');
             queryClient.invalidateQueries('shifts');
+            log.info("Created new shift:", data)
             startGettingBackgroundLocation();
         },
 
@@ -68,12 +80,26 @@ export default function TrackingBar() {
             return { previousShift };
         },
         onError: (err, newShift, context) => {
-            log.error(`Problem starting shift: ${err}, ${context}`)
+            log.error(`Problem starting shift: ${err}, ${context}`);
             queryClient.setQueryData('activeShift', context.previousShift);
             toast?.show("Couldn't start a shift. Try again?");
         },
         onSettled: () => {
             queryClient.invalidateQueries('activeShift');
+        },
+    });
+
+    const uploadScreenshot = useMutation(addScreenshotToShift, {
+        onSuccess: (data, variables, context) => {
+            log.info('Submitted screenshot!', data, variables, context);
+            console.log(data)
+        },
+        onError: (err, problem, context) => {
+            log.error('Had a problem:', err, problem);
+            console.log(err)
+        },
+        onSettled: () => {
+            log.info('Settled adding screenshot.');
         },
     });
 
@@ -96,8 +122,8 @@ export default function TrackingBar() {
     useEffect(() => {
         if (activeShift) {
             let interval = setInterval(() => {
-                const clockInTime = shiftStatus.data.getActiveShift.startTime
-                const startTimestamp = activeShift  ? clockInTime : null;
+                const clockInTime = shiftStatus.data.getActiveShift.startTime;
+                const startTimestamp = activeShift ? clockInTime : null;
                 setElapsedTime(formatElapsedTime(startTimestamp));
             }, 1000);
             return () => clearInterval(interval);
@@ -106,6 +132,37 @@ export default function TrackingBar() {
             setElapsedTime(formatElapsedTime(null));
         }
         registerMileageTask();
+    });
+
+    // Processes new screenshots while tracking bar is on
+    useEffect(() => {
+        MediaLibrary.addListener((obj) => {
+            log.info("Media Library listener hit")
+            if ('insertedAssets' in obj) {
+                const shift_id = shiftStatus.data.getActiveShift.id;
+                console.log(
+                    'Shift found, processing screenshot...',
+                    obj.insertedAssets[0],
+                    shift_id
+                );
+                console.log('SHIFT ID:', shift_id);
+
+                var screenshots = obj.insertedAssets.filter(
+                    (a) => a.mediaSubtypes != undefined && a.mediaSubtypes.includes('screenshot')
+                );
+                screenshots.map((s: Asset) =>
+                    uploadScreenshot.mutate({
+                        screenshot: s,
+                        shiftId: shift_id,
+                        jwt: auth.jwt
+                    })
+                );
+                /* processScreenshots(obj.insertedAssets, shiftStatus.data?.getActiveShift); */
+            }
+        });
+        return () => {
+            MediaLibrary.removeAllListeners();
+        };
     });
 
     const onTogglePress = () => {

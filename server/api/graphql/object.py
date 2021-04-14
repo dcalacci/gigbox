@@ -11,6 +11,7 @@ from api.models import (
     Shift as ShiftModel,
     Location as LocationModel,
     Employer as EmployerModel,
+    Screenshot as ScreenshotModel,
     Geometry_WKT,
     EmployerNames,
 )
@@ -42,6 +43,11 @@ class Shift(SQLAlchemyObjectType):
         query = Employer.get_query(info=info)
         query = query.filter(EmployerModel.shift_id == self.id)
         return query.all()
+
+
+class Screenshot(SQLAlchemyObjectType):
+    class Meta:
+        model = ScreenshotModel
 
 
 class Employer(SQLAlchemyObjectType):

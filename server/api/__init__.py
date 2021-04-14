@@ -20,16 +20,17 @@ def create_app(env):
     app.config.from_object(get_environment_config())
     db.init_app(app)
 
-    # class DummyMiddleware(object):
-    #     def resolve(self, next, root, info, **kwargs):
-    #         print("DummyMiddleware", next, kwargs, root, info)
-    #         return next(root, info, **kwargs)
+    class DummyMiddleware(object):
+        def resolve(self, next, root, info, **kwargs):
+            print("DummyMiddleware", next, kwargs, root, info)
+            return next(root, info, **kwargs)
 
-    # dummy_middleware = DummyMiddleware()
+    dummy_middleware = DummyMiddleware()
 
     # OR app.schema import schema..
     # @app.route('/graphql', methods=['GET', 'POST'])
     def graphql_endpoint():
+        # print("request:", request)
         view = FileUploadGraphQLView.as_view(
             "graphql", schema=schema, graphiql=True)
         return view
@@ -38,10 +39,10 @@ def create_app(env):
     app.add_url_rule(
         '/graphql',
         view_func=graphql_endpoint()
-        # middleware=[dummy_middleware])
+        # middleware=[dummy_middleware]
     )
 
-    @app.before_first_request
+    @ app.before_first_request
     def initialize_database():
         """ Create db tables"""
         app.logger.info("Before first request")
@@ -55,7 +56,7 @@ def create_app(env):
         db.session.commit()
         app.logger.info("Session Committed.")
 
-    @app.teardown_appcontext
+    @ app.teardown_appcontext
     def shutdown_session(exception=None):
         db.session.remove()
 
@@ -67,7 +68,7 @@ def create_app(env):
     api.add_resource(auth.LoggedIn, '/auth/login')
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
-    @app.route("/")
+    @ app.route("/")
     def root():
         return "Go to /graphql"
 
