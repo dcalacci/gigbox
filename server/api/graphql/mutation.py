@@ -1,7 +1,10 @@
 import os
 import random
 import cv2
+import pytesseract
 import numpy as np
+import json
+import base64
 from graphene import (
     Mutation,
     Float,
@@ -19,10 +22,8 @@ from geoalchemy2.shape import to_shape
 from datetime import datetime
 from dateutil import parser
 from flask import g, current_app
-
+from PIL import Image
 from graphene_file_upload.scalars import Upload
-import json
-import base64
 from api import db
 from api.controllers.auth.decorators import login_required
 from api.graphql.object import (
@@ -44,6 +45,7 @@ from api.models import (
     EmployerNames,
 )
 from api.routing.mapmatch import match
+from api.screenshots.parser import predict_app, image_to_df, parse_image
 
 # we use a traditional REST endpoint to create JWT tokens and for first login
 # So, honestly, unsure if we need a Createuser mutation. We will only ever create
@@ -178,6 +180,7 @@ class GetScreenshotData(Mutation):
     isApp = Field(lambda: Boolean)
     # employer details if parsed as an app image
     employer = Field(lambda: String)
+    data = Field(lambda: String)
 
     @login_required
     def mutate(self, info, file, **kwargs):
@@ -185,25 +188,12 @@ class GetScreenshotData(Mutation):
         print("Got a file:", file)
         f_array = np.asarray(bytearray(file.read()))
         image = cv2.imdecode(f_array, 0)
-        filename = "/tmp/{}.png".format(os.getpid() + random.randint(1, 100))
-        print("cv2 parsed image:", image)
-        return GetScreenshotData(success=True, isApp=True, employer="SHIPT")
-
-
-def image_to_text(image_filename):
-    image = cv2.imread(image_filename)
-    gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    # scale 1.5x
-    gray = cv2.resize(gray, None, fx=2, fy=2, interpolation=cv2.INTER_CUBIC)
-    # enhancer = ImageEnhance.Contrast(gray)
-    # gray = enhancer.enhance(2)
-    # gray = gray.convert('1')
-    # random filename
-    filename = "/tmp/{}.png".format(os.getpid() + random.randint(1, 100))
-    cv2.imwrite(filename, gray)
-    text = pytesseract.image_to_string(Image.open(filename), config="--psm 6")
-    os.remove(filename)
-    return text
+        # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
+        text = parse_image(image)
+        app = predict_app(text)
+        df = image_to_df(image)
+        ## TODO: save image, OCR data in postgres
+        return GetScreenshotData(success=True, isApp=True, employer="SHIPT", data=text)
 
 
 class SetShiftEmployers(Mutation):
@@ -214,7 +204,6 @@ class SetShiftEmployers(Mutation):
         employers = List(EmployerInput)
 
     def mutate(self, info, shift_id, employers):
-
         shift_id = from_global_id(shift_id)[1]
         shift = db.session.get(shift_id)
         assert shift.user_id == g.user
