@@ -138,7 +138,9 @@ export default function TrackingBar() {
     useEffect(() => {
         MediaLibrary.addListener((obj) => {
             log.info("Media Library listener hit")
-            if ('insertedAssets' in obj) {
+            //TODO: if user takes a screenshot of an app, but they're not in an active shift,
+            // ask them if they would like to start a shift.
+            if ('insertedAssets' in obj && activeShift) {
                 const shift_id = shiftStatus.data.getActiveShift.id;
                 console.log(
                     'Shift found, processing screenshot...',
