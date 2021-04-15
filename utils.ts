@@ -1,23 +1,17 @@
+import moment from 'moment';
 /**
  *
  * @param startTimestamp A timestamp (number) to calculate elapsed time from.
  * @return {[string]} Hours and minutes since startTimestamp, formatted as "0h 0m"
  */
 export const formatElapsedTime = (startTimestamp: number | null): string => {
-    const now = new Date();
     if (startTimestamp === null) {
         return '0h 0m';
     } else {
-        const startTime = new Date(startTimestamp);
-        // strip milliseconds
-        let timeDiff = (now.getTime() - startTime.getTime()) / 1000;
-        //var timeStr = timeDiff.toTimeString().split(' ')[0];
-        const seconds = Math.round(timeDiff % 60);
-        timeDiff = Math.floor(timeDiff / 60);
-        var minutes = Math.round(timeDiff % 60);
-        timeDiff = Math.floor(timeDiff / 60);
-        var hours = Math.round(timeDiff % 24);
-        const timestr = `${hours}h ${minutes}m`;
+        const st = moment.utc(startTimestamp);
+        const hdiff = moment().diff(st, 'hours');
+        const mdiff = moment().diff(st, 'minutes') - hdiff * 60;
+        const timestr = `${hdiff}h ${mdiff}m`;
         return timestr;
     }
 };

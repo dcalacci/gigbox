@@ -13,7 +13,8 @@ import { getShifts } from './api';
 
 const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
     const calendarStart = moment(props.item.node.startTime).calendar();
-    const endTime = props.item.node.endTime ? moment(props.item.node.endTime).format('LT') : 'Now';
+    console.log("start time:", calendarStart, props.item.node.startTime)
+    const endTime = props.item.node.endTime ? moment.utc(props.item.node.endTime).format('LT') : 'Now';
     const timeString = `${calendarStart} to ${endTime}`;
     return (
         <View style={tailwind('flex-1 w-full p-2 mb-10')} key={props.item.node.id}>
@@ -29,7 +30,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
             >
                 <View style={tailwind('p-2')}>
                     <Text style={tailwind('text-black text-xl font-bold')}>
-                        {moment(props.item.node.startTime).fromNow()}
+                        {moment.utc(props.item.node.startTime).fromNow()}
                     </Text>
                     <Text style={tailwind('text-black text-xl font-bold')}>{timeString}</Text>
                 </View>
