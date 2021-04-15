@@ -5,36 +5,23 @@ from geoalchemy2.shape import to_shape
 from api.routing.mapmatch import match
 from dateutil import parser, relativedelta
 from datetime import datetime
+from graphql_relay.node.node import from_global_id
 from graphql import GraphQLError
 from flask import g
 
 # import numpy as np
 from api.controllers.auth.decorators import login_required
-from api.graphql.object import User, Shift, Location, WeeklySummary
+from api.graphql.object import User, Shift, Location, WeeklySummary, Trips
 from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel
-
-
-def get_shift_distance(shift, info):
-    locs = Location.get_query(info=info).filter(
-        LocationModel.shift_id == shift.id).order_by(LocationModel.timestamp.asc())
-    # current_app.logger.info("Found locs...")
-    coords = [{'lat': to_shape(s.geom).y,
-               'lng': to_shape(s.geom).x,
-               'timestamp': s.timestamp} for s in locs]
-
-    res = match(coords).json()
-    # print("matchings:", res.json()['matchings'])
-    # print("tracepoints:", res.json()['tracepoints'])
-    # res_json = json.loads(res)
-    if 'matchings' in res:
-        total_distance = res['matchings'][0]['distance']
-        return total_distance
-    return 0
+from api.routing.mapmatch import get_shift_distance
 
 
 class Query(graphene.ObjectType):
     node = relay.Node.Field()
 
+    getTrips = graphene.Field(Trips)
+    getActiveShift = graphene.Field(Shift)
+    getWeeklySummary = graphene.Field(WeeklySummary)
     allShifts = SQLAlchemyConnectionField(Shift, sort=Shift.sort_argument())
     print("Allshift field args:", allShifts.args)
 
@@ -66,14 +53,10 @@ class Query(graphene.ObjectType):
 
     # userList = SQLAlchemyConnectionField(User)
 
-    getActiveShift = graphene.Field(Shift)
-
     @login_required
     def resolve_getActiveShift(self, info):
         userId = str(g.user)
         return ShiftModel.query.filter_by(active=True, user_id=userId).first()
-
-    getWeeklySummary = graphene.Field(WeeklySummary)
 
     @login_required
     def resolve_getWeeklySummary(self, info):
@@ -96,3 +79,10 @@ class Query(graphene.ObjectType):
                   .filter(LocationModel.shift_id.in_(shift_ids))).count()
 
         return WeeklySummary(miles=distance_miles, num_shifts=n_shifts)
+
+    @login_required
+    def resolve_getTrips(self, info, shiftId):
+        shift_id = from_global_id(shift_id)[1]
+        shift = Shift.get_query(info=info).get(shift_id)
+        distance = get_shift_distance(shift, info)
+        return Trips(miles=distance)

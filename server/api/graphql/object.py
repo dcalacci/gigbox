@@ -90,6 +90,10 @@ class WeeklySummary(graphene.ObjectType):
     num_shifts = graphene.Int()
 
 
+class Trips(graphene.ObjectType):
+    miles = graphene.Float()
+
+
 # INPUTS
 class EmployerInput(graphene.InputObjectType):
     name = graphene.Enum.from_enum(EmployerNames)

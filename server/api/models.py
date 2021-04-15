@@ -106,6 +106,7 @@ class Shift(db.Model):
     date_created = db.Column(DateTime, default=func.now())
     # if this shift is deleted, delete its related location data
     screenshots = db.relationship("Screenshot")
+    road_snapped_miles = db.Column(db.Float, default=0)
     locations = db.relationship(
         "Location", backref=backref("shift", cascade="all, delete")
     )

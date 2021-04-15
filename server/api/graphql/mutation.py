@@ -47,7 +47,7 @@ from api.models import (
     EmployerNames,
 )
 from api.utils import generate_filename
-from api.routing.mapmatch import match
+from api.routing.mapmatch import get_shift_distance
 from api.screenshots.parser import predict_app, image_to_df, parse_image
 from flask import current_app
 
@@ -123,6 +123,9 @@ class EndShift(Mutation):
             db.session.query(ShiftModel).filter_by(
                 id=shift_id, user_id=g.user).first()
         )
+
+        # calculate final mileage for this shift
+        shift = updateShiftMileage(shift, info)
         shift.end_time = end_time
         shift.active = False
         db.session.add(shift)
@@ -141,6 +144,14 @@ class EndShift(Mutation):
         # total_distance = res['matchings']['distance']
 
         return EndShift(shift=shift)
+
+
+def updateShiftMileage(shift, info):
+    meters = get_shift_distance(shift, info)
+    mileage = meters * 0.0006213712
+    shift.road_snapped_miles = mileage
+    current_app.logger.info(f"mileage: {mileage}")
+    return shift
 
 
 class AddLocationsToShift(Mutation):
@@ -172,6 +183,13 @@ class AddLocationsToShift(Mutation):
                     shift_id,
                 )
             )
+        # Every 5 locations added, update the distance on the shift by doing
+        # map matching
+        n_locations = len(shift.locations)
+        if n_locations % 5 == 0:
+            current_app.logger.info(
+                "Updating mileage on shift...")
+            shift = updateShiftMileage(shift, info)
         db.session.add(shift)
         db.session.commit()
         return AddLocationsToShift(location=shift.locations[-1], ok=True)
