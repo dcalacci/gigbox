@@ -49,7 +49,7 @@ export default function TrackingBar() {
         onMutate: async (data) => {
             await queryClient.cancelQueries('activeShift');
             const previousShift = queryClient.getQueryData('activeShift');
-            log.info('Providing mutate with optimistic data...');
+            log.info('ending shift optimistically...');
             queryClient.setQueryData('activeShift', () => ({
                 getActiveShift: { active: false, startTime: new Date() },
             }));
@@ -66,7 +66,7 @@ export default function TrackingBar() {
         onSuccess: (data, variables, context) => {
             queryClient.invalidateQueries('activeShift');
             queryClient.invalidateQueries('shifts');
-            log.info("Created new shift:", data)
+            log.info('Created new shift:', data);
             startGettingBackgroundLocation();
         },
 
@@ -92,11 +92,11 @@ export default function TrackingBar() {
     const uploadScreenshot = useMutation(addScreenshotToShift, {
         onSuccess: (data, variables, context) => {
             log.info('Submitted screenshot!', data, variables, context);
-            console.log(data)
+            console.log(data);
         },
         onError: (err, problem, context) => {
             log.error('Had a problem:', err, problem);
-            console.log(err)
+            console.log(err);
         },
         onSettled: () => {
             log.info('Settled adding screenshot.');
@@ -111,20 +111,24 @@ export default function TrackingBar() {
         toast?.show(`Problem loading shifts: ${shiftStatus.error}`);
     }
 
-    const activeShift = shiftStatus.data?.getActiveShift
-        ? shiftStatus.data.getActiveShift.active
-        : false;
-
     const [elapsedTime, setElapsedTime] = useState<string>(formatElapsedTime(null));
+
+    // convenience function to check if there's a current active shift
+    const shiftActive = () => {
+        if (shiftStatus.isLoading || shiftStatus.isError) {
+            return false
+        } 
+        return !shiftStatus.data.getActiveShift ? false : shiftStatus.data.getActiveShift.active  
+    }
 
     // updates the tracking bar time logger every second. Uses useEffect
     // so our setInterval resets on cue.
     useEffect(() => {
-        if (activeShift) {
+        if (shiftActive()) {
             let interval = setInterval(() => {
                 const clockInTime = shiftStatus.data.getActiveShift.startTime;
-                const startTimestamp = activeShift ? clockInTime : null;
-                setElapsedTime(formatElapsedTime(startTimestamp));
+                /* const startTimestamp = shiftActive() ? clockInTime : null; */
+                setElapsedTime(formatElapsedTime(clockInTime));
             }, 1000);
             return () => clearInterval(interval);
         } else {
@@ -137,25 +141,21 @@ export default function TrackingBar() {
     // Processes new screenshots while tracking bar is on
     useEffect(() => {
         MediaLibrary.addListener((obj) => {
-            log.info("Media Library listener hit")
+            log.info('Media Library listener hit');
             //TODO: if user takes a screenshot of an app, but they're not in an active shift,
             // ask them if they would like to start a shift.
-            if ('insertedAssets' in obj && activeShift) {
+            if ('insertedAssets' in obj && shiftActive()) {
                 const shift_id = shiftStatus.data.getActiveShift.id;
-
 
                 var screenshots = obj.insertedAssets.filter(
                     (a) => a.mediaSubtypes != undefined && a.mediaSubtypes.includes('screenshot')
                 );
-                log.info(
-                    'Shift found, processing a screenshot for shift ',
-                    shift_id
-                );
+                log.info('Shift found, processing a screenshot for shift ', shift_id);
                 screenshots.map((s: Asset) =>
                     uploadScreenshot.mutate({
                         screenshot: s,
                         shiftId: shift_id,
-                        jwt: auth.jwt
+                        jwt: auth.jwt,
                     })
                 );
                 /* processScreenshots(obj.insertedAssets, shiftStatus.data?.getActiveShift); */
@@ -167,7 +167,7 @@ export default function TrackingBar() {
     });
 
     const onTogglePress = () => {
-        if (!activeShift) {
+        if (!shiftActive()) {
             createActiveShift.mutate();
         } else {
             log.info('Ending shift ', shiftStatus.data.getActiveShift.id);
@@ -175,24 +175,24 @@ export default function TrackingBar() {
         }
     };
 
-    const textStyle = [tailwind('text-lg'), activeShift ? tailwind('font-semibold') : null];
+    const textStyle = [tailwind('text-lg'), shiftActive() ? tailwind('font-semibold') : null];
 
     if (!shiftStatus.isLoading && !shiftStatus.isError) {
         return (
-            <View style={[tailwind(''), activeShift ? tailwind('bg-green-500') : null]}>
+            <View style={[tailwind(''), shiftActive() ? tailwind('bg-green-500') : null]}>
                 <View
                     style={[
                         tailwind(
                             'flex-shrink flex-row justify-around items-center border-b-4 p-3 border-green-600 h-16 bg-white'
                         ),
-                        activeShift ? tailwind('bg-green-500') : null,
+                        shiftActive() ? tailwind('bg-green-500') : null,
                     ]}
                 >
                     <Toggle
-                        title={activeShift ? 'Tracking Shift' : 'Clock In'}
+                        title={shiftActive() ? 'Tracking Shift' : 'Clock In'}
                         activeText="On"
                         inactiveText="Off"
-                        value={activeShift}
+                        value={shiftActive()}
                         onToggle={onTogglePress}
                     />
                     <View style={tailwind('flex-grow-0')}>
