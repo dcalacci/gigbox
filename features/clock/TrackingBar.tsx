@@ -34,7 +34,7 @@ export default function TrackingBar() {
     const queryClient = useQueryClient();
     const auth = useSelector((state: RootState): AuthState => state.auth);
     const shiftStatus = useQuery('activeShift', fetchActiveShift, {
-        /* placeholderData: { getActiveShift: { active: false } }, */
+        placeholderData: { getActiveShift: { active: false } },
     });
     const endActiveShift = useMutation(endShift, {
         onSuccess: (data, variables, context) => {
@@ -44,10 +44,12 @@ export default function TrackingBar() {
             // update shift list
             queryClient.invalidateQueries('shifts');
             stopGettingBackgroundLocation();
+            log.info("Ended shift:", data)
+            queryClient.setQueryData('activeShift', data.endShift.shift)
         },
 
         onMutate: async (data) => {
-            await queryClient.cancelQueries('activeShift');
+            /* await queryClient.cancelQueries('activeShift'); */
             const previousShift = queryClient.getQueryData('activeShift');
             log.info('ending shift optimistically...');
             queryClient.setQueryData('activeShift', () => ({
@@ -103,9 +105,9 @@ export default function TrackingBar() {
         },
     });
 
-    const dispatch = useDispatch();
-
-    if (shiftStatus.isLoading) log.info('Tracking bar loading...');
+    if (shiftStatus.isLoading) {
+        log.info('Tracking bar loading...')
+    }
     if (shiftStatus.isError) {
         log.error(`tracking bar Error! ${shiftStatus.error}`);
         toast?.show(`Problem loading shifts: ${shiftStatus.error}`);
