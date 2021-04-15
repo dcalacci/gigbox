@@ -33,20 +33,23 @@ from api.graphql.object import (
     Location,
     LocationInput,
     EmployerInput,
-    ScreenshotData,
     Employer,
+    Screenshot
 )
 from api.models import (
     User as UserModel,
     Shift as ShiftModel,
     Location as LocationModel,
     Employer as EmployerModel,
+    Screenshot as ScreenshotModel,
     Geometry_WKT,
     _convert_geometry,
     EmployerNames,
 )
+from api.utils import generate_filename
 from api.routing.mapmatch import match
 from api.screenshots.parser import predict_app, image_to_df, parse_image
+from flask import current_app
 
 # we use a traditional REST endpoint to create JWT tokens and for first login
 # So, honestly, unsure if we need a Createuser mutation. We will only ever create
@@ -178,6 +181,8 @@ class AddScreenshotToShift(Mutation):
     class Arguments:
         shift_id = ID(required=True)
         asset = Upload(required=True)
+        device_uri = String(required=True)
+        timestamp = DateTime(required=True)
 
     # True if successfully saved and processed image
     success = Field(lambda: Boolean)
@@ -186,23 +191,54 @@ class AddScreenshotToShift(Mutation):
     # employer details if parsed as an app image
     employer = Field(lambda: String)
     data = Field(lambda: String)
+    shift_id = Field(lambda: ID)
+    screenshot = Field(lambda: Screenshot,
+                       description="Screenshot that was created.")
 
-    # @login_required
-    def mutate(self, info, shift_id, asset, **kwargs):
+    @login_required
+    def mutate(self, info, shift_id, asset, device_uri, timestamp, **kwargs):
         shift_id = from_global_id(shift_id)[1]
-        print("SHIFT ID:", shift_id)
+        # Decode base64 image
         decoded = base64.decodebytes(bytes(asset, 'utf-8'))
         f_array = np.asarray(bytearray(decoded))
+        # Write image to disk
         image = cv2.imdecode(f_array, 0)
         # gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
         text = parse_image(image)
         app = predict_app(text)
-        df = image_to_df(image)
-        # TODO: save image, OCR data in postgres
-        # TODO: non-app images should be rejected
-        return AddScreenshotToShift(
-            success=True, isApp=True, employer="SHIPT", data=text
-        )
+
+        if app:
+            img_filename = os.path.join('/tmp',
+                                        generate_filename(shift_id))
+            print("IMAGE FILENAME:", img_filename)
+            cv2.imwrite(img_filename, image)
+            print("Wrote to file...")
+            screenshot = ScreenshotModel(
+                shift_id=shift_id,
+                on_device_uri=device_uri,
+                img_filename=img_filename,
+                timestamp=timestamp,
+                user_id=g.user,
+                employer=app
+            )
+            db.session.add(screenshot)
+            db.session.commit()
+            # df = image_to_df(image)
+            # TODO: non-app images should be rejected
+            return AddScreenshotToShift(
+                success=True,
+                isApp=True,
+                employer="SHIPT",
+                data=text,
+                shift_id=shift_id,
+                screenshot=screenshot
+            )
+        else:
+            print("Not an app screenshot. Not saving...")
+            return AddScreenshotToShift(
+                success=False,
+                isApp=False,
+            )
 
 
 class SetShiftEmployers(Mutation):

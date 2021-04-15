@@ -126,20 +126,23 @@ class Shift(db.Model):
         )
 
 
-class Screenshot(db.Model):
-    __tablename__ = "screenshots"
-    id = db.Column(db.Integer, primary_key=True)
-    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id))
-    timestamp = db.Column(db.String)
-    on_device_uri = db.Column(db.String)
-
-
 class EmployerNames(enum.Enum):
     DOORDASH = "DoorDash"
     INSTACART = "Instacart"
     SHIPT = "Shipt"
     GRUBHUB = "GrubHub"
     UBEREATS = "UberEats"
+
+
+class Screenshot(db.Model):
+    __tablename__ = "screenshots"
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id))
+    timestamp = db.Column(db.String)
+    on_device_uri = db.Column(db.String)
+    img_filename = db.Column(db.String)
+    user_id = db.Column(db.String, ForeignKey(User.id))
+    employer = db.Column(db.Enum(EmployerNames))
 
 
 class Employer(db.Model):

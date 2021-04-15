@@ -3,17 +3,18 @@ import cv2
 import os
 import random
 from PIL import Image
+from api.models import EmployerNames
 import pytesseract
 
 
 def predict_app(image_text):
     # TODO: implement layoutLM pipeline for classification
     if "instacart" in image_text.lower():
-        return "INSTACART"
+        return EmployerNames.INSTACART
     elif "Shop" in image_text.lower():
-        return "SHIPT"
+        return EmployerNames.SHIPT
     else:
-        return False
+        return EmployerNames.DOORDASH
 
 
 def image_to_df(image):

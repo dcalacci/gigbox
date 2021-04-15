@@ -16,6 +16,12 @@ from api.models import (
     EmployerNames,
 )
 
+# This wrapper needed (for now) to enable us to use the same enum class
+# in several different DB objects with sqlalchemy and graphene together.
+# see: https://github.com/graphql-python/graphene-sqlalchemy/issues/211#issuecomment-501508507
+from functools import lru_cache
+graphene.Enum.from_enum = lru_cache(maxsize=None)(graphene.Enum.from_enum)
+
 
 class User(SQLAlchemyObjectType):
     class Meta:
@@ -71,17 +77,17 @@ class Location(SQLAlchemyObjectType):
     accuracy = ORMField(model_attr="accuracy")
 
 
+class Screenshot(SQLAlchemyObjectType):
+    class Meta:
+        model = ScreenshotModel
+
+
 class WeeklySummary(graphene.ObjectType):
     # earnings = graphene.Float()
     # expenses = graphene.Float()
     miles = graphene.Float()
     # num_jobs = graphene.Int()
     num_shifts = graphene.Int()
-
-
-class ScreenshotData(graphene.ObjectType):
-    is_gig_app = graphene.Boolean()
-    employer = graphene.Enum.from_enum(EmployerNames)
 
 
 # INPUTS

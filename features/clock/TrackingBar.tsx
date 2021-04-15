@@ -142,15 +142,14 @@ export default function TrackingBar() {
             // ask them if they would like to start a shift.
             if ('insertedAssets' in obj && activeShift) {
                 const shift_id = shiftStatus.data.getActiveShift.id;
-                console.log(
-                    'Shift found, processing screenshot...',
-                    obj.insertedAssets[0],
-                    shift_id
-                );
-                console.log('SHIFT ID:', shift_id);
+
 
                 var screenshots = obj.insertedAssets.filter(
                     (a) => a.mediaSubtypes != undefined && a.mediaSubtypes.includes('screenshot')
+                );
+                log.info(
+                    'Shift found, processing a screenshot for shift ',
+                    shift_id
                 );
                 screenshots.map((s: Asset) =>
                     uploadScreenshot.mutate({

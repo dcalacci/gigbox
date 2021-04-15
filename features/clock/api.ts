@@ -66,63 +66,46 @@ export const createShift = () => {
     return client.request(query);
 };
 
-// export const addScreenshotToShift = async ({ screenshot, shiftId, jwt }) => {
-//     const client = getClient(store);
-//     const info = await MediaLibrary.getAssetInfoAsync(screenshot);
-//     log.info('INFO:>>>', info);
-//     const fileBase64 = await FileSystem.readAsStringAsync(info.localUri, {
-//         encoding: FileSystem.EncodingType.Base64,
-//     });
-
-//     let filename = info.localUri.split('/').pop();
-//     // Infer the type of the image
-//     let match = /\.(\w+)$/.exec(filename);
-//     let type = match ? `image/${match[1]}` : `image/png`;
-
-//     const body = new FormData();
-//     body.append(
-//         'operations',
-//         `{ "query": "mutation ($file: Upload!, $shift: ID!) { addScreenshotToShift(asset: $file, shiftId: $shift) { data } }", "variables": { "file": null, "shiftId": ${shiftId}} } }`
-//     );
-//     body.append('', '\\');
-//     body.append('map', '{ "0": ["variables.file"] }');
-//     body.append('', '\\');
-//     body.append('0', `{ "uri": ${info.localUri}, "name": ${filename}, "type": ${type}}`);
-
-//     return fetch(graphqlUri, {
-//         method: 'POST',
-//         body,
-//         headers: {
-//             'Content-Type': 'multipart/form-data',
-//             authorization: jwt,
-//         },
-//     });
-// };
-
 export const addScreenshotToShift = async ({ screenshot, shiftId, jwt }) => {
+    const client = getClient(store);
     const query = gql`
-        mutation mutation($Shift: ID!, $File: Upload!) {
-            addScreenshotToShift(shiftId: $Shift, asset: $File) {
+        mutation mutation($Shift: ID!, $File: Upload!, $DeviceURI: String!, $Timestamp: DateTime!) {
+            addScreenshotToShift(
+                shiftId: $Shift
+                asset: $File
+                deviceUri: $DeviceURI
+                timestamp: $Timestamp
+            ) {
                 data
+                screenshot {
+                    shiftId
+                    onDeviceUri
+                    imgFilename
+                    timestamp
+                    userId
+                    employer
+                }
             }
         }
     `;
 
     // const assetSource = Image.resolveAssetSource(screenshot);
     const info = await MediaLibrary.getAssetInfoAsync(screenshot);
-    log.info('INFO:>>>', info);
+    log.info('Screenshot info:', info);
     const fileBase64 = await FileSystem.readAsStringAsync(info.localUri, {
         encoding: FileSystem.EncodingType.Base64,
     });
+    log.info('Screenshot encoded.');
 
     // const base64 = await FileSystem.readAsStringAsync(screenshot, { encoding: 'base64' });
     // let filename = info.localUri.split('/').pop();
     // // Infer the type of the image
     // let match = /\.(\w+)$/.exec(filename);
     // let type = match ? `image/${match[1]}` : `image/png`;
-
-    return request(graphqlUri, query, {
+    return client.request(query, {
         Shift: shiftId,
         File: fileBase64,
+        DeviceURI: info.localUri,
+        Timestamp: new Date(info.creationTime),
     });
 };
