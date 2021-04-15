@@ -4,6 +4,8 @@ import { Image, StyleSheet, Text, FlatList, SafeAreaView, View } from 'react-nat
 import * as Permissions from 'expo-permissions';
 import * as MediaLibrary from 'expo-media-library';
 import { Asset } from 'expo-media-library';
+import { useQuery } from 'react-query'
+import { fetchActiveShift } from '../features/clock/api';
 
 const styles = StyleSheet.create({
     container: {
@@ -22,9 +24,11 @@ const styles = StyleSheet.create({
     },
 });
 
-const processScreenshots = (screenshots: Asset[]) => {
+const processScreenshots = (screenshots: Asset[], shiftStatus: any) => {
     //TODO: process screenshots into jobs / send to server
+    console.log("Shift status in processing:", shiftStatus)
     console.log(' MEDIA LIBRARY CHANGED; incremental changes:', screenshots.length);
+    console.log('screenshot 0:', screenshots[0]);
 };
 
 const JobsList = () => {
@@ -32,6 +36,10 @@ const JobsList = () => {
     const [assetList, setAssetList] = useState<Asset[]>([]);
     // true if list is currently refreshing
     const [refreshing, setRefreshing] = useState<boolean>(false);
+
+    const shiftStatus = useQuery('activeShift', fetchActiveShift, {
+        /* placeholderData: { getActiveShift: { active: false } }, */
+    });
 
     useEffect(() => {
         // get recent screenshots on load
@@ -43,7 +51,10 @@ const JobsList = () => {
         MediaLibrary.addListener((obj) => {
             if ('insertedAssets' in obj) {
                 setAssetList([...obj.insertedAssets, ...assetList]);
-                processScreenshots(obj.insertedAssets);
+                /* if (!shiftStatus.isLoading && !shiftStatus.isError) { */
+                /*     console.log("Shift found, processing screenshot...") */
+                /*     processScreenshots(obj.insertedAssets, shiftStatus.data.getActiveShift); */
+                /* } */
             }
         });
         return () => {

@@ -34,18 +34,26 @@ db = SQLAlchemy()
 # and for types generally, see:
 # https://github.com/graphql-python/graphene-sqlalchemy/issues/53
 # I found that I had to add it here for our database migrations to work properly.
-db_uri = "postgresql://" + os.environ["DB_USERNAME"] + ":" \
-    + os.environ["DB_PASSWORD"] + "@" \
-    + os.environ["DB_HOST"] + ":" \
-    + os.environ["DB_PORT"] + "/" \
+db_uri = (
+    "postgresql://"
+    + os.environ["DB_USERNAME"]
+    + ":"
+    + os.environ["DB_PASSWORD"]
+    + "@"
+    + os.environ["DB_HOST"]
+    + ":"
+    + os.environ["DB_PORT"]
+    + "/"
     + os.environ["DB_DATABASE"]
+)
 engine = create_engine(db_uri)
 
 # have to import scalar from engine, not db....
 
 
 class Geometry_WKT(graphene.Scalar):
-    '''Geometry WKT custom type.'''
+    """Geometry WKT custom type."""
+
     name = "Geometry WKT"
 
     @staticmethod
@@ -64,17 +72,19 @@ class Geometry_WKT(graphene.Scalar):
 
 @gsqa.converter.convert_sqlalchemy_type.register(Geometry)
 def _convert_geometry(thetype, column, registry=None):
-    return Geometry_WKT(description=gsqa.converter.get_column_doc(column),
-                        required=not(gsqa.converter.is_column_nullable(column)))
+    return Geometry_WKT(
+        description=gsqa.converter.get_column_doc(column),
+        required=not (gsqa.converter.is_column_nullable(column)),
+    )
 
 
 class User(db.Model):
 
-    __tablename__ = 'users'
+    __tablename__ = "users"
     # id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     id = db.Column(db.String, primary_key=True, unique=True, index=True)
     uid = db.Column(db.String, unique=True, index=True)
-    shifts = db.relationship('Shift')
+    shifts = db.relationship("Shift")
     date_created = db.Column(DateTime, server_default=func.now())
 
     def __init__(self, id):
@@ -86,7 +96,7 @@ class User(db.Model):
 
 
 class Shift(db.Model):
-    __tablename__ = 'shifts'
+    __tablename__ = "shifts"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     start_time = db.Column(DateTime, default=func.now())
     end_time = db.Column(DateTime, nullable=True)
@@ -95,13 +105,15 @@ class Shift(db.Model):
     date_modified = db.Column(DateTime, onupdate=func.now())
     date_created = db.Column(DateTime, default=func.now())
     # if this shift is deleted, delete its related location data
-    locations = db.relationship("Location",
-                                backref=backref('shift',
-                                                cascade='all, delete'))
-    employers = db.relationship("Employer",
-                                backref=backref('shift', cascade="all, delete"))
+    screenshots = db.relationship("Screenshot")
+    locations = db.relationship(
+        "Location", backref=backref("shift", cascade="all, delete")
+    )
+    employers = db.relationship(
+        "Employer", backref=backref("shift", cascade="all, delete")
+    )
 
-    __table_args__ = (Index('index', "id", "start_time"), )
+    __table_args__ = (Index("index", "id", "start_time"),)
 
     # I looked for a way to enforce the idea that only one shift per user ID could
     # be active at a time, but didn't figure out a way to enforce it in sqlalchemy...
@@ -109,7 +121,9 @@ class Shift(db.Model):
     # index_shiftconstraint = db.Index("user_id", unique=True)
 
     def __repr__(self):
-        return f"Shift from {self.start_time} to {self.end_time} for user {self.user_id}"
+        return (
+            f"Shift from {self.start_time} to {self.end_time} for user {self.user_id}"
+        )
 
 
 class EmployerNames(enum.Enum):
@@ -118,6 +132,17 @@ class EmployerNames(enum.Enum):
     SHIPT = "Shipt"
     GRUBHUB = "GrubHub"
     UBEREATS = "UberEats"
+
+
+class Screenshot(db.Model):
+    __tablename__ = "screenshots"
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id))
+    timestamp = db.Column(db.String)
+    on_device_uri = db.Column(db.String)
+    img_filename = db.Column(db.String)
+    user_id = db.Column(db.String, ForeignKey(User.id))
+    employer = db.Column(db.Enum(EmployerNames))
 
 
 class Employer(db.Model):
@@ -144,9 +169,9 @@ class Employer(db.Model):
 
 
 class Location(db.Model):
-    __tablename__ = 'locations'
+    __tablename__ = "locations"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    geom = db.Column(Geometry('POINT'))
+    geom = db.Column(Geometry("POINT"))
     accuracy = db.Column(db.Float)
     timestamp = db.Column(DateTime, nullable=False)
     shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id))

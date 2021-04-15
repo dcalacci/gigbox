@@ -2,10 +2,25 @@ import graphene
 from graphene import relay, Field, UUID, String
 from graphene_sqlalchemy import SQLAlchemyObjectType
 from graphene_sqlalchemy.types import ORMField
+from graphene_file_upload.scalars import Upload
 from datetime import datetime
 from dateutil import relativedelta
 import base64
-from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Employer as EmployerModel, Geometry_WKT, EmployerNames
+from api.models import (
+    User as UserModel,
+    Shift as ShiftModel,
+    Location as LocationModel,
+    Employer as EmployerModel,
+    Screenshot as ScreenshotModel,
+    Geometry_WKT,
+    EmployerNames,
+)
+
+# This wrapper needed (for now) to enable us to use the same enum class
+# in several different DB objects with sqlalchemy and graphene together.
+# see: https://github.com/graphql-python/graphene-sqlalchemy/issues/211#issuecomment-501508507
+from functools import lru_cache
+graphene.Enum.from_enum = lru_cache(maxsize=None)(graphene.Enum.from_enum)
 
 
 class User(SQLAlchemyObjectType):
@@ -36,6 +51,11 @@ class Shift(SQLAlchemyObjectType):
         return query.all()
 
 
+class Screenshot(SQLAlchemyObjectType):
+    class Meta:
+        model = ScreenshotModel
+
+
 class Employer(SQLAlchemyObjectType):
     class Meta:
         model = EmployerModel
@@ -53,8 +73,13 @@ class Location(SQLAlchemyObjectType):
     #     shp = to_shape(root.geom)
     #     return {"lat": shp.y,
     #             "lng": shp.x}
-    timestamp = ORMField(model_attr='timestamp')
+    timestamp = ORMField(model_attr="timestamp")
     accuracy = ORMField(model_attr="accuracy")
+
+
+class Screenshot(SQLAlchemyObjectType):
+    class Meta:
+        model = ScreenshotModel
 
 
 class WeeklySummary(graphene.ObjectType):
