@@ -90,6 +90,18 @@ class WeeklySummary(graphene.ObjectType):
     num_shifts = graphene.Int()
 
 
+class BoundingBox(graphene.ObjectType):
+    min_lat = graphene.Float()
+    min_lng = graphene.Float()
+    max_lat = graphene.Float()
+    max_lng = graphene.Float()
+
+
+class Route(graphene.ObjectType):
+    geometry = graphene.String()
+    bounding_box = graphene.Field(BoundingBox)
+
+
 class Trips(graphene.ObjectType):
     miles = graphene.Float()
 

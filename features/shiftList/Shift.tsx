@@ -1,5 +1,5 @@
 import React, { useEffect, useState, FunctionComponent } from 'react';
-import { View, Text, SafeAreaView } from 'react-native';
+import { View, Text, SafeAreaView, StyleSheet } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from 'react-query';
@@ -7,35 +7,87 @@ import { FlatList } from 'react-native-gesture-handler';
 
 import moment from 'moment';
 
-import { log } from '../../utils'
+import { log } from '../../utils';
 import { tailwind } from 'tailwind';
-import { getShifts } from './api';
+import { getShifts, getShiftGeometry } from './api';
+import TripMap from './TripMap';
 
 const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
     const calendarStart = moment(props.item.node.startTime).calendar();
-    console.log("start time:", calendarStart, props.item.node.startTime)
-    const endTime = props.item.node.endTime ? moment.utc(props.item.node.endTime).format('LT') : 'Now';
+    console.log('start time:', calendarStart, props.item.node.startTime);
+    const endTime = props.item.node.endTime
+        ? moment.utc(props.item.node.endTime).format('LT')
+        : 'Now';
     const timeString = `${calendarStart} to ${endTime}`;
-    const mileage = props.item.node.roadSnappedMiles ? props.item.node.roadSnappedMiles: 0
+
+    const [locations, setLocations] = useState([{}]);
+    const [region, setRegion] = useState({});
+    const routeStatus = useQuery('shiftRoute', () => getShiftGeometry(props.item.node.id), {
+        onSuccess: (data) => {
+            console.log("Got data:", data)
+            const coords = JSON.parse(data.getRouteLine.geometry);
+            const locations = coords.map((c) => {
+                return { latitude: c[1], longitude: c[0] };
+            });
+            setLocations(locations);
+            const bbox = data.getRouteLine.boundingBox;
+            setRegion({
+                latitudeDelta: ((bbox.maxLat - bbox.minLat)*2.05),
+                longitudeDelta: ((bbox.maxLng - bbox.minLng)*2.05),
+                latitude: bbox.maxLat - (bbox.maxLat - bbox.minLat)/2,
+                longitude: bbox.maxLng - (bbox.maxLng - bbox.minLng)/2,
+            });
+            /* setRegion({ */
+            /*     ...center, */
+            /*     latitude: bbox.maxLat - center.latitudeDelta, */
+            /*     longitude: bbox.maxLng - center.longitudeDelta, */
+            /* }); */
+        },
+    });
+
+    const daysAgo = moment.utc(props.item.node.startTime).diff(moment(), 'days');
+    const mileage = props.item.node.roadSnappedMiles ? props.item.node.roadSnappedMiles : 0;
     return (
-        <View style={tailwind('flex-1 w-full p-2 mb-10')} key={props.item.node.id}>
+        <View style={[tailwind('flex flex-row')]} key={props.item.node.id}>
+            <View style={[tailwind('m-2 h-48 flex flex-grow flex-col'), styles.card]}>
+                <View
+                    style={[
+                        tailwind('flex-1 pb-1 h-full flex flex-col'),
+                        styles.card,
+                        { overflow: 'hidden' },
+                    ]}
+                >
+                    <View style={[tailwind('flex-1'), { borderRadius: 10 }]}>
+                        {routeStatus.isSuccess ? (
+                            <TripMap
+                                tripLocations={locations}
+                                region={region}
+                                shiftId={props.item.node.id}
+                            />
+                        ) : (
+                            <Text>Loading...</Text>
+                        )}
+                    </View>
+                    <View style={tailwind('p-2')}>
+                        <Text style={tailwind('text-black text-xl font-bold')}>
+                            {moment.utc(props.item.node.startTime).fromNow()}
+                        </Text>
+                        <Text style={tailwind('text-black text-xl font-bold')}>{timeString}</Text>
+                        <Text style={tailwind('text-black text-xl')}>{mileage.toFixed(1)}mi</Text>
+                    </View>
+                </View>
+            </View>
             <View
                 style={tailwind(
-                    'self-start absolute bg-transparent border-2 border-green-500 w-full h-full'
-                )}
-            ></View>
-            <View
-                style={tailwind(
-                    'self-start bg-transparent border mt-1 ml-1 mr-4 p-1 w-full h-full'
+                    'flex-grow-0 w-10 p-5 flex flex-col h-full border-l-4 border-green-500'
                 )}
             >
-                <View style={tailwind('p-2')}>
-                    <Text style={tailwind('text-black text-xl font-bold')}>
-                        {moment.utc(props.item.node.startTime).fromNow()}
-                    </Text>
-                    <Text style={tailwind('text-black text-xl font-bold')}>{timeString}</Text>
-                        <Text style={tailwind('text-black text-xl')}>{mileage.toFixed(1)}mi</Text>
-                </View>
+                <View
+                    style={[
+                        tailwind('rounded-full bg-green-500 h-8 w-8'),
+                        daysAgo % 7 == 0 ? tailwind('w-24') : null,
+                    ]}
+                ></View>
             </View>
         </View>
     );
@@ -83,15 +135,30 @@ export default function ShiftList() {
         return <Text>Error: {error.message}</Text>;
     } else {
         return (
-            <SafeAreaView>
+            <View style={[tailwind('flex-1 w-full flex-row'), { margin: 0 }]}>
                 <FlatList
+                    style={tailwind('')}
                     data={flattened_data}
-                    renderItem={ShiftCard}
-                    onRefresh={onRefresh}
+                    renderItem={(props) => (<ShiftCard {...props}/>)}
+                    onRefresh={() => onRefresh()}
                     refreshing={refreshing}
                     keyExtractor={(shift) => shift.node.id}
                 ></FlatList>
-            </SafeAreaView>
+            </View>
         );
     }
 }
+
+const styles = StyleSheet.create({
+    card: {
+        borderRadius: 10,
+        backgroundColor: '#ffffff',
+        shadowOffset: {
+            width: 0,
+            height: 2,
+        },
+        shadowOpacity: 0.22,
+        shadowRadius: 3,
+        elevation: 5,
+    },
+});

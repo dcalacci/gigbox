@@ -11,9 +11,9 @@ from flask import g
 
 # import numpy as np
 from api.controllers.auth.decorators import login_required
-from api.graphql.object import User, Shift, Location, WeeklySummary, Trips
-from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel
-from api.routing.mapmatch import get_shift_distance
+from api.graphql.object import User, Shift, Location, WeeklySummary, Trips, Route, BoundingBox
+from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Geometry_WKT
+from api.routing.mapmatch import get_shift_distance, get_shift_geometry
 
 
 class Query(graphene.ObjectType):
@@ -21,9 +21,9 @@ class Query(graphene.ObjectType):
 
     getTrips = graphene.Field(Trips)
     getActiveShift = graphene.Field(Shift)
+    getRouteLine = graphene.Field(Route, objectId=graphene.ID())
     getWeeklySummary = graphene.Field(WeeklySummary)
     allShifts = SQLAlchemyConnectionField(Shift, sort=Shift.sort_argument())
-    print("Allshift field args:", allShifts.args)
 
     shifts = graphene.List(Shift,
                            cursor=graphene.Int(),
@@ -76,8 +76,28 @@ class Query(graphene.ObjectType):
         return WeeklySummary(miles=distance_miles, num_shifts=n_shifts)
 
     @login_required
-    def resolve_getTrips(self, info, shiftId):
-        shift_id = from_global_id(shift_id)[1]
+    def resolve_getRouteLine(self, info, objectId):
+        # TODO: do an if statement here if we ever have more than just shifts
+        # with routes. we can tell what kind it is from the global ID
+        shift_id = from_global_id(objectId)[1]
+        shift = Shift.get_query(info=info).get(shift_id)
+        res = get_shift_geometry(shift, info)
+        if not res:
+            return None
+        else:
+            (geometry, bb) = res
+            print("got geometry:", geometry, bb)
+            return Route(geometry=geometry,
+                         bounding_box=BoundingBox(
+                             min_lat=bb[1],
+                             min_lng=bb[0],
+                             max_lat=bb[3],
+                             max_lng=bb[2],
+                         ))
+
+    @login_required
+    def resolve_getTrips(self, info, objectId):
+        shift_id = from_global_id(objectId)[1]
         shift = Shift.get_query(info=info).get(shift_id)
         distance = get_shift_distance(shift, info)
         return Trips(miles=distance)

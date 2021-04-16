@@ -2,6 +2,27 @@ import { gql } from 'graphql-request';
 import { getClient } from '../../utils';
 import { store } from '../../store/store';
 
+export const getShiftGeometry = (shift_id: String) => {
+    const client = getClient(store);
+    const query = gql`
+        query route($id: ID!) {
+            getRouteLine(objectId: $id) {
+                geometry
+                boundingBox {
+                    minLat
+                    minLng
+                    maxLat
+                    maxLng
+                }
+            }
+        }
+    `;
+    const variables = {
+        id: shift_id,
+    };
+    return client.request(query, variables);
+};
+
 export const getShifts = (first: Number, after: String) => {
     const client = getClient(store);
     const query = gql`

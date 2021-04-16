@@ -112,6 +112,7 @@ class Shift(db.Model):
     road_snapped_miles = db.Column(db.Float, default=0)
     # passive_deletes also means that when we delete a shift, the location and employer records
     # are deleted correctly, regardless of whether we use session.delete() or filter().delete()
+
     locations = db.relationship(
         "Location", backref=backref("shift", cascade="all, delete", passive_deletes=True)
     )
