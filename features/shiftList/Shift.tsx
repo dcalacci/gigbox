@@ -16,6 +16,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
     console.log("start time:", calendarStart, props.item.node.startTime)
     const endTime = props.item.node.endTime ? moment.utc(props.item.node.endTime).format('LT') : 'Now';
     const timeString = `${calendarStart} to ${endTime}`;
+    const mileage = props.item.node.roadSnappedMiles ? props.item.node.roadSnappedMiles: 0
     return (
         <View style={tailwind('flex-1 w-full p-2 mb-10')} key={props.item.node.id}>
             <View
@@ -33,6 +34,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                         {moment.utc(props.item.node.startTime).fromNow()}
                     </Text>
                     <Text style={tailwind('text-black text-xl font-bold')}>{timeString}</Text>
+                        <Text style={tailwind('text-black text-xl')}>{mileage.toFixed(1)}mi</Text>
                 </View>
             </View>
         </View>

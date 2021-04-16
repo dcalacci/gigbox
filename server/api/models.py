@@ -100,17 +100,23 @@ class Shift(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     start_time = db.Column(DateTime, default=func.now())
     end_time = db.Column(DateTime, nullable=True)
-    user_id = db.Column(db.String, ForeignKey(User.id))
+    # ondelete='CASCADE' ensures that if we delete a user through both session.delete() and filter().delete()
+    # their shifts are deleted
+    user_id = db.Column(db.String, ForeignKey(User.id, ondelete='CASCADE'))
     active = db.Column(Boolean, nullable=False)
     date_modified = db.Column(DateTime, onupdate=func.now())
     date_created = db.Column(DateTime, default=func.now())
     # if this shift is deleted, delete its related location data
-    screenshots = db.relationship("Screenshot")
+    screenshots = db.relationship("Screenshot",
+                                  backref=backref("shift", cascade='all, delete', passive_deletes=True))
+    road_snapped_miles = db.Column(db.Float, default=0)
+    # passive_deletes also means that when we delete a shift, the location and employer records
+    # are deleted correctly, regardless of whether we use session.delete() or filter().delete()
     locations = db.relationship(
-        "Location", backref=backref("shift", cascade="all, delete")
+        "Location", backref=backref("shift", cascade="all, delete", passive_deletes=True)
     )
     employers = db.relationship(
-        "Employer", backref=backref("shift", cascade="all, delete")
+        "Employer", backref=backref("shift", cascade="all, delete", passive_deletes=True)
     )
 
     __table_args__ = (Index("index", "id", "start_time"),)
@@ -137,35 +143,25 @@ class EmployerNames(enum.Enum):
 class Screenshot(db.Model):
     __tablename__ = "screenshots"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id))
+    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(
+        Shift.id, ondelete='CASCADE'))
     timestamp = db.Column(db.String)
     on_device_uri = db.Column(db.String)
     img_filename = db.Column(db.String)
-    user_id = db.Column(db.String, ForeignKey(User.id))
+    user_id = db.Column(db.String, ForeignKey(User.id, ondelete='CASCADE'), )
     employer = db.Column(db.Enum(EmployerNames))
 
 
 class Employer(db.Model):
     __tablename__ = "employers"
     id = db.Column(db.Integer, primary_key=True)
-    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id))
+    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(
+        Shift.id, ondelete='CASCADE'))
     name = db.Column(db.Enum(EmployerNames))
 
     def __init__(self, name, shift_id):
         self.name = name
         self.shift_id = shift_id
-
-
-# This isn't needed yet -- for a future feature
-# @listens_for(Employer.__table__, 'after_create')
-# def insert_initial_values(*args, **kwargs):
-#     print("Adding employer data...")
-#     db.session.add(Employer(name=EmployerNames.DOORDASH))
-#     db.session.add(Employer(name=EmployerNames.INSTACART))
-#     db.session.add(Employer(name=EmployerNames.SHIPT))
-#     db.session.add(Employer(name=EmployerNames.UBEREATS))
-#     db.session.add(Employer(name=EmployerNames.GRUBHUB))
-#     db.session.commit()
 
 
 class Location(db.Model):
@@ -174,7 +170,8 @@ class Location(db.Model):
     geom = db.Column(Geometry("POINT"))
     accuracy = db.Column(db.Float)
     timestamp = db.Column(DateTime, nullable=False)
-    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id))
+    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(
+        Shift.id, ondelete='CASCADE'))
 
     def __init__(self, timestamp, lng, lat, shift_id):
         self.timestamp = timestamp

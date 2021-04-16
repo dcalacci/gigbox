@@ -21,6 +21,7 @@ export const fetchActiveShift = () => {
                 id
                 active
                 startTime
+                roadSnappedMiles
                 locations {
                     id
                     geom

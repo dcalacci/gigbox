@@ -16,6 +16,7 @@ export const getShifts = (first: Number, after: String) => {
                         id
                         startTime
                         endTime
+                        roadSnappedMiles
                         locations {
                             geom
                             timestamp

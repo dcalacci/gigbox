@@ -34,6 +34,8 @@ export default function TrackingBar() {
     const queryClient = useQueryClient();
     const auth = useSelector((state: RootState): AuthState => state.auth);
     const shiftStatus = useQuery('activeShift', fetchActiveShift, {
+        refetchInterval: 10000,
+        refetchIntervalInBackground: true,
         placeholderData: { getActiveShift: { active: false } },
     });
     const endActiveShift = useMutation(endShift, {
@@ -44,8 +46,8 @@ export default function TrackingBar() {
             // update shift list
             queryClient.invalidateQueries('shifts');
             stopGettingBackgroundLocation();
-            log.info("Ended shift:", data)
-            queryClient.setQueryData('activeShift', data.endShift.shift)
+            log.info('Ended shift:', data);
+            queryClient.setQueryData('activeShift', data.endShift.shift);
         },
 
         onMutate: async (data) => {
@@ -77,7 +79,7 @@ export default function TrackingBar() {
             const previousShift = queryClient.getQueryData('activeShift');
             log.info('Providing mutate with optimistic data...');
             queryClient.setQueryData('activeShift', () => ({
-                getActiveShift: { active: true, startTime: new Date() },
+                getActiveShift: { active: true, startTime: new Date(), roadSnappedMiles: 0.0},
             }));
             return { previousShift };
         },
@@ -106,7 +108,7 @@ export default function TrackingBar() {
     });
 
     if (shiftStatus.isLoading) {
-        log.info('Tracking bar loading...')
+        log.info('Tracking bar loading...');
     }
     if (shiftStatus.isError) {
         log.error(`tracking bar Error! ${shiftStatus.error}`);
@@ -118,10 +120,10 @@ export default function TrackingBar() {
     // convenience function to check if there's a current active shift
     const shiftActive = () => {
         if (shiftStatus.isLoading || shiftStatus.isError) {
-            return false
-        } 
-        return !shiftStatus.data.getActiveShift ? false : shiftStatus.data.getActiveShift.active  
-    }
+            return false;
+        }
+        return !shiftStatus.data.getActiveShift ? false : shiftStatus.data.getActiveShift.active;
+    };
 
     // updates the tracking bar time logger every second. Uses useEffect
     // so our setInterval resets on cue.
@@ -178,8 +180,11 @@ export default function TrackingBar() {
     };
 
     const textStyle = [tailwind('text-lg'), shiftActive() ? tailwind('font-semibold') : null];
+    /* log.info('Rendering shift:', shiftStatus.data.getActiveShift); */
 
     if (!shiftStatus.isLoading && !shiftStatus.isError) {
+        const shift = shiftStatus.data.getActiveShift;
+        const nMiles = ((shift && shift.roadSnappedMiles) ? shift.roadSnappedMiles : 0.0).toFixed(1);
         return (
             <View style={[tailwind(''), shiftActive() ? tailwind('bg-green-500') : null]}>
                 <View
@@ -198,7 +203,7 @@ export default function TrackingBar() {
                         onToggle={onTogglePress}
                     />
                     <View style={tailwind('flex-grow-0')}>
-                        <Text style={textStyle}>0.0mi</Text>
+                        <Text style={textStyle}>{nMiles}mi</Text>
                         <Text style={textStyle}>{elapsedTime}</Text>
                     </View>
                 </View>

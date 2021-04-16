@@ -9,6 +9,7 @@ type WeeklyCardProps = {};
 
 const WeeklyCard: FunctionComponent<WeeklyCardProps> = ({}) => {
     const weeklySummary = useQuery('weeklySummary', fetchWeeklySummary);
+    if (weeklySummary.isError) log.error(weeklySummary)
     if (weeklySummary.isLoading || weeklySummary.isError) {
         return (
             <View style={tailwind('flex-1 w-11/12')}>
