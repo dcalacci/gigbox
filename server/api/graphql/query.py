@@ -69,15 +69,10 @@ class Query(graphene.ObjectType):
                   .filter(
                       ShiftModel.start_time > dt_weekago))
         n_shifts = shifts.count()
+        distances = [shift.road_snapped_miles for shift in shifts]
 
-        distances = [get_shift_distance(shift, info) for shift in shifts]
-        distance_miles = sum(distances) * 0.0006213712
-
-        locQuery = Location.get_query(info=info)
-        shift_ids = [shift.id for shift in shifts]
-        n_locs = (locQuery
-                  .filter(LocationModel.shift_id.in_(shift_ids))).count()
-
+        # distances = [get_shift_distance(shift, info) for shift in shifts]
+        distance_miles = sum(distances)
         return WeeklySummary(miles=distance_miles, num_shifts=n_shifts)
 
     @login_required
