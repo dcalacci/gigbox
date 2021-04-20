@@ -51,7 +51,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                     });
                 }
             },
-            refetchInterval: (endTime ? null : 5000)
+            refetchInterval: endTime ? null : 5000,
         }
     );
 
@@ -79,6 +79,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                 <View style={[tailwind('flex-auto'), { height: 150 }]}>
                     {region != null ? (
                         <TripMap
+                            isActive={(endTime == false)}
                             tripLocations={locations}
                             region={region}
                             shiftId={props.item.node.id}
@@ -98,7 +99,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                         </Text>
                     </View>
 
-                        <Text style={tailwind('text-black text-lg pl-2')}>{startStr}</Text>
+                    <Text style={tailwind('text-black text-lg pl-2')}>{startStr}</Text>
                 </View>
 
                 <View style={[tailwind('flex flex-col p-5 justify-items-center')]}>
@@ -181,6 +182,13 @@ export default function ShiftList() {
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                     }
+                    onEndReached={() => {
+                        console.log("reached end")
+                        if (hasNextPage) {
+                            console.log('fetching next page');
+                            fetchNextPage();
+                        }
+                    }}
                     extraData={expanded}
                     keyExtractor={(shift) => shift.node.id}
                 ></FlatList>

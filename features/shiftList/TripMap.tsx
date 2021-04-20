@@ -16,6 +16,7 @@ import { getShiftGeometry } from './api';
 interface TripMapProps {
     tripLocations: [{ latitude: number; longitude: number }];
     shiftId: string;
+    isActive: boolean
     region: {
         latitude: number;
         longitude: number;
@@ -30,10 +31,11 @@ const TripMap: FunctionComponent<TripMapProps> = (props: TripMapProps) => {
     return (
         <MapView
             ref={mapRef}
-            initialRegion={props.region}
+            region={props.region}
             zoomEnabled={false}
             rotateEnabled={false}
             scrollEnabled={false}
+            showsUserLocation={props.isActive}
             zoomControlEnabled={false}
             loadingEnabled={true}
             style={[tailwind('w-full h-full')]}
