@@ -51,6 +51,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                     });
                 }
             },
+            refetchInterval: (endTime ? null : 5000)
         }
     );
 

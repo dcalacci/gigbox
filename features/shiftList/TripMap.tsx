@@ -31,6 +31,11 @@ const TripMap: FunctionComponent<TripMapProps> = (props: TripMapProps) => {
         <MapView
             ref={mapRef}
             initialRegion={props.region}
+            zoomEnabled={false}
+            rotateEnabled={false}
+            scrollEnabled={false}
+            zoomControlEnabled={false}
+            loadingEnabled={true}
             style={[tailwind('w-full h-full')]}
         >
             <Polyline
