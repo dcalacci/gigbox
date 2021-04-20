@@ -43,10 +43,12 @@ def get_shift_distance(shift, info):
 
 
 def get_shift_geometry(shift, info):
+    print("Shift locations:", shift.locations)
+    locs = sorted(shift.locations, key=lambda l: l.timestamp)
 
-    locs = Location.get_query(info=info).filter(
-        LocationModel.shift_id == shift.id).order_by(LocationModel.timestamp.asc())
-    if locs.count() == 0:
+    # locs = Location.get_query(info=info).filter(
+    #     LocationModel.shift_id == shift.id).order_by(LocationModel.timestamp.asc())
+    if len(locs) == 0:
         return False
     current_app.logger.info(
         "Retrieving locations for shift {}".format(shift.id))

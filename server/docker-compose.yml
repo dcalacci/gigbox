@@ -37,7 +37,7 @@ services:
         ports:
             - '5001:5000'
         command:
-            "osrm-routed --algorithm mld california-latest.osrm"
+            "osrm-routed --max-matching-size 10000 --algorithm mld us-latest.osrm"
         networks:
             - backend
 volumes:
