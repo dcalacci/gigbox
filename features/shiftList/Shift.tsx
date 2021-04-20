@@ -7,8 +7,8 @@ import {
     StyleSheet,
     Pressable,
     LayoutAnimation,
+    RefreshControl,
 } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
 
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from 'react-query';
 import { FlatList } from 'react-native-gesture-handler';
@@ -22,10 +22,12 @@ import TripMap from './TripMap';
 
 const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
     const calendarStart = moment.utc(props.item.node.startTime).calendar();
-    const endTime = props.item.node.endTime
-        ? moment.utc(props.item.node.endTime).format('LT')
-        : 'Now';
-    const timeString = `${calendarStart} to ${endTime}`;
+    const startTime = moment.utc(props.item.node.startTime).local();
+    const endTime = props.item.node.endTime ? moment.utc(props.item.node.endTime).local() : false;
+    let startStr = startTime.format('dddd MMMM Do, h:mm a');
+    if (endTime) {
+        startStr = `${startStr} - ${endTime.format('h:mm a')}`;
+    }
 
     const [locations, setLocations] = useState([{}]);
     const [region, setRegion] = useState(null);
@@ -34,9 +36,6 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
         () => getShiftGeometry(props.item.node.id),
         {
             onSuccess: (data) => {
-                console.log('ON SUCCESS for shift route:', props.item.node.id);
-                console.log(props.item.node);
-                console.log(data);
                 if (data.getRouteLine !== null) {
                     const coords = JSON.parse(data.getRouteLine.geometry);
                     const locations = coords.map((c) => {
@@ -68,7 +67,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
     const daysAgo = moment.utc(props.item.node.startTime).diff(moment(), 'days');
     const mileage = props.item.node.roadSnappedMiles ? props.item.node.roadSnappedMiles : 0;
     return (
-        <View style={[tailwind('flex-auto m-2 flex flex-shrink flex-col'), styles.card, ]}>
+        <View style={[tailwind('flex-auto m-2 flex flex-shrink flex-col'), styles.card]}>
             <View
                 style={[
                     tailwind('pb-1 h-full flex flex-col flex-grow'),
@@ -76,7 +75,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                     { overflow: 'hidden' },
                 ]}
             >
-                <View style={[tailwind('flex-auto'), { height: 150}]}>
+                <View style={[tailwind('flex-auto'), { height: 150 }]}>
                     {region != null ? (
                         <TripMap
                             tripLocations={locations}
@@ -87,13 +86,18 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                         <Text>Loading...</Text>
                     )}
                 </View>
-                <View style={tailwind('p-2 flex-row justify-between')}>
-                    <Text style={tailwind('text-black text-xl font-bold')}>
-                        {moment.utc(props.item.node.startTime).fromNow()}
-                    </Text>
-                    <Text style={tailwind('text-black text-lg font-bold')}>
-                        {mileage.toFixed(1)} mi (total)
-                    </Text>
+
+                <View style={tailwind('flex-col justify-start')}>
+                    <View style={tailwind('p-2 flex-row justify-between')}>
+                        <Text style={tailwind('text-black text-xl font-bold')}>
+                            {moment.utc(props.item.node.startTime).fromNow()}
+                        </Text>
+                        <Text style={tailwind('text-black text-lg font-bold')}>
+                            {mileage.toFixed(1)} mi (total)
+                        </Text>
+                    </View>
+
+                        <Text style={tailwind('text-black text-lg pl-2')}>{startStr}</Text>
                 </View>
 
                 <View style={[tailwind('flex flex-col p-5 justify-items-center')]}>
@@ -130,7 +134,6 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
 };
 
 export default function ShiftList() {
-    const [refreshing, setRefreshing] = useState(false);
     const queryClient = useQueryClient();
     const n = 10;
     const fetchShifts = ({ pageParam = null }) => {
@@ -145,60 +148,47 @@ export default function ShiftList() {
         isFetchingNextPage,
         status,
     } = useInfiniteQuery('shifts', fetchShifts, {
+        onSettled: () => {
+            setRefreshing(false);
+        },
         getNextPageParam: (lastPage, pages) => {
             return lastPage.allShifts.pageInfo.endCursor;
         },
     });
     const [expanded, setExpanded] = useState(null);
-
-    // TODO: unclear why this refresh does not work but our job list one does
+    const [refreshing, setRefreshing] = useState(false);
     const onRefresh = () => {
-        log.info('invalidating all shift queries...');
         setRefreshing(true);
         queryClient.invalidateQueries('shifts');
     };
-    const onSizeChange = (w, h) => {
-        log.info('ON SIZE CHANGE');
-        console.log(w, h);
-        console.log('expanded:', expanded);
-    };
 
     const flattened_data = data?.pages.map((a) => a.allShifts.edges).flat();
-    /* console.log('flattened:', flattened_data); */
-    /* return status === 'loading' ? ( */
-    /*     <Text>Loading...</Text> */
-    /* ) : status === 'error' ? ( */
-    /*     <Text>Error: {error.message}</Text> */
-    /* ) : ( */
-    /*         ); */
     if (status === 'loading') {
         return <Text> Loading...</Text>;
     } else if (status === 'error') {
         return <Text>Error: {error.message}</Text>;
     } else {
         return (
-
-        <SafeAreaView style={styles.container}>
-            <FlatList
-                style={[
-                    tailwind('h-full w-full flex-auto'),
-                    {flexDirection: 'col', minHeight: 70, flexGrow: 1 },
-                ]}
-                data={flattened_data}
-                renderItem={(props) => <ShiftCard {...props} setExpanded={setExpanded} />}
-                onRefresh={() => onRefresh()}
-                refreshing={refreshing}
-                onContentSizeChange={onSizeChange}
-                extraData={expanded}
-                keyExtractor={(shift) => shift.node.id}
-            ></FlatList>
-                    </SafeAreaView>
+            <SafeAreaView style={styles.container}>
+                <FlatList
+                    style={[
+                        tailwind('h-full w-full flex-auto'),
+                        { flexDirection: 'col', minHeight: 70, flexGrow: 1 },
+                    ]}
+                    data={flattened_data}
+                    renderItem={(props) => <ShiftCard {...props} setExpanded={setExpanded} />}
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    }
+                    extraData={expanded}
+                    keyExtractor={(shift) => shift.node.id}
+                ></FlatList>
+            </SafeAreaView>
         );
     }
 }
 
 const styles = StyleSheet.create({
-
     container: {
         flex: 1,
         width: '100%',
