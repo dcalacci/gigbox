@@ -21,9 +21,10 @@ import { GraphQLClient } from 'graphql-request';
 
 const { manifest } = Constants;
 
-export const uri = manifest.debuggerHost
-    ? `http://${manifest?.debuggerHost?.split(':').shift()}:5000`
-    : 'http://localhost:5000';
+// export const uri = manifest.debuggerHost
+//     ? `http://${manifest?.debuggerHost?.split(':').shift()}:5000`
+//     : 'http://localhost:5000';
+export const uri = 'http://192.168.1.46:5000';
 export const graphqlUri = `${uri}/graphql`;
 console.log(`API URI: ${uri}`);
 

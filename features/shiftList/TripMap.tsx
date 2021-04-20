@@ -26,7 +26,6 @@ interface TripMapProps {
 
 const TripMap: FunctionComponent<TripMapProps> = (props: TripMapProps) => {
     const mapRef = useRef(null);
-    console.log("tripLocations:", props.tripLocations)
 
     return (
         <MapView

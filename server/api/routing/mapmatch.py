@@ -48,7 +48,8 @@ def get_shift_geometry(shift, info):
         LocationModel.shift_id == shift.id).order_by(LocationModel.timestamp.asc())
     if locs.count() == 0:
         return False
-    current_app.logger.info("Retrieving locations for shift ")
+    current_app.logger.info(
+        "Retrieving locations for shift {}".format(shift.id))
     # current_app.logger.info("Found locs...")
     coords = [{'lat': to_shape(s.geom).y,
                'lng': to_shape(s.geom).x,
