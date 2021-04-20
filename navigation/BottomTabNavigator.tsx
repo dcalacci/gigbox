@@ -6,7 +6,7 @@ import * as React from 'react';
 
 import Colors from '../constants/Colors';
 import TabOneScreen from '../screens/TabOneScreen';
-import TabTwoScreen from '../screens/TabTwoScreen';
+import ShiftsScreen from '../screens/ShiftsScreen';
 import JobsScreen from '../screens/JobsScreen';
 import Onboarding from '../screens/Onboarding';
 import { RootState } from '../store/index';
@@ -54,8 +54,8 @@ export default function BottomTabNavigator() {
                             }}
                         />
                         <BottomTab.Screen
-                            name="TabTwo"
-                            component={TabTwoNavigator}
+                            name="Shifts"
+                            component={ShiftsScreen}
                             options={{
                                 tabBarIcon: ({ color }) => (
                                     <TabBarIcon name="ios-code" color={color} />
@@ -107,19 +107,5 @@ function TabOneNavigator() {
                 }}
             />
         </TabOneStack.Navigator>
-    );
-}
-
-const TabTwoStack = createStackNavigator<TabTwoParamList>();
-
-function TabTwoNavigator() {
-    return (
-        <TabTwoStack.Navigator>
-            <TabTwoStack.Screen
-                name="TabTwoScreen"
-                component={TabTwoScreen}
-                options={{ headerTitle: 'Shifts' }}
-            />
-        </TabTwoStack.Navigator>
     );
 }

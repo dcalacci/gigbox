@@ -17,6 +17,7 @@ interface TripMapProps {
     tripLocations: [{ latitude: number; longitude: number }];
     shiftId: string;
     isActive: boolean
+    interactive?: boolean
     region: {
         latitude: number;
         longitude: number;
@@ -32,10 +33,10 @@ const TripMap: FunctionComponent<TripMapProps> = (props: TripMapProps) => {
         <MapView
             ref={mapRef}
             region={props.region}
-            zoomEnabled={false}
-            rotateEnabled={false}
-            scrollEnabled={false}
-            showsUserLocation={props.isActive}
+            zoomEnabled={false || props.interactive}
+            rotateEnabled={false || props.interactive}
+            scrollEnabled={false || props.interactive}
+            /* showsUserLocation={props.isActive} */
             zoomControlEnabled={false}
             loadingEnabled={true}
             style={[tailwind('w-full h-full')]}
