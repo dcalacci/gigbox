@@ -51,7 +51,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
     const daysAgo = moment.utc(props.item.node.startTime).diff(moment(), 'days');
     const mileage = props.item.node.roadSnappedMiles ? props.item.node.roadSnappedMiles : 0;
 
-    const toggleTripDrawer = () => {
+    const openDetails = () => {
         props.navigation.navigate('Details', {
             shift: props.item.node,
             locations,
@@ -59,10 +59,10 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
             mileage,
             startStr,
         });
+    };
+
+    const toggleTripDrawer = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        if (!tripDrawerOpen) {
-            props.setExpanded(props.item.node.id);
-        }
         setTripDrawerOpen(!tripDrawerOpen);
     };
 
@@ -78,6 +78,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                 <View style={[tailwind('flex-auto'), { height: 150 }]}>
                     {region != null ? (
                         <TripMap
+                            interactive={false}
                             isActive={endTime == false}
                             tripLocations={locations}
                             region={region}
@@ -88,18 +89,20 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                     )}
                 </View>
 
-                <View style={tailwind('flex-col justify-start')}>
-                    <View style={tailwind('p-2 flex-row justify-between')}>
-                        <Text style={tailwind('text-black text-xl font-bold')}>
-                            {moment.utc(props.item.node.startTime).fromNow()}
-                        </Text>
-                        <Text style={tailwind('text-black text-lg font-bold')}>
-                            {mileage.toFixed(1)} mi (total)
-                        </Text>
-                    </View>
+                <Pressable onPress={openDetails}>
+                    <View style={tailwind('flex-col justify-start')}>
+                        <View style={tailwind('p-2 flex-row justify-between')}>
+                            <Text style={tailwind('text-black text-xl font-bold')}>
+                                {moment.utc(props.item.node.startTime).fromNow()}
+                            </Text>
+                            <Text style={tailwind('text-black text-lg font-bold')}>
+                                {mileage.toFixed(1)} mi (total)
+                            </Text>
+                        </View>
 
-                    <Text style={tailwind('text-black text-lg pl-2')}>{startStr}</Text>
-                </View>
+                        <Text style={tailwind('text-black text-lg pl-2')}>{startStr}</Text>
+                    </View>
+                </Pressable>
 
                 <View style={[tailwind('flex flex-col p-5 justify-items-center')]}>
                     <Pressable
@@ -120,14 +123,6 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                             <Ionicons name="caret-back-outline" size={24} color="green" />
                         )}
                     </Pressable>
-                    {tripDrawerOpen ? (
-                        <>
-                            <Text>Open</Text>
-                            <Text>Opennn</Text>
-                        </>
-                    ) : (
-                        <Text>Closed</Text>
-                    )}
                 </View>
             </View>
         </View>

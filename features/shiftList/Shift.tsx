@@ -32,14 +32,15 @@ export default function ShiftList({ navigation }) {
             return lastPage.allShifts.pageInfo.endCursor;
         },
     });
-    const [expanded, setExpanded] = useState(null);
     const [refreshing, setRefreshing] = useState(false);
     const onRefresh = () => {
         setRefreshing(true);
         queryClient.invalidateQueries('shifts');
     };
 
-    const Header = () => <Text style={tailwind('text-3xl text-black font-bold pl-2 pt-20')}>Shifts</Text>;
+    const Header = () => (
+        <Text style={tailwind('text-3xl text-black font-bold pl-2 pt-20')}>Shifts</Text>
+    );
 
     const flattened_data = data?.pages.map((a) => a.allShifts.edges).flat();
     if (status === 'loading') {
@@ -56,9 +57,7 @@ export default function ShiftList({ navigation }) {
                         { flexDirection: 'col', minHeight: 70, flexGrow: 1 },
                     ]}
                     data={flattened_data}
-                    renderItem={(props) => (
-                        <ShiftCard {...props} setExpanded={setExpanded} navigation={navigation} />
-                    )}
+                    renderItem={(props) => <ShiftCard {...props} navigation={navigation} />}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                     }
@@ -69,7 +68,6 @@ export default function ShiftList({ navigation }) {
                             fetchNextPage();
                         }
                     }}
-                    extraData={expanded}
                     keyExtractor={(shift) => shift.node.id}
                 ></FlatList>
             </View>
