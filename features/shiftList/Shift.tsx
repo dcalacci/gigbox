@@ -53,8 +53,7 @@ export default function ShiftList({ navigation }) {
                 <FlatList
                     ListHeaderComponent={<Header />}
                     style={[
-                        tailwind('h-full w-full flex-auto'),
-                        { flexDirection: 'col', minHeight: 70, flexGrow: 1 },
+                        tailwind('h-full w-full flex-auto flex-col flex-grow'),
                     ]}
                     data={flattened_data}
                     renderItem={(props) => <ShiftCard {...props} navigation={navigation} />}
