@@ -89,24 +89,22 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                     )}
                 </View>
 
-                <Pressable onPress={openDetails}>
-                    <View style={tailwind('flex-col justify-start')}>
-                        <View style={tailwind('p-2 flex-row justify-between')}>
-                            <Text style={tailwind('text-black text-xl font-bold')}>
-                                {moment.utc(props.item.node.startTime).fromNow()}
-                            </Text>
-                            <Text style={tailwind('text-black text-lg font-bold')}>
-                                {mileage.toFixed(1)} mi (total)
-                            </Text>
-                        </View>
-
-                        <Text style={tailwind('text-black text-lg pl-2')}>{startStr}</Text>
+                <View style={tailwind('flex-col justify-start')}>
+                    <View style={tailwind('p-2 flex-row justify-between')}>
+                        <Text style={tailwind('text-black text-xl font-bold')}>
+                            {moment.utc(props.item.node.startTime).fromNow()}
+                        </Text>
+                        <Text style={tailwind('text-black text-lg font-bold')}>
+                            {mileage.toFixed(1)} mi (total)
+                        </Text>
                     </View>
-                </Pressable>
+
+                    <Text style={tailwind('text-black text-lg pl-2')}>{startStr}</Text>
+                </View>
 
                 <View style={[tailwind('flex flex-col p-5 justify-items-center')]}>
                     <Pressable
-                        onPress={toggleTripDrawer}
+                        onPress={openDetails}
                         style={[
                             tailwind(
                                 'p-5 flex flex-row justify-items-center border-t border-green-500'
@@ -117,17 +115,20 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                         <Text style={tailwind('text-green-500 text-xl font-bold underline')}>
                             2 Trips
                         </Text>
-                        {tripDrawerOpen ? (
-                            <Ionicons name="caret-down-outline" size={24} color="green" />
-                        ) : (
-                            <Ionicons name="caret-back-outline" size={24} color="green" />
-                        )}
+
+                        <Ionicons name="caret-forward-outline" size={24} color="green" />
                     </Pressable>
                 </View>
             </View>
         </View>
     );
 };
+
+/*                         {tripDrawerOpen ? ( */
+/*                             <Ionicons name="caret-down-outline" size={24} color="green" /> */
+/*                         ) : ( */
+/*                             <Ionicons name="caret-back-outline" size={24} color="green" /> */
+/*                         )} */
 
 const styles = StyleSheet.create({
     container: {
