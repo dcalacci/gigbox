@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, EmitterSubscription } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { tailwind } from 'tailwind';
 import { useToast } from 'react-native-fast-toast';
@@ -21,6 +21,8 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { fetchActiveShift, endShift, createShift, addScreenshotToShift } from './api';
 import { log } from '../../utils';
+import * as Device from 'expo-device';
+import * as Updates from 'expo-updates';
 
 const processScreenshots = (screenshots: Asset[], activeShift: any) => {
     //TODO: process screenshots into jobs / send to server
@@ -79,7 +81,7 @@ export default function TrackingBar() {
             const previousShift = queryClient.getQueryData('activeShift');
             log.info('Providing mutate with optimistic data...');
             queryClient.setQueryData('activeShift', () => ({
-                getActiveShift: { active: true, startTime: new Date(), roadSnappedMiles: 0.0},
+                getActiveShift: { active: true, startTime: new Date(), roadSnappedMiles: 0.0 },
             }));
             return { previousShift };
         },
@@ -142,33 +144,72 @@ export default function TrackingBar() {
         registerMileageTask();
     });
 
+    const [mediaListener, setMediaListener] = useState<any | null>(null);
     // Processes new screenshots while tracking bar is on
     useEffect(() => {
-        MediaLibrary.addListener((obj) => {
-            log.info('Media Library listener hit');
-            //TODO: if user takes a screenshot of an app, but they're not in an active shift,
-            // ask them if they would like to start a shift.
-            if ('insertedAssets' in obj && shiftActive()) {
-                const shift_id = shiftStatus.data.getActiveShift.id;
+        if (mediaListener == null && shiftActive()) {
+            log.info('trying to add media listener...');
+            console.log(mediaListener);
+            const listener = MediaLibrary.addListener(async (obj) => {
+                log.info('Adding listener...');
+                //TODO: if user takes a screenshot of an app, but they're not in an active shift,
+                // ask them if they would like to start a shift.
+                if (Device.osName === 'iOS') {
+                    log.info('Trying to retrieve screenshots from iOS...');
+                    if ('insertedAssets' in obj && shiftActive()) {
+                        const shift_id = shiftStatus.data.getActiveShift.id;
 
-                var screenshots = obj.insertedAssets.filter(
-                    (a) => a.mediaSubtypes != undefined && a.mediaSubtypes.includes('screenshot')
-                );
-                log.info('Shift found, processing a screenshot for shift ', shift_id);
-                screenshots.map((s: Asset) =>
-                    uploadScreenshot.mutate({
-                        screenshot: s,
-                        shiftId: shift_id,
-                        timestamp: new Date(),
-                        jwt: auth.jwt,
-                    })
-                );
-                /* processScreenshots(obj.insertedAssets, shiftStatus.data?.getActiveShift); */
-            }
-        });
-        return () => {
-            MediaLibrary.removeAllListeners();
-        };
+                        var screenshots = obj.insertedAssets.filter(
+                            (a) =>
+                                a.mediaSubtypes != undefined &&
+                                a.mediaSubtypes.includes('screenshot')
+                        );
+                        log.info('Shift found, processing a screenshot for shift ', shift_id);
+                        screenshots.map((s: Asset) =>
+                            uploadScreenshot.mutate({
+                                screenshot: s,
+                                shiftId: shift_id,
+                                timestamp: new Date()
+                            })
+                        );
+                        /* processScreenshots(obj.insertedAssets, shiftStatus.data?.getActiveShift); */
+                    }
+                } else {
+                    log.info('Trying to retrieve screenshots from android..');
+                    try {
+                        const screenshotAlbum = await MediaLibrary.getAlbumAsync('Screenshots')
+                        MediaLibrary.getAssetsAsync({
+                            album: screenshotAlbum,
+                            mediaType: [MediaLibrary.MediaType.photo],
+                            // you'd think it would be creationTime, but screenshots have a 
+                            // creationTime of 0 on android it seems
+                            sortBy: [[MediaLibrary.SortBy.modificationTime, false]],
+                        }).then((screenshots) => {
+                            console.log('screenshots:', screenshots.assets);
+                            const shift_id = shiftStatus.data.getActiveShift.id;
+                            log.info("Shift ID:", shift_id)
+                            uploadScreenshot.mutate({
+                                screenshot: screenshots.assets[0],
+                                shiftId: shift_id
+                            })
+                        });
+                        // const scrAlbum = await MediaLibrary.getAlbumAsync('Screenshots')
+                        // console.log('album', scrAlbum)
+                    } catch (e) {
+                        log.error('Could not retrieve screenshots:', e);
+                    }
+                }
+            });
+            log.info('Setting media listener local state...');
+            setMediaListener(listener);
+            return () => {
+                if (mediaListener !== null) {
+                    log.info('Removing medialistener from local state...');
+                    mediaListener.remove();
+                    setMediaListener(null);
+                }
+            };
+        }
     });
 
     const onTogglePress = () => {
@@ -185,7 +226,7 @@ export default function TrackingBar() {
 
     if (!shiftStatus.isLoading && !shiftStatus.isError) {
         const shift = shiftStatus.data.getActiveShift;
-        const nMiles = ((shift && shift.roadSnappedMiles) ? shift.roadSnappedMiles : 0.0).toFixed(1);
+        const nMiles = (shift && shift.roadSnappedMiles ? shift.roadSnappedMiles : 0.0).toFixed(1);
         return (
             <View style={[tailwind(''), shiftActive() ? tailwind('bg-green-500') : null]}>
                 <View

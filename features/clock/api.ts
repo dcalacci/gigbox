@@ -67,7 +67,7 @@ export const createShift = () => {
     return client.request(query);
 };
 
-export const addScreenshotToShift = async ({ screenshot, shiftId, jwt }) => {
+export const addScreenshotToShift = async ({ screenshot, shiftId}) => {
     const client = getClient(store);
     const query = gql`
         mutation mutation($Shift: ID!, $File: Upload!, $DeviceURI: String!, $Timestamp: DateTime!) {
@@ -93,6 +93,7 @@ export const addScreenshotToShift = async ({ screenshot, shiftId, jwt }) => {
     // const assetSource = Image.resolveAssetSource(screenshot);
     const info = await MediaLibrary.getAssetInfoAsync(screenshot);
     log.info('Screenshot info:', info);
+    log.info('Adding screenshot to shift', shiftId)
     const fileBase64 = await FileSystem.readAsStringAsync(info.localUri, {
         encoding: FileSystem.EncodingType.Base64,
     });
@@ -107,6 +108,6 @@ export const addScreenshotToShift = async ({ screenshot, shiftId, jwt }) => {
         Shift: shiftId,
         File: fileBase64,
         DeviceURI: info.localUri,
-        Timestamp: new Date(info.creationTime),
+        Timestamp: new Date(info.modificationTime),
     });
 };

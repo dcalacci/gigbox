@@ -31,6 +31,7 @@ export default function ShiftList({ navigation }) {
         getNextPageParam: (lastPage, pages) => {
             return lastPage.allShifts.pageInfo.endCursor;
         },
+        refetchInterval: 10000
     });
     const [refreshing, setRefreshing] = useState(false);
     const onRefresh = () => {

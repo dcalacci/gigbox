@@ -16,12 +16,15 @@ import moment from 'moment';
 import TripMap from '../shiftList/TripMap';
 
 const Trips = ({ shift }) => {
+    const [screenshots, setScreenshots] = useState([]);
     const screenshotStatus = useQuery(
         ['screenshots', shift.id],
         () => getShiftScreenshots(shift.id),
         {
             onSuccess: (data) => {
                 console.log('retrieved screenshots:', data);
+                setScreenshots(data.getShiftScreenshots);
+                console.log('settng screenshots:', screenshots);
             },
         }
     );
@@ -29,72 +32,74 @@ const Trips = ({ shift }) => {
         console.log('deleting shift');
     };
 
+    const Screenshots = () =>
+        screenshots.map((s, idx) => (
+            <View style={tailwind('flex-row p-0 flex-auto')} key={s.id}>
+                <View style={tailwind('flex-col p-1')}>
+                    <Image
+                        style={[tailwind('flex-auto m-0')]}
+                        source={{ uri: s.onDeviceUri }}
+                        resizeMethod={'scale'}
+                        resizeMode={'contain'}
+                    />
+                    <Text style={[{ alignSelf: 'flex-start' }, tailwind('font-bold')]}>
+                        {moment.utc(s.timestamp).local().format('h:mm a')}
+                    </Text>
+                </View>
+
+                {idx < screenshots.length - 1 ? (
+                    <View style={[tailwind('border-b-2 border-green-500 w-12 self-center')]} />
+                ) : null}
+            </View>
+        ));
+
+    console.log(Screenshots());
+
     const TripList = () => {
-        return screenshotStatus.data.getShiftScreenshots.map((s) => {
-            return (
-                <View style={[tailwind('flex-col justify-center w-full pl-2 pr-2')]}>
-                    <View style={tailwind('flex-row w-full')}>
-                        <ScrollView
-                            horizontal={true}
-                            key={s.id}
-                            style={tailwind('m-2 rounded-lg bg-gray-200 w-1/3 p-2')}
-                        >
-                            <View style={tailwind('flex-row p-0')}>
-                                <View style={tailwind('flex-col p-1 justify-start')}>
-                                    <Image
-                                        style={[tailwind('flex-auto m-0')]}
-                                        source={{ uri: s.onDeviceUri }}
-                                        resizeMethod={'scale'}
-                                        resizeMode={'contain'}
-                                    />
-                                    <Text style={{ alignSelf: 'center' }}>
-                                        {moment.utc(s.timestamp).local().format('h:mm a')}
-                                    </Text>
-                                </View>
-                                <View
-                                    style={[
-                                        tailwind('border-b-2 border-green-500 w-1/2 self-center'),
-                                    ]}
-                                />
-                            </View>
-                        </ScrollView>
+        return (
+            <View style={[tailwind('flex-col justify-center w-full pl-2 pr-2')]}>
+                <View style={tailwind('flex-row w-full')}>
+                    <ScrollView
+                        horizontal={true}
+                        style={tailwind('m-2 rounded-lg bg-gray-100 w-1/3 p-2')}
+                        contentContainerStyle={tailwind('justify-center')}
+                    >
+                        <Screenshots />
+                    </ScrollView>
+                    <View
+                        style={tailwind(
+                            'flex flex-col flex-grow p-2 content-between justify-between'
+                        )}
+                    >
                         <View
                             style={tailwind(
-                                'flex flex-col flex-grow p-2 content-between justify-between'
+                                'flex flex-col rounded-lg bg-green-500 bg-opacity-60 m-1 p-2'
                             )}
                         >
-                            <View
-                                style={tailwind(
-                                    'flex flex-col rounded-lg bg-green-500 bg-opacity-60 m-1 p-2'
-                                )}
-                            >
-                                <Text style={tailwind('text-lg font-bold text-black')}>
-                                    Mileage
-                                </Text>
-                                <Text style={tailwind('text-lg text-black')}>4.87mi</Text>
-                            </View>
+                            <Text style={tailwind('text-lg font-bold text-black')}>Mileage</Text>
+                            <Text style={tailwind('text-lg text-black')}>4.87mi</Text>
+                        </View>
 
-                            <View
-                                style={tailwind(
-                                    'flex flex-col rounded-lg bg-green-500 bg-opacity-60 m-1 p-2'
-                                )}
-                            >
-                                <Text style={tailwind('text-lg font-bold')}>Total Pay</Text>
-                                <Text style={tailwind('text-lg')}>$10.23</Text>
-                            </View>
-                            <View
-                                style={tailwind(
-                                    'flex flex-col rounded-lg bg-green-500 bg-opacity-60 m-1 p-2'
-                                )}
-                            >
-                                <Text style={tailwind('text-lg font-bold')}>Tip</Text>
-                                <Text style={tailwind('text-lg')}>$11.23</Text>
-                            </View>
+                        <View
+                            style={tailwind(
+                                'flex flex-col rounded-lg bg-green-500 bg-opacity-60 m-1 p-2'
+                            )}
+                        >
+                            <Text style={tailwind('text-lg font-bold')}>Total Pay</Text>
+                            <Text style={tailwind('text-lg')}>$10.23</Text>
+                        </View>
+                        <View
+                            style={tailwind(
+                                'flex flex-col rounded-lg bg-green-500 bg-opacity-60 m-1 p-2'
+                            )}
+                        >
+                            <Text style={tailwind('text-lg font-bold')}>Tip</Text>
+                            <Text style={tailwind('text-lg')}>$11.23</Text>
                         </View>
                     </View>
                 </View>
-            );
-        });
+            </View>
+        );
     };
 
     return (
@@ -133,7 +138,7 @@ const ShiftDetails = ({ navigation, route }) => {
                 <View
                     style={[
                         tailwind('h-3/4 pt-2'),
-                        { borderRadius: 10, overflow: 'hidden', elevation: 5 },
+                        { borderRadius: 10, overflow: 'hidden'},
                     ]}
                 >
                     <TripMap
