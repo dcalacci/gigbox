@@ -41,6 +41,10 @@ export const getShifts = (first: Number, after: String) => {
                         startTime
                         endTime
                         roadSnappedMiles
+                        screenshots {
+                            id
+                            timestamp
+                        }
                     }
                 }
             }

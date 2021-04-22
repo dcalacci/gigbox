@@ -40,9 +40,9 @@ const Trips = ({ shift }) => {
                             style={tailwind('m-2 rounded-lg bg-gray-200 w-1/3 p-2')}
                         >
                             <View style={tailwind('flex-row p-0')}>
-                                <View style={tailwind('flex-col p-1')}>
+                                <View style={tailwind('flex-col p-1 justify-start')}>
                                     <Image
-                                        style={[tailwind('flex-auto h-36 m-0')]}
+                                        style={[tailwind('flex-auto m-0')]}
                                         source={{ uri: s.onDeviceUri }}
                                         resizeMethod={'scale'}
                                         resizeMode={'contain'}

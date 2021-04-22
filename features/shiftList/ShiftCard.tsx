@@ -113,7 +113,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                         ]}
                     >
                         <Text style={tailwind('text-green-500 text-xl font-bold underline')}>
-                            2 Trips
+                            {props.item.node.screenshots.length} Screenshots 
                         </Text>
 
                         <Ionicons name="caret-forward-outline" size={24} color="green" />
