@@ -159,6 +159,7 @@ export default function TrackingBar() {
                     uploadScreenshot.mutate({
                         screenshot: s,
                         shiftId: shift_id,
+                        timestamp: new Date(),
                         jwt: auth.jwt,
                     })
                 );

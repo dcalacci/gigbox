@@ -11,6 +11,7 @@ export const getShiftScreenshots = async (shift_id: String) => {
                 id
                 imgFilename
                 employer
+                timestamp
             }
         }
     `;

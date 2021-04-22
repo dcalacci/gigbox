@@ -24,27 +24,35 @@ const Trips = ({ shift }) => {
             },
         }
     );
+
+    const TripList = () => {
+        return screenshotStatus.data.getShiftScreenshots.map((s) => {
+            return (
+                <View key={s.id} style={tailwind('flex-auto flex-col pl-2 pr-2')}>
+                    <Image
+                        style={[tailwind('flex-auto h-36 m-0 p-0')]}
+                        source={{ uri: s.onDeviceUri }}
+                        resizeMethod={'scale'}
+                        resizeMode={'contain'}
+                    />
+                    <Text style={{ alignSelf: 'center' }}>
+                        {moment.utc(s.timestamp).local().format('h:mm a')}
+                    </Text>
+                </View>
+            );
+        });
+    };
+
     return (
         <ScrollView style={tailwind('h-2/3 bg-white')}>
             <View style={tailwind('flex-col')}>
                 <View style={tailwind('border-b border-green-500 h-1 mb-2 mr-5 ml-5')} />
                 <View style={tailwind('flex flex-row flex-auto content-between')}>
-                    {screenshotStatus.data.getShiftScreenshots.map((s) => {
-                        return (
-                            <View style={tailwind('flex-auto flex-col pl-2 pr-2')}>
-                                <Image
-                                    style={[tailwind('flex-auto h-36 m-0 p-0')]}
-                                    key={s.id}
-                                    source={{ uri: s.onDeviceUri }}
-                                    resizeMethod={'scale'}
-                                    resizeMode={'contain'}
-                                />
-                                <Text style={{ alignSelf: 'center' }}>
-                                    {moment.utc(s.timestamp).format('h:mm a')}
-                                </Text>
-                            </View>
-                        );
-                    })}
+                    {screenshotStatus.isLoading || screenshotStatus.isError ? (
+                        <Text>Loading...</Text>
+                    ) : (
+                        <TripList />
+                    )}
                 </View>
                 <View style={tailwind('border-b border-green-500 mb-2 mr-5 ml-5')}>
                     <Text style={tailwind('text-xl font-bold')}>INSTACART</Text>
