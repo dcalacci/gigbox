@@ -1,4 +1,4 @@
-version: '3.9' # Specify docker-compose version
+version: '3.3' # Specify docker-compose version
 services:
     gigbox-server:
         container_name: gigbox-server
@@ -15,6 +15,7 @@ services:
         restart: always
         volumes:
             - .:/usr/src/app
+            - screenshots:/opt/images
         networks:
             - backend
             - frontend
@@ -22,7 +23,7 @@ services:
         image: postgis/postgis
         env_file: database.env
         ports:
-            - '5432'
+            - '5432:5432'
         volumes:
             - database-data:/var/lib/postgresql/data
         networks:
@@ -42,6 +43,7 @@ services:
             - backend
 volumes:
     database-data:
+    screenshots:
 
 networks:
     backend:

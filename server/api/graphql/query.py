@@ -11,9 +11,35 @@ from flask import g
 
 # import numpy as np
 from api.controllers.auth.decorators import login_required
-from api.graphql.object import User, Shift, Location, WeeklySummary, Trips, Route, BoundingBox
-from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Geometry_WKT
+from api.graphql.object import User, Shift, Location, WeeklySummary, Trips, Route, BoundingBox, Screenshot
+from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Screenshot as ScreenshotModel, Geometry_WKT
 from api.routing.mapmatch import get_shift_distance, get_shift_geometry
+
+
+# A good way of hacking together role authorization would be this, from here:
+# https://github.com/graphql-python/graphene-sqlalchemy/issues/137#issuecomment-582727580
+# Instead, we just use the SQLAlchemyConnectionField as an interface, and add a filter for user_id
+class AuthorizedConnectionField(SQLAlchemyConnectionField):
+
+    def __init__(self, type, *args, **kwargs):
+        # fields = {name: field.type() for name, field in input_type._meta.fields.items()}
+        # kwargs.update(fields)
+        super().__init__(type, *args, **kwargs)
+
+    @classmethod
+    @login_required
+    def get_query(cls, model, info, sort=None, **args):
+        query = super().get_query(model, info, sort=sort, **args)
+        query = query.filter_by(user_id=str(g.user))
+        omitted = ('first', 'last', 'hasPreviousPage',
+                   'hasNextPage', 'startCursor', 'endCursor')
+        for name, val in args.items():
+            if name in omitted:
+                continue
+            col = getattr(model, name, None)
+            if col:
+                query = query.filter(col == val)
+        return query
 
 
 class Query(graphene.ObjectType):
@@ -21,9 +47,9 @@ class Query(graphene.ObjectType):
 
     getTrips = graphene.Field(Trips)
     getActiveShift = graphene.Field(Shift)
-    getRouteLine = graphene.Field(Route, objectId=graphene.ID())
     getWeeklySummary = graphene.Field(WeeklySummary)
-    allShifts = SQLAlchemyConnectionField(Shift, sort=Shift.sort_argument())
+    getShiftScreenshots = graphene.Field(graphene.List(Screenshot), shiftId=graphene.ID())
+    allShifts = AuthorizedConnectionField(Shift, sort=Shift.sort_argument())
 
     shifts = graphene.List(Shift,
                            cursor=graphene.Int(),
@@ -51,7 +77,13 @@ class Query(graphene.ObjectType):
         # return {"shifts": qs,
         #         "nextCursor": cursor + n}
 
-    # userList = SQLAlchemyConnectionField(User)
+    @login_required
+    def resolve_getShiftScreenshots(self, info, shiftId):
+        userId = str(g.user)
+        shiftId= from_global_id(shiftId)[1]
+        return ScreenshotModel.query.filter_by(
+            user_id=userId,
+            shift_id=shiftId)
 
     @login_required
     def resolve_getActiveShift(self, info):
@@ -74,26 +106,6 @@ class Query(graphene.ObjectType):
         # distances = [get_shift_distance(shift, info) for shift in shifts]
         distance_miles = sum(distances)
         return WeeklySummary(miles=distance_miles, num_shifts=n_shifts)
-
-    @login_required
-    def resolve_getRouteLine(self, info, objectId):
-        # TODO: do an if statement here if we ever have more than just shifts
-        # with routes. we can tell what kind it is from the global ID
-        shift_id = from_global_id(objectId)[1]
-        shift = Shift.get_query(info=info).get(shift_id)
-        res = get_shift_geometry(shift, info)
-        if not res:
-            return None
-        else:
-            (geometry, bb) = res
-            print("got geometry:", geometry, bb)
-            return Route(geometry=geometry,
-                         bounding_box=BoundingBox(
-                             min_lat=bb[1],
-                             min_lng=bb[0],
-                             max_lat=bb[3],
-                             max_lng=bb[2],
-                         ))
 
     @login_required
     def resolve_getTrips(self, info, objectId):

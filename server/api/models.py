@@ -10,7 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import func  # for datetimes
 from sqlalchemy import create_engine
-from sqlalchemy.dialects.postgresql import UUID
+from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.event import listens_for
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import from_shape
@@ -113,17 +113,24 @@ class Shift(db.Model):
     # passive_deletes also means that when we delete a shift, the location and employer records
     # are deleted correctly, regardless of whether we use session.delete() or filter().delete()
 
+    # we store as JSONB because that's what we get back from the map match API, and because it's 
+    # easier to pass around.
+    snapped_geometry = db.Column(JSONB)
+
     locations = db.relationship(
         "Location", backref=backref("shift", cascade="all, delete", passive_deletes=True)
     )
     employers = db.relationship(
         "Employer", backref=backref("shift", cascade="all, delete", passive_deletes=True)
     )
+    trips = db.relationship(
+            'Trip', backref=backref("shift", cascade="all, delete", passive_deletes=True))
 
     __table_args__ = (Index("index", "id", "start_time"),)
 
     # I looked for a way to enforce the idea that only one shift per user ID could
     # be active at a time, but didn't figure out a way to enforce it in sqlalchemy...
+    # an example:
     # CREATE UNIQUE INDEX "user_email" ON emails(user_id) WHERE is_active=true
     # index_shiftconstraint = db.Index("user_id", unique=True)
 
@@ -163,6 +170,24 @@ class Employer(db.Model):
     def __init__(self, name, shift_id):
         self.name = name
         self.shift_id = shift_id
+
+## TODO: what other fields?
+## TODO: create trips automatically from shift locations and/or screenshots
+class Trip(db.Model):
+    __tablename__="trips"
+    date_created = db.Column(DateTime, default=func.now())
+    date_modified = db.Column(DateTime, onupdate=func.now())
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id, ondelete='CASCADE'))
+    start_screenshot = db.Column(UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
+    end_screenshot = db.Column(UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
+    start_location = db.Column(Geometry("POINT"))
+    end_location = db.Column(Geometry("POINT"))
+    mileage = db.Column(db.Float, nullable=True)
+    total_pay = db.Column(db.Float, nullable=True)
+    tip = db.Column(db.Float, nullable=True)
+    is_work = db.Column(db.Boolean, nullable=True)
+    employer = db.Column(db.Enum(EmployerNames), nullable=True)
 
 
 class Location(db.Model):

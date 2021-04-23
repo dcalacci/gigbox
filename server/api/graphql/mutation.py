@@ -47,7 +47,7 @@ from api.models import (
     EmployerNames,
 )
 from api.utils import generate_filename
-from api.routing.mapmatch import get_shift_distance
+from api.routing.mapmatch import get_shift_distance, get_shift_geometry
 from api.screenshots.parser import predict_app, image_to_df, parse_image
 from flask import current_app
 
@@ -116,7 +116,6 @@ class EndShift(Mutation):
 
     @login_required
     def mutate(self, info, shift_id):
-        print("SHIFT ID:", shift_id)
         shift_id = from_global_id(shift_id)[1]
         end_time = datetime.now()
         shift = (
@@ -126,24 +125,32 @@ class EndShift(Mutation):
 
         # calculate final mileage for this shift
         shift = updateShiftMileage(shift, info)
+        shift = addRouteLineToShift(shift, info)
         shift.end_time = end_time
         shift.active = False
         db.session.add(shift)
         db.session.commit()
 
-        # locs = db.session.query(LocationModel).filter_by(
-        #     shift_id=shift_id).order_by(LocationModel.timestamp.asc())
-        # current_app.logger.info("Found locs...")
-        # coords = [{'lat': to_shape(s.geom).y,
-        #            'lng': to_shape(s.geom).x,
-        #            'timestamp': s.timestamp} for s in locs]
-        # res = match(coords).json()
-        # print("matchings:", res.json()['matchings'])
-        # print("tracepoints:", res.json()['tracepoints'])
-        # # res_json = json.loads(res)
-        # total_distance = res['matchings']['distance']
-
         return EndShift(shift=shift)
+
+
+def addRouteLineToShift(shift, info):
+    match_result = get_shift_geometry(shift, info)
+    if not match_result:
+        # TODO: raise error
+        current_app.logger.error(f'Failed to match a route to shift...')
+
+    bb = match_result[1]
+    bounding_box = {'minLat': bb[1],
+                    'minLng': bb[0],
+                    'maxLat': bb[3],
+                    'maxLng': bb[2]}
+    matched = {'geometries': match_result[0], 'bounding_box': bounding_box}
+    current_app.logger.info('adding matched geometry to shift:')
+    print(matched)
+    shift.snapped_geometry = matched
+    current_app.logger.info(f'matched route added to shift...')
+    return shift
 
 
 def updateShiftMileage(shift, info):
@@ -188,8 +195,9 @@ class AddLocationsToShift(Mutation):
         n_locations = len(shift.locations)
         if n_locations % 5 == 0:
             current_app.logger.info(
-                "Updating mileage on shift...")
+                "Updating mileage & calculated route on shift...")
             shift = updateShiftMileage(shift, info)
+            shift = addRouteLineToShift(shift, info)
         db.session.add(shift)
         db.session.commit()
         return AddLocationsToShift(location=shift.locations[-1], ok=True)
@@ -225,8 +233,9 @@ class AddScreenshotToShift(Mutation):
         text = parse_image(image)
         app = predict_app(text)
 
+        # IMAGE_DIR = current_app.config.IMAGE_DIR
         if app:
-            img_filename = os.path.join('/tmp',
+            img_filename = os.path.join('/opt/images',
                                         generate_filename(shift_id))
             print("IMAGE FILENAME:", img_filename)
             cv2.imwrite(img_filename, image)
