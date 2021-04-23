@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, EmitterSubscription } from 'react-native';
+import { View, Text, EmitterSubscription, StyleSheet, Pressable } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { tailwind } from 'tailwind';
 import { useToast } from 'react-native-fast-toast';
@@ -11,6 +11,7 @@ import { Asset } from 'expo-media-library';
 import { RootState } from '../../store/index';
 import Toggle from '../../components/Toggle';
 
+import { Ionicons } from '@expo/vector-icons';
 import { AuthState } from '../auth/authSlice';
 import { formatElapsedTime } from '../../utils';
 import {
@@ -21,6 +22,7 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { fetchActiveShift, endShift, createShift, addScreenshotToShift } from './api';
 import { log } from '../../utils';
+import TripMap from '../shiftList/TripMap';
 import * as Device from 'expo-device';
 import * as Updates from 'expo-updates';
 
@@ -137,6 +139,30 @@ export default function TrackingBar() {
         // registerMileageTask();
     });
 
+    const [jobStarted, setJobStarted] = useState(false);
+    const [locations, setLocations] = useState([{}]);
+    const [region, setRegion] = useState(null);
+    useEffect(() => {
+        console.log('trying to set geometry');
+        if (shiftStatus.data?.getActiveShift && shiftStatus.data?.getActiveShift.snappedGeometry) {
+            log.info('Setting locations and bounding box for shift.');
+            const { geometries, bounding_box } = JSON.parse(
+                shiftStatus.data?.getActiveShift.snappedGeometry
+            );
+            const locations = geometries.map((c) => {
+                return { latitude: c[1], longitude: c[0] };
+            });
+            setLocations(locations);
+            const bbox = bounding_box;
+            setRegion({
+                latitudeDelta: (bbox.maxLat - bbox.minLat) * 2.05,
+                longitudeDelta: (bbox.maxLng - bbox.minLng) * 2.05,
+                latitude: bbox.maxLat - (bbox.maxLat - bbox.minLat) / 2,
+                longitude: bbox.maxLng - (bbox.maxLng - bbox.minLng) / 2,
+            });
+        }
+    }, [shiftStatus.data?.getActiveShift]);
+
     const [mediaListener, setMediaListener] = useState<any | null>(null);
     // Processes new screenshots while tracking bar is on
     useEffect(() => {
@@ -162,7 +188,7 @@ export default function TrackingBar() {
                             uploadScreenshot.mutate({
                                 screenshot: s,
                                 shiftId: shift_id,
-                                timestamp: new Date()
+                                timestamp: new Date(),
                             })
                         );
                         /* processScreenshots(obj.insertedAssets, shiftStatus.data?.getActiveShift); */
@@ -170,21 +196,21 @@ export default function TrackingBar() {
                 } else {
                     log.info('Trying to retrieve screenshots from android..');
                     try {
-                        const screenshotAlbum = await MediaLibrary.getAlbumAsync('Screenshots')
+                        const screenshotAlbum = await MediaLibrary.getAlbumAsync('Screenshots');
                         MediaLibrary.getAssetsAsync({
                             album: screenshotAlbum,
                             mediaType: [MediaLibrary.MediaType.photo],
-                            // you'd think it would be creationTime, but screenshots have a 
+                            // you'd think it would be creationTime, but screenshots have a
                             // creationTime of 0 on android it seems
                             sortBy: [[MediaLibrary.SortBy.modificationTime, false]],
                         }).then((screenshots) => {
                             console.log('screenshots:', screenshots.assets);
                             const shift_id = shiftStatus.data.getActiveShift.id;
-                            log.info("Shift ID:", shift_id)
+                            log.info('Shift ID:', shift_id);
                             uploadScreenshot.mutate({
                                 screenshot: screenshots.assets[0],
-                                shiftId: shift_id
-                            })
+                                shiftId: shift_id,
+                            });
                         });
                         // const scrAlbum = await MediaLibrary.getAlbumAsync('Screenshots')
                         // console.log('album', scrAlbum)
@@ -221,11 +247,12 @@ export default function TrackingBar() {
         const shift = shiftStatus.data.getActiveShift;
         const nMiles = (shift && shift.roadSnappedMiles ? shift.roadSnappedMiles : 0.0).toFixed(1);
         return (
-            <View style={[tailwind(''), shiftActive() ? tailwind('bg-green-500') : null]}>
+            <View style={[tailwind('flex flex-col')]}>
                 <View
                     style={[
+                        { zIndex: 100 },
                         tailwind(
-                            'flex-shrink flex-row justify-around items-center border-b-4 p-3 border-green-600 h-16 bg-white'
+                            'flex-shrink flex-row justify-around items-center p-3 border-green-600 h-16 bg-white'
                         ),
                         shiftActive() ? tailwind('bg-green-500') : null,
                     ]}
@@ -242,6 +269,72 @@ export default function TrackingBar() {
                         <Text style={textStyle}>{elapsedTime}</Text>
                     </View>
                 </View>
+                {shiftActive() ? (
+                    <View
+                        style={[
+                            tailwind('flex-auto flex-col ml-1 mb-1 mr-1'),
+                            styles.cardShadow,
+                            styles.card,
+                        ]}
+                    >
+                        <View
+                            style={[
+                                tailwind('flex-auto w-full flex-col'),
+                                styles.card,
+                            ]}
+                        >
+                            {jobStarted ? (
+                                <View style={tailwind('h-36 border-b-2 border-green-500')}>
+                                    <View style={styles.mapTitle}>
+                                        <Text style={tailwind('text-xl text-gray-800 font-bold underline')}>Current Job</Text>
+                                    </View>
+                                    <TripMap
+                                        interactive={true}
+                                        isActive={false}
+                                        tripLocations={locations}
+                                        region={region}
+                                        shiftId={shift.id}
+                                    />
+                                </View>
+                            ) : null}
+                            {jobStarted ? (
+                                <View style={tailwind('w-full p-2')}>
+                                    <View
+                                        style={tailwind(
+                                            'flex-initial bg-green-500 rounded-2xl p-1'
+                                        )}
+                                    >
+                                        <Text
+                                            style={tailwind(
+                                                'text-sm font-bold text-white flex-initial'
+                                            )}
+                                        >
+                                            Started: 4:32pm
+                                        </Text>
+                                    </View>
+                                </View>
+                            ) : null}
+                            {shiftActive() ? 
+                            <Pressable
+                                onPress={() => setJobStarted(!jobStarted)}
+                                style={[
+                                    tailwind('mb-0 p-2'),
+                                    jobStarted ? tailwind('bg-red-300') : tailwind('bg-gray-600'),
+                                    styles.roundedBottom,
+                                ]}
+                            >
+                                <Text
+                                    style={tailwind(
+                                        'underline font-bold text-white text-lg self-center'
+                                    )}
+                                >
+                                    {jobStarted ? 'End This Job' : 'Start New Job'}
+                                </Text>
+                            </Pressable>
+                            : null}
+                        </View>
+                    </View>
+                ) : null}
             </View>
         );
     } else {
@@ -252,3 +345,29 @@ export default function TrackingBar() {
         );
     }
 }
+
+const styles = StyleSheet.create({
+    cardShadow: {
+        shadowOffset: {
+            width: 0,
+            height: 1,
+        },
+        shadowOpacity: 0.22,
+        shadowRadius: 3,
+        elevation: 5,
+    },
+    card: {
+        borderRadius: 10,
+        backgroundColor: '#ffffff',
+    },
+    roundedBottom: {
+        borderBottomLeftRadius: 10,
+        borderBottomRightRadius: 10,
+    },
+    mapTitle: {
+        position: 'absolute',
+        top: 2,
+        left: 10,
+        zIndex: 101
+    }
+});

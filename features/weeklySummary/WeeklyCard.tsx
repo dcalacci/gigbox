@@ -21,7 +21,7 @@ const WeeklyCard: FunctionComponent<WeeklyCardProps> = ({}) => {
 
         const summary = weeklySummary.data.getWeeklySummary;
         return (
-            <View style={[tailwind('flex-1 m-2 p-5 h-48'), styles.card]}>
+            <View style={[tailwind('flex-1 m-2 p-5 h-48 rounded-xl bg-white')]}>
                 <Text style={tailwind('text-green-500 text-3xl font-bold underline')}>
                     This week
                 </Text>

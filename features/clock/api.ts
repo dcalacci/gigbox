@@ -22,6 +22,7 @@ export const fetchActiveShift = () => {
                 active
                 startTime
                 roadSnappedMiles
+                snappedGeometry
                 locations {
                     id
                     geom
@@ -67,7 +68,7 @@ export const createShift = () => {
     return client.request(query);
 };
 
-export const addScreenshotToShift = async ({ screenshot, shiftId}) => {
+export const addScreenshotToShift = async ({ screenshot, shiftId }) => {
     const client = getClient(store);
     const query = gql`
         mutation mutation($Shift: ID!, $File: Upload!, $DeviceURI: String!, $Timestamp: DateTime!) {
@@ -93,7 +94,7 @@ export const addScreenshotToShift = async ({ screenshot, shiftId}) => {
     // const assetSource = Image.resolveAssetSource(screenshot);
     const info = await MediaLibrary.getAssetInfoAsync(screenshot);
     log.info('Screenshot info:', info);
-    log.info('Adding screenshot to shift', shiftId)
+    log.info('Adding screenshot to shift', shiftId);
     const fileBase64 = await FileSystem.readAsStringAsync(info.localUri, {
         encoding: FileSystem.EncodingType.Base64,
     });
