@@ -19,7 +19,10 @@ export const getShifts = (first: Number, after: String) => {
                         roadSnappedMiles
                         snappedGeometry
                         screenshots {
+                            onDeviceUri
                             id
+                            imgFilename
+                            employer
                             timestamp
                         }
                     }
@@ -32,18 +35,5 @@ export const getShifts = (first: Number, after: String) => {
         first,
         after,
     };
-    // const query = gql`
-    // query {
-    //     shifts(first: ${first} skip: ${skip} before: ${before} after: ${after} ) {
-    //         id
-    //         startTime
-    //         endTime
-    //         locations {
-    //             geom
-    //             timestamp
-    //         }
-    //     }
-    //     }
-    // `;
     return client.request(query, variables);
 };

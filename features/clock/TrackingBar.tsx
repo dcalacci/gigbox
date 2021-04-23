@@ -24,13 +24,6 @@ import { log } from '../../utils';
 import * as Device from 'expo-device';
 import * as Updates from 'expo-updates';
 
-const processScreenshots = (screenshots: Asset[], activeShift: any) => {
-    //TODO: process screenshots into jobs / send to server
-    /* log.info(' MEDIA LIBRARY CHANGED; incremental changes:', screenshots.length); */
-    log.info('screenshot 0:', screenshots[0]);
-    log.info('Adding screenshot to shift: ', activeShift);
-};
-
 export default function TrackingBar() {
     const toast = useToast();
     const queryClient = useQueryClient();

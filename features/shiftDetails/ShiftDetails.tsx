@@ -1,4 +1,4 @@
-import React, { useState, FunctionComponent } from 'react';
+import React, { useState, FunctionComponent, useEffect } from 'react';
 import {
     ScrollView,
     View,
@@ -11,23 +11,15 @@ import {
 } from 'react-native';
 import { tailwind } from 'tailwind';
 import { useQuery } from 'react-query';
-import { getShiftScreenshots } from './api';
 import moment from 'moment';
 import TripMap from '../shiftList/TripMap';
 
 const Trips = ({ shift }) => {
     const [screenshots, setScreenshots] = useState([]);
-    const screenshotStatus = useQuery(
-        ['screenshots', shift.id],
-        () => getShiftScreenshots(shift.id),
-        {
-            onSuccess: (data) => {
-                console.log('retrieved screenshots:', data);
-                setScreenshots(data.getShiftScreenshots);
-                console.log('settng screenshots:', screenshots);
-            },
-        }
-    );
+    useEffect(() => {
+        setScreenshots(shift.screenshots)
+    }, [shift])
+
     const deleteShift = () => {
         console.log('deleting shift');
     };
@@ -107,7 +99,7 @@ const Trips = ({ shift }) => {
             <View style={tailwind('flex-col')}>
                 <View style={tailwind('border-b border-green-500 h-1 mb-2 mr-5 ml-5')} />
                 <View style={tailwind('flex flex-row flex-auto content-between')}>
-                    {screenshotStatus.isLoading || screenshotStatus.isError ? (
+                    {screenshots == [] ? (
                         <Text>Loading...</Text>
                     ) : (
                         <TripList />
