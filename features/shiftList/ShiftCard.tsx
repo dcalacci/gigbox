@@ -1,4 +1,4 @@
-import React, { useState, FunctionComponent } from 'react';
+import React, { useState, FunctionComponent, useEffect } from 'react';
 import { View, Text, StyleSheet, Pressable, LayoutAnimation } from 'react-native';
 
 import { useQuery } from 'react-query';
@@ -7,11 +7,9 @@ import moment from 'moment';
 import { Ionicons } from '@expo/vector-icons';
 import { log } from '../../utils';
 import { tailwind } from 'tailwind';
-import { getShiftGeometry } from './api';
 import TripMap from './TripMap';
 
 const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
-    const calendarStart = moment.utc(props.item.node.startTime).calendar();
     const startTime = moment.utc(props.item.node.startTime).local();
     const endTime = props.item.node.endTime ? moment.utc(props.item.node.endTime).local() : false;
     let startStr = startTime.format('dddd MMMM Do, h:mm a');
@@ -21,30 +19,24 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
 
     const [locations, setLocations] = useState([{}]);
     const [region, setRegion] = useState(null);
-    const routeStatus = useQuery(
-        ['shiftRoute', props.item.node.id],
-        () => getShiftGeometry(props.item.node.id),
-        {
-            onSuccess: (data) => {
-                if (data.getRouteLine !== null) {
-                    const coords = JSON.parse(data.getRouteLine.geometry);
-                    const locations = coords.map((c) => {
-                        return { latitude: c[1], longitude: c[0] };
-                    });
-                    setLocations(locations);
-                    const bbox = data.getRouteLine.boundingBox;
-                    setRegion({
-                        latitudeDelta: (bbox.maxLat - bbox.minLat) * 2.05,
-                        longitudeDelta: (bbox.maxLng - bbox.minLng) * 2.05,
-                        latitude: bbox.maxLat - (bbox.maxLat - bbox.minLat) / 2,
-                        longitude: bbox.maxLng - (bbox.maxLng - bbox.minLng) / 2,
-                    });
-                }
-            },
-            // refetch map updates if it's the active shift
-            refetchInterval: endTime ? null : 5000,
+
+    useEffect(() => {
+        if (props.item.node.snappedGeometry) {
+            log.info('Setting locations and bounding box for shift.');
+            const { geometries, bounding_box } = JSON.parse(props.item.node.snappedGeometry);
+            const locations = geometries.map((c) => {
+                return { latitude: c[1], longitude: c[0] };
+            });
+            setLocations(locations);
+            const bbox = bounding_box;
+            setRegion({
+                latitudeDelta: (bbox.maxLat - bbox.minLat) * 2.05,
+                longitudeDelta: (bbox.maxLng - bbox.minLng) * 2.05,
+                latitude: bbox.maxLat - (bbox.maxLat - bbox.minLat) / 2,
+                longitude: bbox.maxLng - (bbox.maxLng - bbox.minLng) / 2,
+            });
         }
-    );
+    }, [props.item.node.snappedGeometry]);
 
     // open drawer
     const [tripDrawerOpen, setTripDrawerOpen] = useState(false);
@@ -113,7 +105,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
                         ]}
                     >
                         <Text style={tailwind('text-green-500 text-xl font-bold underline')}>
-                            {props.item.node.screenshots.length} Screenshots 
+                            {props.item.node.screenshots.length} Screenshots
                         </Text>
 
                         <Ionicons name="caret-forward-outline" size={24} color="green" />

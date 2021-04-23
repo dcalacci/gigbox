@@ -11,7 +11,6 @@ import { tailwind } from 'tailwind';
 import { getShifts } from './api';
 import { Location } from 'graphql/language/source';
 import MapView, { Polyline } from 'react-native-maps';
-import { getShiftGeometry } from './api';
 
 interface TripMapProps {
     tripLocations: [{ latitude: number; longitude: number }];

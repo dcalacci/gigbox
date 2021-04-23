@@ -141,7 +141,7 @@ export default function TrackingBar() {
             // otherwise set it to zero
             setElapsedTime(formatElapsedTime(null));
         }
-        registerMileageTask();
+        // registerMileageTask();
     });
 
     const [mediaListener, setMediaListener] = useState<any | null>(null);

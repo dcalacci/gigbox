@@ -6,7 +6,7 @@ import { FlatList } from 'react-native-gesture-handler';
 
 import { log } from '../../utils';
 import { tailwind } from 'tailwind';
-import { getShifts, getShiftGeometry } from './api';
+import { getShifts} from './api';
 import ShiftDetails from '../shiftDetails/ShiftDetails';
 import ShiftCard from './ShiftCard';
 
@@ -27,15 +27,17 @@ export default function ShiftList({ navigation }) {
     } = useInfiniteQuery('shifts', fetchShifts, {
         onSettled: () => {
             setRefreshing(false);
+            log.info("Done refreshing shift list.")
         },
         getNextPageParam: (lastPage, pages) => {
             return lastPage.allShifts.pageInfo.endCursor;
         },
-        refetchInterval: 10000
+        refetchInterval: 5000
     });
     const [refreshing, setRefreshing] = useState(false);
     const onRefresh = () => {
         setRefreshing(true);
+        log.info("Refreshing shift list..")
         queryClient.invalidateQueries('shifts');
     };
 
@@ -57,7 +59,7 @@ export default function ShiftList({ navigation }) {
                         tailwind('h-full w-full flex-auto flex-col flex-grow'),
                     ]}
                     data={flattened_data}
-                    renderItem={(props) => <ShiftCard {...props} navigation={navigation} />}
+                    renderItem={(props) => (props.item.node == null ? null : <ShiftCard {...props} navigation={navigation} />)}
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                     }

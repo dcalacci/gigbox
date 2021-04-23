@@ -2,30 +2,6 @@ import { gql } from 'graphql-request';
 import { getClient } from '../../utils';
 import { store } from '../../store/store';
 
-//TODO: parse out geometry here, instead of in component.
-export const getShiftGeometry = async (shift_id: String) => {
-    const client = getClient(store);
-    const query = gql`
-        query route($id: ID!) {
-            getRouteLine(objectId: $id) {
-                geometry
-                boundingBox {
-                    minLat
-                    minLng
-                    maxLat
-                    maxLng
-                }
-            }
-        }
-    `;
-    const variables = {
-        id: shift_id,
-    };
-    let data = await client.request(query, variables);
-    console.log('query data:', data);
-    return data;
-};
-
 export const getShifts = (first: Number, after: String) => {
     const client = getClient(store);
     const query = gql`
@@ -41,6 +17,7 @@ export const getShifts = (first: Number, after: String) => {
                         startTime
                         endTime
                         roadSnappedMiles
+                        snappedGeometry
                         screenshots {
                             id
                             timestamp
