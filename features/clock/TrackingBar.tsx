@@ -40,6 +40,7 @@ export default function TrackingBar() {
             roadSnappedMiles: 0,
             startTime: new Date(),
             snappedGeometry: '',
+            jobs: []
         },
         onSuccess: (data) => {
             console.log("successfully got active shift:", data)
@@ -141,9 +142,6 @@ export default function TrackingBar() {
         // registerMileageTask();
     });
 
-    const [jobStarted, setJobStarted] = useState(false);
-    const [locations, setLocations] = useState([{}]);
-    const [region, setRegion] = useState(null);
     const [mediaListener, setMediaListener] = useState<any | null>(null);
     // Processes new screenshots while tracking bar is on
     useEffect(() => {
@@ -179,7 +177,6 @@ export default function TrackingBar() {
                                 shiftId: shift_id,
                             })
                         );
-                        /* processScreenshots(obj.insertedAssets, shiftStatus.data?.getActiveShift); */
                     }
                 } else {
                     log.info('Trying to retrieve screenshots from android..');
