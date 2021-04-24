@@ -4,14 +4,15 @@ import moment from 'moment';
  * @param startTimestamp A timestamp (number) to calculate elapsed time from.
  * @return {[string]} Hours and minutes since startTimestamp, formatted as "0h 0m"
  */
-export const formatElapsedTime = (startTimestamp: number | null): string => {
+export const formatElapsedTime = (startTimestamp: number | Date | null): string => {
     if (startTimestamp === null) {
-        return '0h 0m';
+        return '0h 0m 0s';
     } else {
         const st = moment.utc(startTimestamp);
         const hdiff = moment().diff(st, 'hours');
         const mdiff = moment().diff(st, 'minutes') - hdiff * 60;
-        const timestr = `${hdiff}h ${mdiff}m`;
+        const sdiff = moment().diff(st, 'seconds') - hdiff * 360 - mdiff * 60;
+        const timestr = `${hdiff}h ${mdiff}m ${sdiff}s`;
         return timestr;
     }
 };

@@ -116,12 +116,6 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
     );
 };
 
-/*                         {tripDrawerOpen ? ( */
-/*                             <Ionicons name="caret-down-outline" size={24} color="green" /> */
-/*                         ) : ( */
-/*                             <Ionicons name="caret-back-outline" size={24} color="green" /> */
-/*                         )} */
-
 const styles = StyleSheet.create({
     container: {
         flex: 1,

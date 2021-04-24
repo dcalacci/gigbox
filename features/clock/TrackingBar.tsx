@@ -22,18 +22,28 @@ import {
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { fetchActiveShift, endShift, createShift, addScreenshotToShift } from './api';
 import { log } from '../../utils';
-import TripMap from '../shiftList/TripMap';
+import JobTracker from './JobTracker';
 import * as Device from 'expo-device';
-import * as Updates from 'expo-updates';
+import moment from 'moment';
+import { isLoading } from 'expo-font';
 
 export default function TrackingBar() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const auth = useSelector((state: RootState): AuthState => state.auth);
-    const shiftStatus = useQuery('activeShift', fetchActiveShift, {
+    const activeShift = useQuery('activeShift', fetchActiveShift, {
         refetchInterval: 10000,
         refetchIntervalInBackground: true,
-        placeholderData: { getActiveShift: { active: false } },
+        placeholderData: {
+            active: false,
+            id: '',
+            roadSnappedMiles: 0,
+            startTime: new Date(),
+            snappedGeometry: '',
+        },
+        onSuccess: (data) => {
+            console.log("successfully got active shift:", data)
+        }
     });
     const endActiveShift = useMutation(endShift, {
         onSuccess: (data, variables, context) => {
@@ -104,30 +114,22 @@ export default function TrackingBar() {
         },
     });
 
-    if (shiftStatus.isLoading) {
+    if (activeShift.isLoading) {
         log.info('Tracking bar loading...');
     }
-    if (shiftStatus.isError) {
-        log.error(`tracking bar Error! ${shiftStatus.error}`);
-        toast?.show(`Problem loading shifts: ${shiftStatus.error}`);
+    if (activeShift.isError) {
+        log.error(`tracking bar Error! ${activeShift.error}`);
+        toast?.show(`Problem loading shifts: ${activeShift.error}`);
     }
 
     const [elapsedTime, setElapsedTime] = useState<string>(formatElapsedTime(null));
 
-    // convenience function to check if there's a current active shift
-    const shiftActive = () => {
-        if (shiftStatus.isLoading || shiftStatus.isError) {
-            return false;
-        }
-        return !shiftStatus.data.getActiveShift ? false : shiftStatus.data.getActiveShift.active;
-    };
-
     // updates the tracking bar time logger every second. Uses useEffect
     // so our setInterval resets on cue.
     useEffect(() => {
-        if (shiftActive()) {
+        if (activeShift.status == 'success' && activeShift.data.active) {
             let interval = setInterval(() => {
-                const clockInTime = shiftStatus.data.getActiveShift.startTime;
+                const clockInTime = activeShift.data.startTime;
                 /* const startTimestamp = shiftActive() ? clockInTime : null; */
                 setElapsedTime(formatElapsedTime(clockInTime));
             }, 1000);
@@ -142,41 +144,28 @@ export default function TrackingBar() {
     const [jobStarted, setJobStarted] = useState(false);
     const [locations, setLocations] = useState([{}]);
     const [region, setRegion] = useState(null);
-    useEffect(() => {
-        console.log('trying to set geometry');
-        if (shiftStatus.data?.getActiveShift && shiftStatus.data?.getActiveShift.snappedGeometry) {
-            log.info('Setting locations and bounding box for shift.');
-            const { geometries, bounding_box } = JSON.parse(
-                shiftStatus.data?.getActiveShift.snappedGeometry
-            );
-            const locations = geometries.map((c) => {
-                return { latitude: c[1], longitude: c[0] };
-            });
-            setLocations(locations);
-            const bbox = bounding_box;
-            setRegion({
-                latitudeDelta: (bbox.maxLat - bbox.minLat) * 2.05,
-                longitudeDelta: (bbox.maxLng - bbox.minLng) * 2.05,
-                latitude: bbox.maxLat - (bbox.maxLat - bbox.minLat) / 2,
-                longitude: bbox.maxLng - (bbox.maxLng - bbox.minLng) / 2,
-            });
-        }
-    }, [shiftStatus.data?.getActiveShift]);
-
     const [mediaListener, setMediaListener] = useState<any | null>(null);
     // Processes new screenshots while tracking bar is on
     useEffect(() => {
-        if (mediaListener == null && shiftActive()) {
+        if (activeShift.status != 'success' || !activeShift.data?.active) {
+            return;
+        } else if (mediaListener == null) {
             log.info('trying to add media listener...');
             console.log(mediaListener);
             const listener = MediaLibrary.addListener(async (obj) => {
                 log.info('Adding listener...');
                 //TODO: if user takes a screenshot of an app, but they're not in an active shift,
                 // ask them if they would like to start a shift.
+
+                // return / break if user is not actively tracking a shift
+                if (activeShift.status != 'success' || activeShift.data.active) {
+                    return;
+                }
+
                 if (Device.osName === 'iOS') {
                     log.info('Trying to retrieve screenshots from iOS...');
-                    if ('insertedAssets' in obj && shiftActive()) {
-                        const shift_id = shiftStatus.data.getActiveShift.id;
+                    if ('insertedAssets' in obj) {
+                        const shift_id = activeShift.data.id;
 
                         var screenshots = obj.insertedAssets.filter(
                             (a) =>
@@ -188,7 +177,6 @@ export default function TrackingBar() {
                             uploadScreenshot.mutate({
                                 screenshot: s,
                                 shiftId: shift_id,
-                                timestamp: new Date(),
                             })
                         );
                         /* processScreenshots(obj.insertedAssets, shiftStatus.data?.getActiveShift); */
@@ -205,8 +193,7 @@ export default function TrackingBar() {
                             sortBy: [[MediaLibrary.SortBy.modificationTime, false]],
                         }).then((screenshots) => {
                             console.log('screenshots:', screenshots.assets);
-                            const shift_id = shiftStatus.data.getActiveShift.id;
-                            log.info('Shift ID:', shift_id);
+                            const shift_id = activeShift.data.id;
                             uploadScreenshot.mutate({
                                 screenshot: screenshots.assets[0],
                                 shiftId: shift_id,
@@ -232,19 +219,17 @@ export default function TrackingBar() {
     });
 
     const onTogglePress = () => {
-        if (!shiftActive()) {
+        if (!activeShift.data?.active) {
             createActiveShift.mutate();
         } else {
-            log.info('Ending shift ', shiftStatus.data.getActiveShift.id);
-            endActiveShift.mutate(shiftStatus.data.getActiveShift.id);
+            log.info('Ending shift ', activeShift.data.id);
+            endActiveShift.mutate(activeShift.data.id);
         }
     };
 
-    const textStyle = [tailwind('text-lg'), shiftActive() ? tailwind('font-semibold') : null];
-    /* log.info('Rendering shift:', shiftStatus.data.getActiveShift); */
-
-    if (!shiftStatus.isLoading && !shiftStatus.isError) {
-        const shift = shiftStatus.data.getActiveShift;
+    if (activeShift.data) {
+        const shift = activeShift.data;
+        const textStyle = [tailwind('text-lg'), shift.active ? tailwind('font-semibold') : null];
         const nMiles = (shift && shift.roadSnappedMiles ? shift.roadSnappedMiles : 0.0).toFixed(1);
         return (
             <View style={[tailwind('flex flex-col')]}>
@@ -254,93 +239,48 @@ export default function TrackingBar() {
                         tailwind(
                             'flex-shrink flex-row justify-around items-center p-3 border-green-600 h-16 bg-white'
                         ),
-                        shiftActive() ? tailwind('bg-green-500') : null,
+                        shift.active ? tailwind('bg-green-500') : null,
                     ]}
                 >
                     <Toggle
-                        title={shiftActive() ? 'Tracking Shift' : 'Clock In'}
+                        title={shift.active ? 'Tracking Shift' : 'Clock In'}
                         activeText="On"
                         inactiveText="Off"
-                        value={shiftActive()}
+                        value={shift.active}
                         onToggle={onTogglePress}
                     />
                     <View style={tailwind('flex-grow-0')}>
-                        <Text style={textStyle}>{nMiles}mi</Text>
+                        <Text style={[textStyle, { alignSelf: 'flex-end' }]}>{nMiles}mi</Text>
                         <Text style={textStyle}>{elapsedTime}</Text>
                     </View>
                 </View>
-                {shiftActive() ? (
-                    <View
-                        style={[
-                            tailwind('flex-auto flex-col ml-1 mb-1 mr-1'),
-                            styles.cardShadow,
-                            styles.card,
-                        ]}
-                    >
-                        <View
-                            style={[
-                                tailwind('flex-auto w-full flex-col'),
-                                styles.card,
-                            ]}
-                        >
-                            {jobStarted ? (
-                                <View style={tailwind('h-36 border-b-2 border-green-500')}>
-                                    <View style={styles.mapTitle}>
-                                        <Text style={tailwind('text-xl text-gray-800 font-bold underline')}>Current Job</Text>
-                                    </View>
-                                    <TripMap
-                                        interactive={true}
-                                        isActive={false}
-                                        tripLocations={locations}
-                                        region={region}
-                                        shiftId={shift.id}
-                                    />
-                                </View>
-                            ) : null}
-                            {jobStarted ? (
-                                <View style={tailwind('w-full p-2')}>
-                                    <View
-                                        style={tailwind(
-                                            'flex-initial bg-green-500 rounded-2xl p-1'
-                                        )}
-                                    >
-                                        <Text
-                                            style={tailwind(
-                                                'text-sm font-bold text-white flex-initial'
-                                            )}
-                                        >
-                                            Started: 4:32pm
-                                        </Text>
-                                    </View>
-                                </View>
-                            ) : null}
-                            {shiftActive() ? 
-                            <Pressable
-                                onPress={() => setJobStarted(!jobStarted)}
-                                style={[
-                                    tailwind('mb-0 p-2'),
-                                    jobStarted ? tailwind('bg-red-300') : tailwind('bg-gray-600'),
-                                    styles.roundedBottom,
-                                ]}
-                            >
-                                <Text
-                                    style={tailwind(
-                                        'underline font-bold text-white text-lg self-center'
-                                    )}
-                                >
-                                    {jobStarted ? 'End This Job' : 'Start New Job'}
-                                </Text>
-                            </Pressable>
-                            : null}
-                        </View>
-                    </View>
-                ) : null}
+                {shift.active ? <JobTracker shift={shift} /> : null}
             </View>
         );
     } else {
         return (
-            <View>
-                <Text>Loading...</Text>
+            <View style={[tailwind('flex flex-col')]}>
+                <View
+                    style={[
+                        { zIndex: 100 },
+                        tailwind(
+                            'flex-shrink flex-row justify-around items-center p-3 border-green-600 h-16 bg-white'
+                        ),
+                        tailwind('bg-gray-300'),
+                    ]}
+                >
+                    <Toggle
+                        title={'Loading...'}
+                        activeText="On"
+                        inactiveText="Off"
+                        value={false}
+                        onToggle={() => log.info('toggled while loading')}
+                    />
+                    <View style={tailwind('flex-grow-0')}>
+                        <Text style={[{ alignSelf: 'flex-end' }]}>{0.0}mi</Text>
+                        <Text>{elapsedTime}</Text>
+                    </View>
+                </View>
             </View>
         );
     }
@@ -368,6 +308,6 @@ const styles = StyleSheet.create({
         position: 'absolute',
         top: 2,
         left: 10,
-        zIndex: 101
-    }
+        zIndex: 101,
+    },
 });

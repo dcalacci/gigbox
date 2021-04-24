@@ -10,10 +10,22 @@ export default function TabOneScreen() {
         <View style={tailwind('bg-gray-100 h-full')}>
             <TrackingBar />
             <ScrollView style={tailwind('bg-gray-100 h-full')}>
-                <Pressable style={[tailwind('bg-white m-2 p-2 rounded-2xl flex-col')]}>
+                <Pressable style={[tailwind('bg-white m-2 p-5 rounded-2xl flex-col')]}>
+                    <Text style={tailwind('text-green-500 text-3xl font-bold underline')}>
+                        Today
+                    </Text>
+
+                    <View style={tailwind('border-b border-green-500 -mr-5 ml-5 p-0 pt-1 pb-2')}></View>
                     <View style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}>
                         <Text style={tailwind('text-gray-800 text-lg font-bold')}>
-                            See 2 tracked jobs
+                            2 tracked jobs
+                        </Text>
+                        <Ionicons name="caret-forward-outline" size={24} color="black" />
+                    </View>
+                    <View style={tailwind('border-b border-gray-200 ml-5 mr-5')}></View>
+                    <View style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}>
+                        <Text style={tailwind('text-gray-800 text-lg font-bold')}>
+                            1 total shifts
                         </Text>
                         <Ionicons name="caret-forward-outline" size={24} color="black" />
                     </View>

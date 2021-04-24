@@ -1,19 +1,10 @@
-import { request, gql } from 'graphql-request';
-import { Image } from 'react-native';
-import axios from 'axios';
-import { Asset } from 'expo-media-library';
-import { useToast } from 'react-native-fast-toast';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
+import { gql } from 'graphql-request';
 import { log, getClient, graphqlUri } from '../../utils';
 import { store } from '../../store/store';
-import fetch from 'node-fetch';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
-// import RNFS from 'react-native-file-system';
 
-//TODO: get userId and JWT as part of authentication headers and include this authentication in the graphql endpoints
-
-export const fetchActiveShift = () => {
+export const fetchActiveShift = async () => {
     const client = getClient(store);
     const query = gql`
         query {
@@ -23,15 +14,21 @@ export const fetchActiveShift = () => {
                 startTime
                 roadSnappedMiles
                 snappedGeometry
-                locations {
-                    id
-                    geom
-                    timestamp
-                }
             }
         }
     `;
-    return client.request(query);
+    const data = await client.request(query);
+    if (data.getActiveShift == null) {
+        return {
+            active: false,
+            id: '',
+            roadSnappedMiles: 0,
+            startTime: new Date(),
+            snappedGeometry: '',
+        };
+    } else {
+        return data.getActiveShift;
+    }
 };
 
 export const endShift = (shiftId: string) => {
@@ -68,7 +65,13 @@ export const createShift = () => {
     return client.request(query);
 };
 
-export const addScreenshotToShift = async ({ screenshot, shiftId }) => {
+export const addScreenshotToShift = async ({
+    screenshot,
+    shiftId,
+}: {
+    screenshot: MediaLibrary.Asset;
+    shiftId: string;
+}) => {
     const client = getClient(store);
     const query = gql`
         mutation mutation($Shift: ID!, $File: Upload!, $DeviceURI: String!, $Timestamp: DateTime!) {
@@ -93,22 +96,19 @@ export const addScreenshotToShift = async ({ screenshot, shiftId }) => {
 
     // const assetSource = Image.resolveAssetSource(screenshot);
     const info = await MediaLibrary.getAssetInfoAsync(screenshot);
-    log.info('Screenshot info:', info);
     log.info('Adding screenshot to shift', shiftId);
-    const fileBase64 = await FileSystem.readAsStringAsync(info.localUri, {
-        encoding: FileSystem.EncodingType.Base64,
-    });
-    log.info('Screenshot encoded.');
-
-    // const base64 = await FileSystem.readAsStringAsync(screenshot, { encoding: 'base64' });
-    // let filename = info.localUri.split('/').pop();
-    // // Infer the type of the image
-    // let match = /\.(\w+)$/.exec(filename);
-    // let type = match ? `image/${match[1]}` : `image/png`;
-    return client.request(query, {
-        Shift: shiftId,
-        File: fileBase64,
-        DeviceURI: info.localUri,
-        Timestamp: new Date(info.modificationTime),
-    });
+    if (!info.localUri) {
+        return false;
+    } else {
+        const fileBase64 = await FileSystem.readAsStringAsync(info.localUri, {
+            encoding: FileSystem.EncodingType.Base64,
+        });
+        log.info('Screenshot encoded.', info);
+        return client.request(query, {
+            Shift: shiftId,
+            File: fileBase64,
+            DeviceURI: info.localUri,
+            Timestamp: new Date(info.modificationTime),
+        });
+    }
 };
