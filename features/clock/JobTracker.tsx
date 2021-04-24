@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, StyleSheet, LayoutAnimation} from 'react-native';
 
 import { tailwind } from 'tailwind';
 import { log } from '../../utils';
 import { Shift, Job } from '@/types';
 import { LatLng, Marker, Region } from 'react-native-maps';
 import { QueryClient, useMutation } from 'react-query';
-import { useToast } from 'react-native-fast-toast'
+import { useToast } from 'react-native-fast-toast';
 import moment from 'moment';
 
 import { createJob, endJob } from './api';
@@ -24,7 +24,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
     const [region, setRegion] = useState<Region>();
     const employer = 'INSTACART';
     const [activeJob, setActiveJob] = useState<Job>();
-    const toast = useToast()
+    const toast = useToast();
 
     useEffect(() => {
         const activeJobs: Job[] = shift.jobs.filter((j) => !j.endTime);
@@ -61,11 +61,11 @@ export default function JobTracker({ shift }: { shift: Shift }) {
             console.log('STARTED JOB:, data:', data);
             if (data.createJob.ok) {
                 setJobStarted(true);
-                setActiveJob(data.createJob.job)
+                setActiveJob(data.createJob.job);
             } else {
                 //TODO: toast saying we couldn't start a job for some reason
                 setJobStarted(false);
-                toast?.show("Couldn't start that job. Try again?")
+                toast?.show("Couldn't start that job. Try again?");
             }
         },
         onError: (data, variables) => {
@@ -77,14 +77,14 @@ export default function JobTracker({ shift }: { shift: Shift }) {
     const finishJob = useMutation(endJob, {
         mutationKey: ['endJob'],
         onSuccess: (data, variables, context) => {
-            console.log("ENDING job:", data)
+            console.log('ENDING job:', data);
             if (data.endJob.ok) {
                 log.info('ended job successfully: ', data);
-                setActiveJob(undefined)
+                setActiveJob(undefined);
             } else {
                 //TODO: send toast
                 log.error('failed to end job...');
-                toast?.show("Couldn't stop your job. Try again?")
+                toast?.show("Couldn't stop your job. Try again?");
             }
         },
         onError: (err, variables) => {
@@ -132,8 +132,9 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                 {shift.active ? (
                     <Pressable
                         onPress={() => {
+                            LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
                             if (startJob.status == 'loading' || finishJob.status == 'loading') {
-                                log.debug('Job status is loading, not doing anything...')
+                                log.debug('Job status is loading, not doing anything...');
                                 return;
                             } else {
                                 activeJob

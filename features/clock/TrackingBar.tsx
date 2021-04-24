@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, StyleSheet, LayoutAnimation } from 'react-native';
 import { useSelector } from 'react-redux';
 import { tailwind } from 'tailwind';
 import { useToast } from 'react-native-fast-toast';
@@ -209,6 +209,7 @@ export default function TrackingBar() {
     });
 
     const onTogglePress = () => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         if (!activeShift.data?.active) {
             createActiveShift.mutate();
         } else {
