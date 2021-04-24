@@ -1,5 +1,5 @@
 import React, { FunctionComponent } from 'react';
-import { StyleSheet, Pressable, Text, ScrollView, View } from 'react-native';
+import { Pressable, Text, ScrollView, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { tailwind } from 'tailwind';
 import TrackingBar from '../features/clock/TrackingBar';

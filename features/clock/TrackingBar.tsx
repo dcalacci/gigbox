@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, EmitterSubscription, StyleSheet, Pressable } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
+import { View, Text, StyleSheet } from 'react-native';
+import { useSelector } from 'react-redux';
 import { tailwind } from 'tailwind';
 import { useToast } from 'react-native-fast-toast';
 
-import * as Permissions from 'expo-permissions';
 import * as MediaLibrary from 'expo-media-library';
 import { Asset } from 'expo-media-library';
 
@@ -14,25 +13,19 @@ import Toggle from '../../components/Toggle';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthState } from '../auth/authSlice';
 import { formatElapsedTime } from '../../utils';
-import {
-    startGettingBackgroundLocation,
-    stopGettingBackgroundLocation,
-    registerMileageTask,
-} from '../../tasks';
+import { startGettingBackgroundLocation, stopGettingBackgroundLocation } from '../../tasks';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { fetchActiveShift, endShift, createShift, addScreenshotToShift } from './api';
 import { log } from '../../utils';
 import JobTracker from './JobTracker';
 import * as Device from 'expo-device';
-import moment from 'moment';
-import { isLoading } from 'expo-font';
 
 export default function TrackingBar() {
     const toast = useToast();
     const queryClient = useQueryClient();
     const auth = useSelector((state: RootState): AuthState => state.auth);
     const activeShift = useQuery('activeShift', fetchActiveShift, {
-        refetchInterval: 10000,
+        refetchInterval: 1000,
         refetchIntervalInBackground: true,
         placeholderData: {
             active: false,
@@ -40,11 +33,11 @@ export default function TrackingBar() {
             roadSnappedMiles: 0,
             startTime: new Date(),
             snappedGeometry: '',
-            jobs: []
+            jobs: [],
         },
         onSuccess: (data) => {
-            console.log("successfully got active shift:", data)
-        }
+            console.log('successfully got active shift:', data);
+        },
     });
     const endActiveShift = useMutation(endShift, {
         onSuccess: (data, variables, context) => {

@@ -1,15 +1,6 @@
-import React, { useRef, useEffect, useState, FunctionComponent } from 'react';
-import { StyleSheet, Text, View, Dimensions } from 'react-native';
-import { useSelector, useDispatch } from 'react-redux';
-
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from 'react-query';
-
-import moment from 'moment';
-
-import { log } from '../../utils';
+import React, { useRef, FunctionComponent } from 'react';
+import { StyleSheet } from 'react-native';
 import { tailwind } from 'tailwind';
-import { getShifts } from './api';
-import { Location } from 'graphql/language/source';
 import MapView, { Polyline, Region, LatLng} from 'react-native-maps';
 
 interface TripMapProps {
@@ -19,6 +10,7 @@ interface TripMapProps {
     interactive?: boolean;
     showUserLocation?: boolean;
     region: Region | undefined;
+    children: JSX.Element
 }
 
 const TripMap: FunctionComponent<TripMapProps> = (props: TripMapProps) => {
@@ -44,6 +36,8 @@ const TripMap: FunctionComponent<TripMapProps> = (props: TripMapProps) => {
                 strokeWidth={5}
                 lineJoin="bevel"
             />
+            {props.children}
+            
         </MapView>
     );
 };

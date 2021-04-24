@@ -11,7 +11,7 @@ export const formatElapsedTime = (startTimestamp: number | Date | null): string 
         const st = moment.utc(startTimestamp);
         const hdiff = moment().diff(st, 'hours');
         const mdiff = moment().diff(st, 'minutes') - hdiff * 60;
-        const sdiff = moment().diff(st, 'seconds') - hdiff * 360 - mdiff * 60;
+        const sdiff = moment().diff(st, 'seconds') - (moment().diff(st, 'minutes') * 60);
         const timestr = `${hdiff}h ${mdiff}m ${sdiff}s`;
         return timestr;
     }

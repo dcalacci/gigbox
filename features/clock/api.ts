@@ -1,6 +1,10 @@
 import { gql } from 'graphql-request';
 import { log, getClient, graphqlUri } from '../../utils';
 import { store } from '../../store/store';
+import { LatLng } from 'react-native-maps'
+import { LocationObject } from 'expo-location'
+import * as Location from 'expo-location'
+import {LocationInput } from '@/tyoes'
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 
@@ -14,6 +18,17 @@ export const fetchActiveShift = async () => {
                 startTime
                 roadSnappedMiles
                 snappedGeometry
+                jobs {
+                    id
+                    startTime
+                    endTime
+                    startLocation
+                    mileage
+                    estimatedMileage
+                    totalPay
+                    tip
+                    employer
+                }
             }
         }
     `;
@@ -112,3 +127,94 @@ export const addScreenshotToShift = async ({
         });
     }
 };
+
+export const createJob = async({
+    shiftId,
+    employer
+}: {
+    shiftId: string,
+    employer: string
+}) => {
+    const client = getClient(store)
+    
+    const location: LocationObject | null = await Location.getLastKnownPositionAsync({
+        maxAge: 5000,
+    })
+    
+    if (location == null) {
+        throw new Error("Couldn't retrieve location!")
+    }
+    
+    const startLocation: LocationInput = {
+        lat: location.coords.latitude,
+        lng: location.coords.longitude,
+        timestamp: location.timestamp,
+        accuracy: location.coords.accuracy
+    }
+    console.log("got last known position:", location)
+    
+    const variables = {
+        shiftId,
+        employer,
+        startLocation: startLocation
+    }
+
+    const mutation = gql`
+    mutation mutation($shiftId: ID!, $startLocation: LocationInput!, $employer: String!) {
+        createJob(shiftId: $shiftId, startLocation: $startLocation, employer: $employer) {
+            job {
+                id
+                startLocation
+                employer
+                startTime
+            }
+            ok
+        }
+    }
+    `
+    return await client.request(mutation, variables)
+}
+
+export const endJob = async ({
+    jobId
+}: {
+    jobId: string,
+}) => {
+    const client = getClient(store)
+
+    const mutation = gql`
+    mutation mutation($jobId: ID!, $endLocation: LocationInput!) {
+        endJob(jobId: $jobId, endLocation: $endLocation) {
+            job {
+                id
+                startLocation
+                endLocation
+                employer
+                startTime
+                endTime
+            }
+            ok
+        }
+    }
+    `
+    const location: LocationObject | null = await Location.getLastKnownPositionAsync({
+        maxAge: 5000,
+    })
+    
+    if (location == null) {
+        throw new Error("Couldn't retrieve location!")
+    }
+    
+    const endLocation : LocationInput = {
+        lat: location.coords.latitude,
+        lng: location.coords.longitude,
+        timestamp: location.timestamp,
+        accuracy: location.coords.accuracy
+    }
+
+    const variables = {
+        jobId,
+        endLocation
+    }
+    return await client.request(mutation, variables)
+}
