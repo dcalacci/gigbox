@@ -3,7 +3,8 @@ import { View, Text, Pressable, StyleSheet} from 'react-native';
 
 import { tailwind } from 'tailwind'
 import { log } from '../../utils'
-import { Shift } from '../../types'
+import { Shift} from '@/types'
+import { LatLng, Region } from 'react-native-maps'
 
 import TripMap from '../shiftList/TripMap'
 
@@ -14,15 +15,16 @@ export interface JobTrackerProps {
 export default function JobTracker({shift}: {shift: Shift}) {
 
     const [jobStarted, setJobStarted] = useState(false);
-    const [locations, setLocations] = useState([{}]);
-    const [region, setRegion] = useState(null);
+    const [locations, setLocations] = useState<LatLng[]>();
+    const [region, setRegion] = useState<Region>();
 
     useEffect(() => {
         console.log('trying to set geometry');
         if (shift && shift.snappedGeometry) {
             log.info('Setting locations and bounding box for shift.');
-            const { geometries, bounding_box } = JSON.parse(shift.snappedGeometry);
-            const locations = geometries.map((c) => {
+            const { geometries, bounding_box } = (typeof(shift.snappedGeometry) == 'string' ? JSON.parse(shift.snappedGeometry) : shift.snappedGeometry)
+
+            const locations: LatLng[] = geometries.map((c: [number, number][]) => {
                 return { latitude: c[1], longitude: c[0] };
             });
             setLocations(locations);
@@ -39,9 +41,9 @@ export default function JobTracker({shift}: {shift: Shift}) {
 
     return (
         <View
-            style={[tailwind('flex-auto flex-col ml-2 mb-1 mr-2'), styles.cardShadow, styles.card]}
+            style={[tailwind('flex-auto flex-col ml-2 mb-1 mr-2')]}
         >
-            <View style={[tailwind('flex-auto w-full flex-col'), styles.card]}>
+            <View style={[tailwind('flex-auto w-full flex-col')]}>
                 {jobStarted ? (
                     <View style={tailwind('h-36 border-b-2 border-green-500')}>
                         <View style={styles.mapTitle}>
@@ -50,7 +52,8 @@ export default function JobTracker({shift}: {shift: Shift}) {
                             </Text>
                         </View>
                         <TripMap
-                            interactive={true}
+                            interactive={false}
+                            showUserLocation={true}
                             isActive={false}
                             tripLocations={locations}
                             region={region}

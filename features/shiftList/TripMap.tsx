@@ -10,24 +10,21 @@ import { log } from '../../utils';
 import { tailwind } from 'tailwind';
 import { getShifts } from './api';
 import { Location } from 'graphql/language/source';
-import MapView, { Polyline } from 'react-native-maps';
+import MapView, { Polyline, Region, LatLng} from 'react-native-maps';
 
 interface TripMapProps {
-    tripLocations: [{ latitude: number; longitude: number }];
+    tripLocations: LatLng[] | undefined;
     shiftId: string;
-    isActive: boolean
-    interactive?: boolean
-    region: {
-        latitude: number;
-        longitude: number;
-        latitudeDelta: number;
-        longitudeDelta: number;
-    };
+    isActive: boolean;
+    interactive?: boolean;
+    showUserLocation?: boolean;
+    region: Region | undefined;
 }
 
 const TripMap: FunctionComponent<TripMapProps> = (props: TripMapProps) => {
     const mapRef = useRef(null);
 
+    const locations = (!props.tripLocations ? [] : props.tripLocations)
     return (
         <MapView
             ref={mapRef}
@@ -35,13 +32,14 @@ const TripMap: FunctionComponent<TripMapProps> = (props: TripMapProps) => {
             zoomEnabled={false || props.interactive}
             rotateEnabled={false || props.interactive}
             scrollEnabled={false || props.interactive}
-            /* showsUserLocation={props.isActive} */
+            showsUserLocation={false || props.showUserLocation}
+            // /* showsUserLocation={props.isActive} */
             zoomControlEnabled={false}
             loadingEnabled={true}
             style={[tailwind('w-full h-full')]}
         >
             <Polyline
-                coordinates={props.tripLocations}
+                coordinates={locations}
                 strokeColor="#000"
                 strokeWidth={5}
                 lineJoin="bevel"
