@@ -18,6 +18,17 @@ export const getShifts = (first: Number, after: String) => {
                         endTime
                         roadSnappedMiles
                         snappedGeometry
+                        jobs {
+                            id
+                            startTime
+                            endTime
+                            startLocation
+                            mileage
+                            estimatedMileage
+                            totalPay
+                            tip
+                            employer
+                        }
                         screenshots {
                             onDeviceUri
                             id
