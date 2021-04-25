@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { tailwind } from 'tailwind'
 import { Text, Animated, View, StyleSheet } from 'react-native';
 import PropTypes from 'prop-types';
 
@@ -16,7 +17,7 @@ export default class AnimatedEllipsis extends Component<AnimatedEllipsisProps> {
         minOpacity: 0,
         style: {
             color: '#e8e8e8',
-            fontSize: 48,
+            fontSize: 120,
         },
     };
 
@@ -71,13 +72,13 @@ export default class AnimatedEllipsis extends Component<AnimatedEllipsisProps> {
 
     render() {
         let dots = this._animation_state.dot_opacities.map((o, i) => (
-            <Animated.Text key={i} style={[this.props.style, { opacity: o }]}>
+            <Animated.Text key={i} style={[this.props.style, { opacity: o }, tailwind('self-center text-3xl font-bold text-white')]}>
                 {' '}
                 .
             </Animated.Text>
         ));
 
-        return <View style={styles.container}>{dots}</View>;
+        return <View style={[styles.container, tailwind('self-center')]}>{dots}</View>;
     }
 }
 
