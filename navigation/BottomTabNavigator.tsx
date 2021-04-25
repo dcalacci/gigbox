@@ -25,8 +25,6 @@ export default function BottomTabNavigator() {
     const loggedIn = () => { return logIn(jwt)}
     const loggedInStatus = useQuery('loggedIn', loggedIn, { refetchInterval: 10000});
 
-    console.log('LOGGED IN:', loggedInStatus);
-
     //TODO: check for live (authenticated) token
 
     if (loggedInStatus.isLoading) {

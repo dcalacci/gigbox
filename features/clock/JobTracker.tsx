@@ -149,7 +149,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                         ]}
                     >
                         {startJob.status == 'loading' || finishJob.status == 'loading' ? (
-                            <Ellipsis style={tailwind('self-center')} />
+                            <Ellipsis style={tailwind('text-lg self-center')} />
                         ) : (
                             <Text
                                 style={tailwind(

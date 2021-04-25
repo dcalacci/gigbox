@@ -25,8 +25,8 @@ export default function TrackingBar() {
     const queryClient = useQueryClient();
     const auth = useSelector((state: RootState): AuthState => state.auth);
     const activeShift = useQuery('activeShift', fetchActiveShift, {
-        refetchInterval: 1000,
-        refetchIntervalInBackground: true,
+        refetchInterval: 5000,
+        // refetchIntervalInBackground: true,
         placeholderData: {
             active: false,
             id: '',
@@ -35,9 +35,9 @@ export default function TrackingBar() {
             snappedGeometry: '',
             jobs: [],
         },
-        onSuccess: (data) => {
-            console.log('successfully got active shift:', data);
-        },
+        onError: (err) => {
+            log.error("Could not fetch shift")
+        }
     });
     const endActiveShift = useMutation(endShift, {
         onSuccess: (data, variables, context) => {

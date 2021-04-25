@@ -23,7 +23,9 @@ export const getShifts = (first: Number, after: String) => {
                             startTime
                             endTime
                             startLocation
+                            endLocation
                             mileage
+                            snappedGeometry
                             estimatedMileage
                             totalPay
                             tip

@@ -5,7 +5,6 @@ import MapView, { Polyline, Region, LatLng} from 'react-native-maps';
 
 interface TripMapProps {
     tripLocations: LatLng[] | undefined;
-    shiftId: string;
     isActive: boolean;
     interactive?: boolean;
     showUserLocation?: boolean;
