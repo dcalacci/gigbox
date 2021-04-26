@@ -25,6 +25,7 @@ from dateutil import parser
 from flask import g, current_app
 from PIL import Image
 from graphene_file_upload.scalars import Upload
+from geoalchemy2.shape import from_shape
 from api import db
 from api.controllers.auth.decorators import login_required
 from api.graphql.object import (
@@ -34,7 +35,8 @@ from api.graphql.object import (
     LocationInput,
     EmployerInput,
     Employer,
-    Screenshot
+    Screenshot,
+    Job
 )
 from api.models import (
     User as UserModel,
@@ -42,12 +44,13 @@ from api.models import (
     Location as LocationModel,
     Employer as EmployerModel,
     Screenshot as ScreenshotModel,
+    Job as JobModel,
     Geometry_WKT,
     _convert_geometry,
     EmployerNames,
 )
 from api.utils import generate_filename
-from api.routing.mapmatch import get_shift_distance, get_shift_geometry
+from api.routing.mapmatch import get_route_distance_and_geometry
 from api.screenshots.parser import predict_app, image_to_df, parse_image
 from flask import current_app
 
@@ -124,8 +127,8 @@ class EndShift(Mutation):
         )
 
         # calculate final mileage for this shift
-        shift = updateShiftMileage(shift, info)
-        shift = addRouteLineToShift(shift, info)
+        shift = updateShiftMileageAndGeometry(shift, info)
+        shift = endAnyActiveJobs(shift, info)
         shift.end_time = end_time
         shift.active = False
         db.session.add(shift)
@@ -133,31 +136,36 @@ class EndShift(Mutation):
 
         return EndShift(shift=shift)
 
-
-def addRouteLineToShift(shift, info):
-    match_result = get_shift_geometry(shift, info)
-    if not match_result:
-        # TODO: raise error
+def updateShiftMileageAndGeometry(shift, info):
+    """adds mileage and geometry to a shift object using one call to our mapmatch api"""
+    locs = sorted(shift.locations, key=lambda l: l.timestamp)
+    match_obj = get_route_distance_and_geometry(locs)
+    if not match_obj['geom_obj']:
         current_app.logger.error(f'Failed to match a route to shift...')
+        return shift
 
-    bb = match_result[1]
+    distance = match_obj['distance']
+    bb = match_obj['geom_obj'][1]
+    geometries = match_obj['geom_obj'][0]
+
     bounding_box = {'minLat': bb[1],
                     'minLng': bb[0],
                     'maxLat': bb[3],
                     'maxLng': bb[2]}
-    matched = {'geometries': match_result[0], 'bounding_box': bounding_box}
+    matched = {'geometries': geometries, 'bounding_box': bounding_box}
     current_app.logger.info('adding matched geometry to shift:')
-    print(matched)
     shift.snapped_geometry = matched
+    shift.road_snapped_miles = match_obj['distance']
     current_app.logger.info(f'matched route added to shift...')
     return shift
 
 
-def updateShiftMileage(shift, info):
-    meters = get_shift_distance(shift, info)
-    mileage = meters * 0.0006213712
-    shift.road_snapped_miles = mileage
-    current_app.logger.info(f"mileage: {mileage}")
+def endAnyActiveJobs(shift, info):
+    for j in shift.jobs:
+        if (j.end_time is None):
+            print("Found an active job. Ending...")
+            j.end_time = datetime.now()
+            j.end_location = shift.locations[-1].geom
     return shift
 
 
@@ -196,8 +204,7 @@ class AddLocationsToShift(Mutation):
         if n_locations % 5 == 0:
             current_app.logger.info(
                 "Updating mileage & calculated route on shift...")
-            shift = updateShiftMileage(shift, info)
-            shift = addRouteLineToShift(shift, info)
+            shift = updateShiftMileageAndGeometry(shift, info)
         db.session.add(shift)
         db.session.commit()
         return AddLocationsToShift(location=shift.locations[-1], ok=True)
@@ -268,6 +275,83 @@ class AddScreenshotToShift(Mutation):
             )
 
 
+class CreateJob(Mutation):
+    job = Field(lambda: Job, description='Job that was created')
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        shift_id = ID(
+            required=True, description="ID of the shift to make a job in")
+
+        start_location = LocationInput()
+        employer = String()
+
+    @login_required
+    def mutate(self, info, shift_id, start_location, employer):
+        print("creating job...")
+        shift_id = from_global_id(shift_id)[1]
+        shift = ShiftModel.query.filter_by(id=shift_id, user_id=g.user).first()
+
+        employer = EmployerNames.INSTACART
+        job = JobModel(
+            shift_id=shift.id,
+            lng=start_location.lng,
+            lat=start_location.lat,
+            user_id = shift.user_id,
+            employer=employer
+        )
+        shift.jobs.append(job)
+
+        db.session.add(shift)
+        db.session.commit()
+        return CreateJob(job=job, ok=True)
+
+def get_job_mileage_and_geometry(info, job):
+    # don't need this - the shift id here is UUID
+    # shift_id = from_global_id(job.shift_id)[1]
+    print("getting mileage and geometry for job:", job, job.shift_id)
+    shift = ShiftModel.query.get(job.shift_id)
+    # shift = db.session.get(job.shift_id)
+    # get only locations between job start and end from this shift
+    job_locations = [l for l in shift.locations if (l.timestamp >= job.start_time and l.timestamp
+            <= job.end_time)]
+    locs = sorted(job_locations, key=lambda l: l.timestamp)
+    match_obj = get_route_distance_and_geometry(locs)
+
+    distance = match_obj['distance']
+    bb = match_obj['geom_obj'][1]
+    geometries = match_obj['geom_obj'][0]
+
+    bounding_box = {'minLat': bb[1],
+                    'minLng': bb[0],
+                    'maxLat': bb[3],
+                    'maxLng': bb[2]}
+    matched = {'geometries': geometries, 'bounding_box': bounding_box}
+    current_app.logger.info('adding matched geometry to job:')
+    job.snapped_geometry = matched
+    job.mileage = match_obj['distance']
+    return job
+
+class EndJob(Mutation):
+    job = Field(lambda: Job, description="job to end")
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        job_id = ID(required=True)
+        end_location = LocationInput()
+
+    @login_required
+    def mutate(self, info, job_id, end_location):
+        job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
+        job.end_time = datetime.now()
+        job.end_location = from_shape(
+            geometry.Point(end_location.lng, end_location.lat))
+        job = get_job_mileage_and_geometry(info, job)
+        db.session.add(job)
+        db.session.commit()
+        return EndJob(job=job, ok=True)
+
+
 class SetShiftEmployers(Mutation):
     shift = Field(lambda: Shift, description="Shift to update")
 
@@ -295,5 +379,7 @@ class Mutation(ObjectType):
     createUser = CreateUser.Field()
     createShift = CreateShift.Field()
     endShift = EndShift.Field()
+    createJob = CreateJob.Field()
+    endJob = EndJob.Field()
     addLocationsToShift = AddLocationsToShift.Field()
     addScreenshotToShift = AddScreenshotToShift.Field()

@@ -113,7 +113,7 @@ class Shift(db.Model):
     # passive_deletes also means that when we delete a shift, the location and employer records
     # are deleted correctly, regardless of whether we use session.delete() or filter().delete()
 
-    # we store as JSONB because that's what we get back from the map match API, and because it's 
+    # we store as JSONB because that's what we get back from the map match API, and because it's
     # easier to pass around.
     snapped_geometry = db.Column(JSONB)
 
@@ -123,8 +123,8 @@ class Shift(db.Model):
     employers = db.relationship(
         "Employer", backref=backref("shift", cascade="all, delete", passive_deletes=True)
     )
-    trips = db.relationship(
-            'Trip', backref=backref("shift", cascade="all, delete", passive_deletes=True))
+    jobs = db.relationship(
+        'Job', backref=backref("shift", cascade="all, delete", passive_deletes=True))
 
     __table_args__ = (Index("index", "id", "start_time"),)
 
@@ -153,6 +153,7 @@ class Screenshot(db.Model):
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     shift_id = db.Column(UUID(as_uuid=True), ForeignKey(
         Shift.id, ondelete='CASCADE'))
+    # TODO: Why is this a timestamp again?
     timestamp = db.Column(db.String)
     on_device_uri = db.Column(db.String)
     img_filename = db.Column(db.String)
@@ -171,23 +172,44 @@ class Employer(db.Model):
         self.name = name
         self.shift_id = shift_id
 
-## TODO: what other fields?
-## TODO: create trips automatically from shift locations and/or screenshots
-class Trip(db.Model):
-    __tablename__="trips"
+
+class Job(db.Model):
+    __tablename__ = "jobs"
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
     date_created = db.Column(DateTime, default=func.now())
     date_modified = db.Column(DateTime, onupdate=func.now())
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(Shift.id, ondelete='CASCADE'))
-    start_screenshot = db.Column(UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
-    end_screenshot = db.Column(UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
+    user_id = db.Column(db.String, ForeignKey(User.id, ondelete='CASCADE'))
+    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(
+        Shift.id, ondelete='CASCADE'))
+
+    # screenshots -- maybe should make this more flexible (more screenshots)
+    start_screenshot = db.Column(
+        UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
+    end_screenshot = db.Column(
+        UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
+
+    # locations
     start_location = db.Column(Geometry("POINT"))
     end_location = db.Column(Geometry("POINT"))
+
+    # start and end times
+    start_time = db.Column(DateTime, default=func.now())
+    end_time = db.Column(DateTime)
+
     mileage = db.Column(db.Float, nullable=True)
+    snapped_geometry = db.Column(JSONB)
+
+    # info from trip screenshots / manual entry
+    estimated_mileage = db.Column(db.Float, nullable=True)
     total_pay = db.Column(db.Float, nullable=True)
     tip = db.Column(db.Float, nullable=True)
-    is_work = db.Column(db.Boolean, nullable=True)
     employer = db.Column(db.Enum(EmployerNames), nullable=True)
+    def __init__(self, lng, lat, shift_id, user_id, employer):
+        self.start_location = from_shape(geometry.Point(lng, lat))
+        self.shift_id = shift_id
+        self.user_id = user_id
+        self.employer = employer
 
 
 class Location(db.Model):

@@ -19,45 +19,27 @@ def match(coordinates):
     MATCH_URI = f'{OSRM_URI}/match/v1/car/{coord_str}'
     return requests.post(MATCH_URI, params=payload)
 
-
-def get_shift_distance(shift, info):
-    locs = Location.get_query(info=info).filter(
-        LocationModel.shift_id == shift.id).order_by(LocationModel.timestamp.asc())
-    current_app.logger.info("Retrieving locations for shift ")
-    # current_app.logger.info("Found locs...")
+def get_match_for_locations(locations):
     coords = [{'lat': to_shape(s.geom).y,
                'lng': to_shape(s.geom).x,
-               'timestamp': s.timestamp} for s in locs]
+               'timestamp': s.timestamp} for s in locations]
 
-    res = match(coords).json()
-    # print("matchings:", res.json()['matchings'])
-    # print("tracepoints:", res.json()['tracepoints'])
-    print("RESULT:", res)
-    # res_json = json.loads(res)
+    return match(coords).json()
+
+
+def get_match_distance(res):
+    """gets route distance from a list of Location objects
+    """
     if 'matchings' in res:
         distances = [m['distance'] for m in res['matchings']]
         geometries = [m['geometry']['coordinates'] for m in res['matchings']]
         total_distance = sum(distances)
-        return total_distance
+        mileage = total_distance * 0.0006213712
+        return mileage
     return 0
 
 
-def get_shift_geometry(shift, info):
-    print("Shift locations:", shift.locations)
-    locs = sorted(shift.locations, key=lambda l: l.timestamp)
-
-    # locs = Location.get_query(info=info).filter(
-    #     LocationModel.shift_id == shift.id).order_by(LocationModel.timestamp.asc())
-    if len(locs) == 0:
-        return False
-    current_app.logger.info(
-        "Retrieving locations for shift {}".format(shift.id))
-    # current_app.logger.info("Found locs...")
-    coords = [{'lat': to_shape(s.geom).y,
-               'lng': to_shape(s.geom).x,
-               'timestamp': s.timestamp} for s in locs]
-
-    res = match(coords).json()
+def get_match_geometry(res):
     # print("matchings:", res.json()['matchings'])
     # print("tracepoints:", res.json()['tracepoints'])
     # res_json = json.loads(res)
@@ -72,4 +54,37 @@ def get_shift_geometry(shift, info):
             return [min(x_coordinates), min(y_coordinates), max(x_coordinates), max(y_coordinates)]
 
         return (geometries, bounding_box(geometries))
+    return False
+
+def get_route_distance_and_geometry(locations):
+    res = get_match_for_locations(locations)
+    distance = get_match_distance(res)
+    geom_obj = get_match_geometry(res)
+    return {"distance": distance,
+            "geom_obj": geom_obj}
+
+
+def get_shift_distance(shift, info):
+    locs = Location.get_query(info=info).filter(
+        LocationModel.shift_id == shift.id).order_by(LocationModel.timestamp.asc())
+    current_app.logger.info("Retrieving locations for shift ")
+    # current_app.logger.info("Found locs...")
+    res = get_match_for_locations(locs)
+    return get_match_distance(res)
+
+
+def get_shift_geometry(shift, info):
+    # print("Shift locations:", shift.locations)
+    current_app.logger.info("Retrieving shift geometry...")
+    locs = sorted(shift.locations, key=lambda l: l.timestamp)
+
+    # locs = Location.get_query(info=info).filter(
+    #     LocationModel.shift_id == shift.id).order_by(LocationModel.timestamp.asc())
+    if len(locs) == 0:
+        return False
+    current_app.logger.info(
+        "Retrieving locations for shift {}".format(shift.id))
+    # current_app.logger.info("Found locs...")
+    res = get_match_for_locations(locs)
+    return get_match_geometry(res)
     return False
