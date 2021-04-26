@@ -126,7 +126,7 @@ export default function TrackingBar() {
                 const clockInTime = activeShift.data.startTime;
                 /* const startTimestamp = shiftActive() ? clockInTime : null; */
                 setElapsedTime(formatElapsedTime(clockInTime));
-            }, 1000);
+            }, 100);
             return () => clearInterval(interval);
         } else {
             // otherwise set it to zero

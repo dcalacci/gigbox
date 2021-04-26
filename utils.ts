@@ -12,8 +12,12 @@ export const formatElapsedTime = (startTimestamp: number | Date | null): string 
         const hdiff = moment().diff(st, 'hours');
         const mdiff = moment().diff(st, 'minutes') - hdiff * 60;
         const sdiff = moment().diff(st, 'seconds') - (moment().diff(st, 'minutes') * 60);
-        const timestr = `${hdiff}h ${mdiff}m ${sdiff}s`;
-        return timestr;
+        if (mdiff >= 1) {
+
+        return `${hdiff}h ${mdiff}m`;
+        } else {
+        return `${hdiff}h ${mdiff}m ${sdiff}s`;
+        }
     }
 };
 
