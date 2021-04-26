@@ -5,6 +5,7 @@ import { OtpResponse, getOtp, verifyOtp } from './api'
 interface OtpState {
     tokenSent: boolean
     errorMessage: string
+    isLoading: boolean
     tokenExpiresIn: number
 }
 
@@ -37,6 +38,7 @@ export const loginWithOtp = createAsyncThunk(
 
 const initialState: OtpState = {
     tokenSent: false,
+    isLoading: false,
     errorMessage: "",
     tokenExpiresIn: 0
 }
@@ -66,9 +68,12 @@ const otpSlice = createSlice({
                     state.errorMessage = "Couldn't send OTP code. Check your connection and try again."
                 }
             })
+            .addCase(loginWithOtp.pending, (state, action) => {
+                state.isLoading = true
+            })
             .addCase(loginWithOtp.fulfilled, (state, action) => {
                 console.log("OTP verification fulfilled", action.payload)
-                return initialState
+                return {...initialState, tokenSent: true}
             })
             .addCase(loginWithOtp.rejected, (state, action: any) => {
                 console.log("OTP Verification REJECTED", action)

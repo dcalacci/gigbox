@@ -16,18 +16,44 @@ import { StackActions } from '@react-navigation/routers';
 import { SafeAreaView, View, Text } from 'react-native';
 
 import { useQuery } from 'react-query';
-import { logIn } from '../features/auth/api';
+import { logIn, LogInResponse } from '../features/auth/api';
+import { setLoggedIn } from '../features/auth/authSlice';
+import { useDispatch } from 'react-redux';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
 export default function BottomTabNavigator() {
     const jwt = useSelector((state: RootState): boolean => state.auth.jwt);
-    const loggedIn = () => { return logIn(jwt)}
-    const loggedInStatus = useQuery('loggedIn', loggedIn, { refetchInterval: 10000});
+    const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
+    const authIsLoading = useSelector((state: RootState): boolean => state.auth.isLoading);
+    const loggedIn = () => {
+        return logIn(jwt);
+    };
+    const dispatch = useDispatch();
+    const loggedInStatus = useQuery('loggedIn', loggedIn, {
+        refetchInterval: 5000,
+        onSuccess: (data: LogInResponse) => {
+            if (isAuthenticated && data.authenticated) {
+                // do nothing 
+                return;
+            }
+            // otherwise, set our state appropriately
+            dispatch(setLoggedIn({ authenticated: data.authenticated, user_id: data.user_id }));
+        },
+        onError: (data: LogInResponse) => {
+            dispatch(setLoggedIn({ authenticated: false, user_id: null }));
+        },
+    });
 
     //TODO: check for live (authenticated) token
 
-    if (loggedInStatus.isLoading) {
+    if (authIsLoading) {
+        return (
+            <View>
+                <Text>Loading....</Text>
+            </View>
+        );
+    } else if (loggedInStatus.isLoading) {
         return (
             <View>
                 <Text>Loading....</Text>
@@ -40,7 +66,7 @@ export default function BottomTabNavigator() {
                 initialRouteName="Home"
                 tabBarOptions={{ activeTintColor: Colors.light.tint }}
             >
-                {loggedInStatus.data.authenticated ? (
+                {isAuthenticated ? (
                     <>
                         <BottomTab.Screen
                             name="Home"
