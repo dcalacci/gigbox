@@ -44,7 +44,7 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
     const mileage = props.item.node.roadSnappedMiles ? props.item.node.roadSnappedMiles : 0;
 
     const openDetails = () => {
-        props.navigation.navigate('Details', {
+        props.navigation.navigate('Shift Details', {
             shift: props.item.node,
             locations,
             region,

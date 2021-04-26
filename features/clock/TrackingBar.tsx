@@ -25,7 +25,7 @@ export default function TrackingBar() {
     const queryClient = useQueryClient();
     const auth = useSelector((state: RootState): AuthState => state.auth);
     const activeShift = useQuery('activeShift', fetchActiveShift, {
-        refetchInterval: 5000,
+        refetchInterval: 1000,
         // refetchIntervalInBackground: true,
         placeholderData: {
             active: false,

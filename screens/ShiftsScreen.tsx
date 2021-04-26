@@ -23,7 +23,19 @@ export default function ShiftsScreen({ navigation }) {
                     headerShown: false,
                 }}
             />
-            <ShiftStack.Screen name="Details" component={ShiftDetails} />
+            <ShiftStack.Screen name="Shift Details" 
+            component={ShiftDetails} 
+            options={{
+                headerStyle: {
+                  backgroundColor: 'white',
+                },
+                headerTransparent: false,
+                headerBackTitle: "All Shifts",
+                headerTintColor: '#000',
+                headerTitleStyle: {
+                  fontWeight: 'bold',
+                },
+              }}/>
         </ShiftStack.Navigator>
     );
 }

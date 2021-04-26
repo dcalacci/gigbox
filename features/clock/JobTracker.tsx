@@ -93,7 +93,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
         },
     });
     return (
-        <View style={[tailwind('flex-auto flex-col ml-2 mb-1 mr-2')]}>
+        <View style={[tailwind('flex-auto flex-col bg-white ml-2 mb-1 mr-2'), styles.roundedBottom]}>
             <View style={[tailwind('flex-auto w-full flex-col')]}>
                 {activeJob ? (
                     <View style={tailwind('h-36 border-b-2 border-green-500')}>
