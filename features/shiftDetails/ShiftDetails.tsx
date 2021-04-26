@@ -6,66 +6,10 @@ import { Region, Marker } from 'react-native-maps';
 import moment from 'moment';
 import TripMap from '../shiftList/TripMap';
 import { parse } from 'wellknown';
+import ScreenshotUploader from './ScreenshotPicker'
 
-import * as ImagePicker from 'expo-image-picker';
 //TODO: show start and end of trip in map
 
-const ScreenshotUploader = ({ modalVisible, setModalVisible }: { modalVisible: boolean }) => {
-    const [image, setImage] = useState(null);
-
-    useEffect(() => {
-        (async () => {
-            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
-            if (status !== 'granted') {
-                alert('Sorry, we need camera roll permissions to make this work!');
-            }
-        })();
-    }, []);
-
-    const pickImage = async () => {
-        let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ImagePicker.MediaTypeOptions.Images,
-            quality: 1,
-            exif: true,
-        });
-
-        console.log(result);
-        if (!result.cancelled) {
-            setImage(result.uri);
-        }
-    };
-
-    return (
-        <Modal
-            animationType="slide"
-            transparent={false}
-            visible={modalVisible}
-            presentationStyle={'formSheet'}
-            onRequestClose={() => {
-                Alert.alert('Modal has been closed.');
-            }}
-        >
-            <View style={tailwind('flex flex-col')}>
-                <Pressable
-                    onPress={() => {
-                        pickImage();
-                    }}
-                >
-                    <Text>Pick Screenshot</Text>
-                </Pressable>
-
-                {image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
-                <Pressable
-                    onPress={() => {
-                        setModalVisible(false);
-                    }}
-                >
-                    <Text>Close</Text>
-                </Pressable>
-            </View>
-        </Modal>
-    );
-};
 
 // Scroll view of screenshots
 const Screenshots = ({ screenshots, onPressAddScreenshots }) => {
