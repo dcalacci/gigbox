@@ -18,26 +18,52 @@ import TripMap from '../shiftList/TripMap';
 import { parse } from 'wellknown';
 //TODO: show start and end of trip in map
 
-const Screenshots = ({ screenshots }) =>
-    screenshots.map((s, idx) => (
-        <View style={tailwind('flex-row p-0 flex-auto')} key={s.id}>
-            <View style={tailwind('flex-col p-1')}>
-                <Image
-                    style={[tailwind('flex-auto m-0')]}
-                    source={{ uri: s.onDeviceUri }}
-                    resizeMethod={'scale'}
-                    resizeMode={'contain'}
-                />
-                <Text style={[{ alignSelf: 'flex-start' }, tailwind('font-bold')]}>
-                    {moment.utc(s.timestamp).local().format('h:mm a')}
+const Screenshots = ({ screenshots }) => {
+    if (screenshots.length == 0) {
+        return (
+            <View style={tailwind('flex-col justify-center bg-gray-100 w-1/2 rounded-lg m-2 p-2')}>
+                <Pressable
+                    style={tailwind('self-center justify-self-center bg-gray-800 rounded-lg p-2')}
+                >
+                    <Text style={tailwind('text-white font-bold underline')}>Add Screenshots</Text>
+                </Pressable>
+                <Text style={tailwind('text-sm text-center p-1')}>
+                    Upload a screenshot of this job to automatically record your pay.
                 </Text>
-            </View>
 
-            {idx < screenshots.length - 1 ? (
-                <View style={[tailwind('border-b-2 border-green-500 w-12 self-center')]} />
-            ) : null}
-        </View>
-    ));
+            </View>
+        );
+    } else {
+        const ScreenshotItems = screenshots.map((s, idx) => (
+            <View style={tailwind('flex-row p-0 flex-auto')} key={s.id}>
+                <View style={tailwind('flex-col p-1')}>
+                    <Image
+                        style={[tailwind('flex-auto m-0')]}
+                        source={{ uri: s.onDeviceUri }}
+                        resizeMethod={'scale'}
+                        resizeMode={'contain'}
+                    />
+                    <Text style={[{ alignSelf: 'flex-start' }, tailwind('font-bold')]}>
+                        {moment.utc(s.timestamp).local().format('h:mm a')}
+                    </Text>
+                </View>
+
+                {idx < screenshots.length - 1 ? (
+                    <View style={[tailwind('border-b-2 border-green-500 w-12 self-center')]} />
+                ) : null}
+            </View>
+        ));
+        return (
+            <ScrollView
+                horizontal={true}
+                style={tailwind('m-2 rounded-lg bg-gray-100 w-1/3 p-2')}
+                contentContainerStyle={tailwind('justify-center')}
+            >
+                <ScreenshotItems />
+            </ScrollView>
+        );
+    }
+};
 
 const JobItem = ({ job, screenshots }) => {
     const [region, setRegion] = useState<Region>();
@@ -135,13 +161,7 @@ const JobItem = ({ job, screenshots }) => {
                 )}
             </View>
             <View style={tailwind('flex-row p-5')}>
-                <ScrollView
-                    horizontal={true}
-                    style={tailwind('m-2 rounded-lg bg-gray-100 w-1/3 p-2')}
-                    contentContainerStyle={tailwind('justify-center')}
-                >
-                    <Screenshots screenshots={screenshots} />
-                </ScrollView>
+                <Screenshots screenshots={screenshots} />
                 <View
                     style={tailwind('flex flex-col flex-grow p-2 content-between justify-between')}
                 >
