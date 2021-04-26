@@ -1,28 +1,79 @@
 import React, { useState, FunctionComponent, useEffect } from 'react';
-import {
-    ScrollView,
-    View,
-    Text,
-    Image,
-    SafeAreaView,
-    StyleSheet,
-    Pressable,
-    RefreshControl,
-} from 'react-native';
+import { ScrollView, View, Text, Image, StyleSheet, Pressable, Modal, Alert } from 'react-native';
 import { tailwind } from 'tailwind';
-import { useQuery } from 'react-query';
 import { Job } from '../../types';
 import { Region, Marker } from 'react-native-maps';
 import moment from 'moment';
 import TripMap from '../shiftList/TripMap';
 import { parse } from 'wellknown';
+
+import * as ImagePicker from 'expo-image-picker';
 //TODO: show start and end of trip in map
 
-const Screenshots = ({ screenshots }) => {
+const ScreenshotUploader = ({ modalVisible, setModalVisible }: { modalVisible: boolean }) => {
+    const [image, setImage] = useState(null);
+
+    useEffect(() => {
+        (async () => {
+            const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+            if (status !== 'granted') {
+                alert('Sorry, we need camera roll permissions to make this work!');
+            }
+        })();
+    }, []);
+
+    const pickImage = async () => {
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            quality: 1,
+            exif: true,
+        });
+
+        console.log(result);
+        if (!result.cancelled) {
+            setImage(result.uri);
+        }
+    };
+
+    return (
+        <Modal
+            animationType="slide"
+            transparent={false}
+            visible={modalVisible}
+            presentationStyle={'formSheet'}
+            onRequestClose={() => {
+                Alert.alert('Modal has been closed.');
+            }}
+        >
+            <View style={tailwind('flex flex-col')}>
+                <Pressable
+                    onPress={() => {
+                        pickImage();
+                    }}
+                >
+                    <Text>Pick Screenshot</Text>
+                </Pressable>
+
+                {image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
+                <Pressable
+                    onPress={() => {
+                        setModalVisible(false);
+                    }}
+                >
+                    <Text>Close</Text>
+                </Pressable>
+            </View>
+        </Modal>
+    );
+};
+
+// Scroll view of screenshots
+const Screenshots = ({ screenshots, onPressAddScreenshots }) => {
     if (screenshots.length == 0) {
         return (
             <View style={tailwind('flex-col justify-center bg-gray-100 w-1/2 rounded-lg m-2 p-2')}>
                 <Pressable
+                    onPress={onPressAddScreenshots}
                     style={tailwind('self-center justify-self-center bg-gray-800 rounded-lg p-2')}
                 >
                     <Text style={tailwind('text-white font-bold underline')}>Add Screenshots</Text>
@@ -30,7 +81,6 @@ const Screenshots = ({ screenshots }) => {
                 <Text style={tailwind('text-sm text-center p-1')}>
                     Upload a screenshot of this job to automatically record your pay.
                 </Text>
-
             </View>
         );
     } else {
@@ -65,9 +115,12 @@ const Screenshots = ({ screenshots }) => {
     }
 };
 
+// A single job, including its map, details, and screenshot uploader
 const JobItem = ({ job, screenshots }) => {
     const [region, setRegion] = useState<Region>();
     const [locations, setLocations] = useState([{}]);
+
+    const [modalVisible, setModalVisible] = useState(false);
     useEffect(() => {
         console.log('job snapped geometry:', job.snappedGeometry);
         if (job.snappedGeometry) {
@@ -132,10 +185,12 @@ const JobItem = ({ job, screenshots }) => {
                 { overflow: 'hidden' },
             ]}
         >
+            <ScreenshotUploader modalVisible={modalVisible} setModalVisible={setModalVisible} />
+
             <View style={[tailwind('h-36 w-full'), { overflow: 'hidden' }]}>
                 {locations && region ? (
                     <TripMap
-                        interactive={true}
+                        interactive={false}
                         isActive={false}
                         tripLocations={locations}
                         region={region}
@@ -161,7 +216,10 @@ const JobItem = ({ job, screenshots }) => {
                 )}
             </View>
             <View style={tailwind('flex-row p-5')}>
-                <Screenshots screenshots={screenshots} />
+                <Screenshots
+                    screenshots={screenshots}
+                    onPressAddScreenshots={() => setModalVisible(true)}
+                />
                 <View
                     style={tailwind('flex flex-col flex-grow p-2 content-between justify-between')}
                 >
@@ -191,6 +249,7 @@ const JobItem = ({ job, screenshots }) => {
         </View>
     );
 };
+//List of job components
 const JobList = ({ jobs, screenshots }) => {
     return (
         <ScrollView style={[tailwind('flex-col w-full pl-2 pr-2')]}>
@@ -257,6 +316,10 @@ const ShiftDetails = ({ navigation, route }) => {
                     {route.params.mileage.toFixed(2)} miles (total)
                 </Text>
             </View>
+
+            <View style={tailwind('border-b border-green-500 h-1 mb-2 mr-5 ml-5')} />
+            <Text style={tailwind('text-3xl text-green-500 underline font-bold p-2')}>{route.params.shift.jobs.length} Jobs</Text>
+
             <Trips shift={shift} />
         </ScrollView>
     );
