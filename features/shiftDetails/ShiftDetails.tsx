@@ -60,6 +60,45 @@ const JobItem = ({ job, screenshots }) => {
         }
     }, [job.snappedGeometry]);
     console.log('Rendering job item:', job);
+    const JobDetail = ({
+        label,
+        value,
+        prefix,
+        suffix,
+        placeholder,
+    }: {
+        label: string;
+        value: number | string;
+        prefix: string;
+        suffix: string;
+        placeholder: string;
+    }) => {
+        const valueString = typeof value === 'number' ? value.toFixed(2) : value;
+
+        return (
+            <View style={tailwind('flex flex-col pt-1')}>
+                <Text style={tailwind('text-xs text-black p-0 m-0')}>{label}</Text>
+                <View
+                    style={[
+                        tailwind('rounded-lg p-2 h-12'),
+                        value == null
+                            ? tailwind('bg-gray-100')
+                            : tailwind('bg-green-500 bg-opacity-50'),
+                    ]}
+                >
+                    <Text
+                        style={[
+                            tailwind('text-lg text-black'),
+                            value == null ? null : tailwind('text-black font-bold underline'),
+                        ]}
+                    >
+                        {prefix} {value ? `${valueString} ${suffix}` : placeholder}
+                    </Text>
+                </View>
+            </View>
+        );
+    };
+
     return (
         <View
             style={[
@@ -106,33 +145,27 @@ const JobItem = ({ job, screenshots }) => {
                 <View
                     style={tailwind('flex flex-col flex-grow p-2 content-between justify-between')}
                 >
-                    <View
-                        style={tailwind(
-                            'flex flex-col rounded-lg bg-green-500 bg-opacity-60 m-1 p-2'
-                        )}
-                    >
-                        <Text style={tailwind('text-lg font-bold text-black')}>Mileage</Text>
-                        <Text style={tailwind('text-lg text-black')}>
-                            {job.mileage ? job.mileage.toFixed(2) : 'Still Tracking'}
-                        </Text>
-                    </View>
-
-                    <View
-                        style={tailwind(
-                            'flex flex-col rounded-lg bg-green-500 bg-opacity-60 m-1 p-2'
-                        )}
-                    >
-                        <Text style={tailwind('text-lg font-bold')}>Total Pay</Text>
-                        <Text style={tailwind('text-lg')}>{job.totalPay}</Text>
-                    </View>
-                    <View
-                        style={tailwind(
-                            'flex flex-col rounded-lg bg-green-500 bg-opacity-60 m-1 p-2'
-                        )}
-                    >
-                        <Text style={tailwind('text-lg font-bold')}>Tip</Text>
-                        <Text style={tailwind('text-lg')}>{job.tip}</Text>
-                    </View>
+                    <JobDetail
+                        label={'Mileage'}
+                        value={job.mileage}
+                        prefix={''}
+                        suffix={' mi'}
+                        placeholder={'Still Tracking'}
+                    />
+                    <JobDetail
+                        label={'Total Pay'}
+                        value={job.totalPay}
+                        prefix={'$ '}
+                        suffix={''}
+                        placeholder={''}
+                    ></JobDetail>
+                    <JobDetail
+                        label={'Tip'}
+                        value={job.tip}
+                        prefix={'$ '}
+                        suffix={''}
+                        placeholder={''}
+                    ></JobDetail>
                 </View>
             </View>
         </View>
