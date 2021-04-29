@@ -10,7 +10,6 @@ from api.models import (
     User as UserModel,
     Shift as ShiftModel,
     Location as LocationModel,
-    Employer as EmployerModel,
     Screenshot as ScreenshotModel,
     Job as JobModel,
     Geometry_WKT,
@@ -39,17 +38,17 @@ class Shift(SQLAlchemyObjectType):
 
     # resolve locations for this shift
     locations = graphene.List(lambda: Location)
-    employers = graphene.List(lambda: Employer)
+    # employers = graphene.List(lambda: Employer)
 
     def resolve_locations(self, info):
         query = Location.get_query(info=info)
         query = query.filter(LocationModel.shift_id == self.id)
         return query.all()
 
-    def resolve_employers(self, info):
-        query = Employer.get_query(info=info)
-        query = query.filter(EmployerModel.shift_id == self.id)
-        return query.all()
+    # def resolve_employers(self, info):
+    #     query = Employer.get_query(info=info)
+    #     query = query.filter(EmployerModel.shift_id == self.id)
+    #     return query.all()
 
 class Job(SQLAlchemyObjectType):
     class Meta:
@@ -59,11 +58,6 @@ class Job(SQLAlchemyObjectType):
 class Screenshot(SQLAlchemyObjectType):
     class Meta:
         model = ScreenshotModel
-
-
-class Employer(SQLAlchemyObjectType):
-    class Meta:
-        model = EmployerModel
 
 
 class Location(SQLAlchemyObjectType):

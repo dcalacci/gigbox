@@ -10,7 +10,7 @@ from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import backref, relationship
 from sqlalchemy.sql import func  # for datetimes
 from sqlalchemy import create_engine
-from sqlalchemy.dialects.postgresql import UUID, JSONB
+from sqlalchemy.dialects.postgresql import UUID, JSONB, ARRAY
 from sqlalchemy.event import listens_for
 from geoalchemy2 import Geometry
 from geoalchemy2.shape import from_shape
@@ -77,6 +77,13 @@ def _convert_geometry(thetype, column, registry=None):
         required=not (gsqa.converter.is_column_nullable(column)),
     )
 
+class EmployerNames(enum.Enum):
+    DOORDASH = "DOORDASH"
+    INSTACART = "INSTACART"
+    SHIPT = "SHIPT"
+    GRUBHUB = "GRUBHUB"
+    UBEREATS = "UBEREATS"
+
 
 class User(db.Model):
 
@@ -116,12 +123,11 @@ class Shift(db.Model):
     # we store as JSONB because that's what we get back from the map match API, and because it's
     # easier to pass around.
     snapped_geometry = db.Column(JSONB)
+    employers = Column(ARRAY(db.Enum(EmployerNames, 
+                   create_constraint=False, native_enum=False)))
 
     locations = db.relationship(
         "Location", backref=backref("shift", cascade="all, delete", passive_deletes=True)
-    )
-    employers = db.relationship(
-        "Employer", backref=backref("shift", cascade="all, delete", passive_deletes=True)
     )
     jobs = db.relationship(
         'Job', backref=backref("shift", cascade="all, delete", passive_deletes=True))
@@ -140,14 +146,6 @@ class Shift(db.Model):
         )
 
 
-class EmployerNames(enum.Enum):
-    DOORDASH = "DoorDash"
-    INSTACART = "Instacart"
-    SHIPT = "Shipt"
-    GRUBHUB = "GrubHub"
-    UBEREATS = "UberEats"
-
-
 class Screenshot(db.Model):
     __tablename__ = "screenshots"
     id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
@@ -159,18 +157,6 @@ class Screenshot(db.Model):
     img_filename = db.Column(db.String)
     user_id = db.Column(db.String, ForeignKey(User.id, ondelete='CASCADE'), )
     employer = db.Column(db.Enum(EmployerNames))
-
-
-class Employer(db.Model):
-    __tablename__ = "employers"
-    id = db.Column(db.Integer, primary_key=True)
-    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(
-        Shift.id, ondelete='CASCADE'))
-    name = db.Column(db.Enum(EmployerNames))
-
-    def __init__(self, name, shift_id):
-        self.name = name
-        self.shift_id = shift_id
 
 
 class Job(db.Model):
@@ -188,6 +174,9 @@ class Job(db.Model):
         UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
     end_screenshot = db.Column(
         UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
+    pay_screenshot = db.Column(
+        UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
+
 
     # locations
     start_location = db.Column(Geometry("POINT"))

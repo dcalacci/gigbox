@@ -6,6 +6,7 @@ import numpy as np
 import json
 import base64
 import binascii
+import graphene
 from graphene import (
     Mutation,
     Float,
@@ -34,7 +35,6 @@ from api.graphql.object import (
     Location,
     LocationInput,
     EmployerInput,
-    Employer,
     Screenshot,
     Job
 )
@@ -42,7 +42,6 @@ from api.models import (
     User as UserModel,
     Shift as ShiftModel,
     Location as LocationModel,
-    Employer as EmployerModel,
     Screenshot as ScreenshotModel,
     Job as JobModel,
     Geometry_WKT,
@@ -213,6 +212,7 @@ class AddLocationsToShift(Mutation):
 class AddScreenshotToShift(Mutation):
     class Arguments:
         shift_id = ID(required=True)
+        job_id = ID(required=False)
         asset = Upload(required=True)
         device_uri = String(required=True)
         timestamp = DateTime(required=True)
@@ -241,6 +241,7 @@ class AddScreenshotToShift(Mutation):
         app = predict_app(text)
 
         # IMAGE_DIR = current_app.config.IMAGE_DIR
+        # TODO: if they give us a job, add the screenshot to the job, and parse it.
         if app:
             img_filename = os.path.join('/opt/images',
                                         generate_filename(shift_id))
@@ -358,18 +359,22 @@ class SetShiftEmployers(Mutation):
     class Arguments:
         shift_id = ID(
             required=True, description="ID of the shift to set employers for")
-        employers = List(EmployerInput)
+        employers = List(graphene.Enum.from_enum(EmployerNames))
 
+    @login_required
     def mutate(self, info, shift_id, employers):
+        print("Adding employers to shift:", shift_id, employers)
         shift_id = from_global_id(shift_id)[1]
-        shift = db.session.get(shift_id)
+        shift = ShiftModel.query.filter_by(id=shift_id, user_id=g.user).first()
         assert shift.user_id == g.user
-        for e in employers:
-            shift.employers.append(EmployerModel(
-                name=e.name, shift_id=shift.id))
+        # TODO: match employer enum to input
+        # right now we just assume it's correct
+        shift.employers = employers
+
+        print("Adding...", shift.employers)
         db.session.add(shift)
         db.session.commit()
-        return SetShiftEmployers()
+        return SetShiftEmployers(shift)
 
 
 class Mutation(ObjectType):
@@ -381,5 +386,6 @@ class Mutation(ObjectType):
     endShift = EndShift.Field()
     createJob = CreateJob.Field()
     endJob = EndJob.Field()
+    setShiftEmployers = SetShiftEmployers.Field()
     addLocationsToShift = AddLocationsToShift.Field()
     addScreenshotToShift = AddScreenshotToShift.Field()
