@@ -4,15 +4,9 @@ import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
 import { View, Text, Pressable, StyleSheet, LayoutAnimation } from 'react-native';
 import { tailwind } from 'tailwind';
-import { useSelector } from 'react-redux';
-import { useQueryClient, useMutation } from 'react-query';
-import { AuthState } from '../auth/authSlice';
-import { RootState } from '../../store/index';
-import { Employers, Shift } from '../../types';
+import { Employers } from '../../types';
 
 import Ellipsis from '../../components/Ellipsis';
-
-import { setShiftEmployers } from './api';
 
 const EmployerBox = ({
     employer,
@@ -63,16 +57,12 @@ const EmployerBoxes = ({
     singleSelect = false,
 }: {
     potentialEmployers: Employers[];
-    onEmployersSubmitted: ((employers: Employers[]) => void) | ((employer: Employers) => void);
+    onEmployersSubmitted: (employers: Employers | Employers[]) => void;
     submissionStatus: string;
     singleSelect: boolean;
 }) => {
-    const auth = useSelector((state: RootState): AuthState => state.auth);
     const [selectedEmployers, setSelectedEmployers] = useState<Employers[]>([]);
 
-    console.log('potential employers:', potentialEmployers);
-
-    //TODO: when user object is more complex
     const submitEmployers = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         onEmployersSubmitted(selectedEmployers);
@@ -95,10 +85,6 @@ const EmployerBoxes = ({
             setSelectedEmployers([...selectedEmployers, e]);
         }
     };
-
-    useEffect(() => {
-        console.log('selected employers:', selectedEmployers);
-    }, [selectedEmployers]);
 
     const employers = potentialEmployers
         ? potentialEmployers
