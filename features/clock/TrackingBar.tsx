@@ -14,10 +14,17 @@ import { AuthState } from '../auth/authSlice';
 import { formatElapsedTime } from '../../utils';
 import { startGettingBackgroundLocation, stopGettingBackgroundLocation } from '../../tasks';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
-import { fetchActiveShift, endShift, createShift, addScreenshotToShift } from './api';
+import {
+    setShiftEmployers,
+    fetchActiveShift,
+    endShift,
+    createShift,
+    addScreenshotToShift,
+} from './api';
 import { log } from '../../utils';
 import JobTracker from './JobTracker';
-import EmployerSelector from './EmployerSelector'
+import EmployerSelector from './EmployerSelector';
+import { Employers } from '../../types';
 import * as Device from 'expo-device';
 
 export default function TrackingBar() {
@@ -33,11 +40,12 @@ export default function TrackingBar() {
             roadSnappedMiles: 0,
             startTime: new Date(),
             snappedGeometry: '',
+            employers: [],
             jobs: [],
         },
         onError: (err) => {
-            log.error("Could not fetch shift")
-        }
+            log.error('Could not fetch shift');
+        },
     });
     const endActiveShift = useMutation(endShift, {
         onSuccess: (data, variables, context) => {
@@ -222,6 +230,30 @@ export default function TrackingBar() {
         const shift = activeShift.data;
         const textStyle = [tailwind('text-lg'), shift.active ? tailwind('font-semibold') : null];
         const nMiles = (shift && shift.roadSnappedMiles ? shift.roadSnappedMiles : 0.0).toFixed(1);
+
+        const setEmployers = useMutation(setShiftEmployers, {
+            onSuccess: (data) => {
+                console.log('Successfully set employers:', data);
+                queryClient.invalidateQueries('activeShift');
+            },
+            onError: (data) => {
+                console.log('couldnt set employers...');
+            },
+            onMutate: async (data) => {
+                console.log('optimistically updating employers for shift...', data);
+                const previousShift = queryClient.getQueryData('activeShift');
+                await queryClient.cancelQueries('activeShift');
+                const newShift = { ...previousShift, employers: data.employers };
+                queryClient.setQueryData('activeShift', newShift);
+            },
+        });
+
+        const onEmployersSubmitted = (selectedEmployers: Employers[]) => {
+            setEmployers.mutate({
+                shiftId: shift.id,
+                employers: selectedEmployers,
+            });
+        };
         return (
             <View style={[tailwind('flex flex-col')]}>
                 <View
@@ -245,7 +277,13 @@ export default function TrackingBar() {
                         <Text style={textStyle}>{elapsedTime}</Text>
                     </View>
                 </View>
-                {shift.active && !shift.employers ? <EmployerSelector shift={shift}/> : null }
+                {shift.active && !shift.employers ? (
+                    <EmployerSelector
+                        onEmployersSubmitted={onEmployersSubmitted}
+                        potentialEmployers={auth.user?.employers}
+                        submissionStatus={setEmployers.status}
+                    />
+                ) : null}
                 {shift.active && shift.employers ? <JobTracker shift={shift} /> : null}
             </View>
         );

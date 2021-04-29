@@ -2,7 +2,7 @@
 // on a particular shift.
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, LayoutAnimation} from 'react-native';
+import { View, Text, Pressable, StyleSheet, LayoutAnimation } from 'react-native';
 import { tailwind } from 'tailwind';
 import { useSelector } from 'react-redux';
 import { useQueryClient, useMutation } from 'react-query';
@@ -47,38 +47,22 @@ const EmployerBox = ({
     );
 };
 
-const EmployerBoxes = ({ hidden, shift }: { hidden: boolean; shift: Shift }) => {
+const EmployerBoxes = ({
+    potentialEmployers,
+    onEmployersSubmitted,
+    submissionStatus,
+}: {
+    potentialEmployers: Employers[];
+    onEmployersSubmitted: (employers: Employers[]) => void;
+    submissionStatus: string;
+}) => {
     const auth = useSelector((state: RootState): AuthState => state.auth);
     const [selectedEmployers, setSelectedEmployers] = useState<Employers[]>([]);
 
-    const queryClient = useQueryClient();
-    const setEmployers = useMutation(setShiftEmployers, 
-      {
-        onSuccess: (data) => {
-          console.log("Successfully set employers:", data)
-          queryClient.invalidateQueries('activeShift')
-        },
-        onError: (data) => {
-          console.log("couldnt set employers...")
-        }, 
-        onMutate: async (data) => {
-          console.log("optimistically updating employers for shift...", data)
-          const previousShift = queryClient.getQueryData('activeShift');
-          await queryClient.cancelQueries('activeShift')
-          const newShift = {...previousShift, employers: data.employers}
-          queryClient.setQueryData('activeShift', newShift)
-
-        }
-      });
     //TODO: when user object is more complex
     const submitEmployers = () => {
-
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        setEmployers.mutate({
-            shiftId: shift.id,
-            employers: selectedEmployers,
-        });
-        console.log('Submitting employers...');
+        onEmployersSubmitted(selectedEmployers);
     };
 
     const updateSelectedEmployers = (e: Employers, selected: boolean): void => {
@@ -92,27 +76,27 @@ const EmployerBoxes = ({ hidden, shift }: { hidden: boolean; shift: Shift }) => 
         }
     };
     useEffect(() => {
-      console.log('selected employers:', selectedEmployers)
-    }, [selectedEmployers])
+        console.log('selected employers:', selectedEmployers);
+    }, [selectedEmployers]);
 
-    const employers = auth.user?.employers
-        ? auth.user.employers
-        : [
-              Employers.INSTACART,
-              Employers.DOORDASH,
-              Employers.SHIPT,
-              Employers.GRUBHUB,
-              Employers.UBEREATS,
-          ];
+    const employers =
+        potentialEmployers 
+            ? potentialEmployers
+            : [
+                  Employers.INSTACART,
+                  Employers.DOORDASH,
+                  Employers.SHIPT,
+                  Employers.GRUBHUB,
+                  Employers.UBEREATS,
+              ];
     return (
         <View
             style={[
                 tailwind('flex-row justify-around content-center ml-2 mr-2 pr-2 pl-2 bg-white'),
                 styles.roundedBottom,
-                hidden ? tailwind('hidden') : null,
             ]}
         >
-            {setEmployers.status == 'loading' || setEmployers.status == 'error' ? (
+            {submissionStatus == 'loading' || submissionStatus == 'error' ? (
                 <Ellipsis style={tailwind('text-lg self-center')} />
             ) : (
                 <>
