@@ -17,11 +17,20 @@ import { setShiftEmployers } from './api';
 const EmployerBox = ({
     employer,
     toggleSelect,
+    selectedEmployers,
 }: {
     employer: Employers;
+    selectedEmployers: Employers[];
     toggleSelect: (e: Employers, selected: boolean) => void;
 }) => {
     const [selected, setSelected] = useState<boolean>(false);
+    useEffect(() => {
+        if (selectedEmployers.includes(employer)) {
+            setSelected(true);
+        } else {
+            setSelected(false);
+        }
+    }, [selectedEmployers]);
     return (
         <Pressable
             onPress={() => {
@@ -51,13 +60,17 @@ const EmployerBoxes = ({
     potentialEmployers,
     onEmployersSubmitted,
     submissionStatus,
+    singleSelect = false,
 }: {
     potentialEmployers: Employers[];
-    onEmployersSubmitted: (employers: Employers[]) => void;
+    onEmployersSubmitted: ((employers: Employers[]) => void) | ((employer: Employers) => void);
     submissionStatus: string;
+    singleSelect: boolean;
 }) => {
     const auth = useSelector((state: RootState): AuthState => state.auth);
     const [selectedEmployers, setSelectedEmployers] = useState<Employers[]>([]);
+
+    console.log('potential employers:', potentialEmployers);
 
     //TODO: when user object is more complex
     const submitEmployers = () => {
@@ -65,8 +78,15 @@ const EmployerBoxes = ({
         onEmployersSubmitted(selectedEmployers);
     };
 
+    // employer enum and whether it was selected (true = it's selected on users screen)
     const updateSelectedEmployers = (e: Employers, selected: boolean): void => {
-        if (!selected && selectedEmployers.includes(e)) {
+        // if single select, only one is ever selected
+        if (selected && singleSelect) {
+            setSelectedEmployers([e]);
+        } else if (!selected && singleSelect) {
+            setSelectedEmployers([]);
+            // otherwise...
+        } else if (!selected && selectedEmployers.includes(e)) {
             const newEmployers = selectedEmployers.filter((empl) => empl == e);
             console.log('new employers, filtered:', newEmployers);
             setSelectedEmployers(newEmployers);
@@ -75,20 +95,20 @@ const EmployerBoxes = ({
             setSelectedEmployers([...selectedEmployers, e]);
         }
     };
+
     useEffect(() => {
         console.log('selected employers:', selectedEmployers);
     }, [selectedEmployers]);
 
-    const employers =
-        potentialEmployers 
-            ? potentialEmployers
-            : [
-                  Employers.INSTACART,
-                  Employers.DOORDASH,
-                  Employers.SHIPT,
-                  Employers.GRUBHUB,
-                  Employers.UBEREATS,
-              ];
+    const employers = potentialEmployers
+        ? potentialEmployers
+        : [
+              Employers.INSTACART,
+              Employers.DOORDASH,
+              Employers.SHIPT,
+              Employers.GRUBHUB,
+              Employers.UBEREATS,
+          ];
     return (
         <View
             style={[
@@ -104,6 +124,7 @@ const EmployerBoxes = ({
                         <EmployerBox
                             toggleSelect={updateSelectedEmployers}
                             employer={e}
+                            selectedEmployers={selectedEmployers}
                             key={e}
                         ></EmployerBox>
                     ))}

@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, LayoutAnimation} from 'react-native';
+import { View, Text, Pressable, StyleSheet, LayoutAnimation } from 'react-native';
 
 import { tailwind } from 'tailwind';
 import { log } from '../../utils';
-import { Shift, Job } from '@/types';
+import { Shift, Job, Employers } from '@/types';
 import { LatLng, Marker, Region } from 'react-native-maps';
 import { QueryClient, useMutation } from 'react-query';
 import { useToast } from 'react-native-fast-toast';
@@ -11,6 +11,7 @@ import moment from 'moment';
 
 import { createJob, endJob } from './api';
 import TripMap from '../shiftList/TripMap';
+import EmployerSelector from './EmployerSelector';
 import Ellipsis from '../../components/Ellipsis';
 import parse from 'wellknown';
 
@@ -22,7 +23,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
     const [jobStarted, setJobStarted] = useState(false);
     const [locations, setLocations] = useState<LatLng[]>();
     const [region, setRegion] = useState<Region>();
-    const employer = 'INSTACART';
+    const [employer, setEmployer] = useState<Employers>();
     const [activeJob, setActiveJob] = useState<Job>();
     const toast = useToast();
 
@@ -60,11 +61,9 @@ export default function JobTracker({ shift }: { shift: Shift }) {
         onSettled: (data, variables, context) => {
             console.log('STARTED JOB:, data:', data);
             if (data.createJob.ok) {
-                setJobStarted(true);
                 setActiveJob(data.createJob.job);
             } else {
                 //TODO: toast saying we couldn't start a job for some reason
-                setJobStarted(false);
                 toast?.show("Couldn't start that job. Try again?");
             }
         },
@@ -81,6 +80,8 @@ export default function JobTracker({ shift }: { shift: Shift }) {
             if (data.endJob.ok) {
                 log.info('ended job successfully: ', data);
                 setActiveJob(undefined);
+                setJobStarted(false);
+                setEmployer(undefined);
             } else {
                 //TODO: send toast
                 log.error('failed to end job...');
@@ -92,8 +93,45 @@ export default function JobTracker({ shift }: { shift: Shift }) {
             log.error('Couldnt finish job.');
         },
     });
+
+    const pressStartOrEndJob = () => {
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
+        if (startJob.status == 'loading' || finishJob.status == 'loading') {
+            log.debug('Job status is loading, not doing anything...');
+            return;
+        } else if (activeJob) {
+            finishJob.mutate({ jobId: activeJob.id });
+        } else if (!employer) {
+            // jobstarted = true but the job hasn't been created yet - we need to
+            // ask user for an employer
+            setJobStarted(true);
+        } else {
+            // finally, submit job
+            startJob.mutate({ shiftId: shift.id, employer });
+        }
+    };
+
+    const submitEmployer = (employer: Employers): void => {
+        setJobStarted(true);
+        setEmployer(employer);
+        // then, start the job!
+        startJob.mutate({ shiftId: shift.id, employer });
+    };
+
+    const getButtonText = () => {
+        if (activeJob) {
+            return 'Finish this Job';
+        } else if (!activeJob && jobStarted) {
+            // we're selecting an employer
+            return 'What app are you working for?';
+        } else if (!activeJob) {
+            return 'Start New Job';
+        }
+    };
     return (
-        <View style={[tailwind('flex-auto flex-col bg-white ml-2 mb-1 mr-2'), styles.roundedBottom]}>
+        <View
+            style={[tailwind('flex-auto flex-col bg-white ml-2 mb-1 mr-2'), styles.roundedBottom]}
+        >
             <View style={[tailwind('flex-auto w-full flex-col')]}>
                 {activeJob ? (
                     <View style={tailwind('h-36 border-b-2 border-green-500')}>
@@ -108,7 +146,6 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                             isActive={false}
                             tripLocations={locations}
                             region={region}
-                            shiftId={shift.id}
                         >
                             <Marker
                                 pinColor={'green'}
@@ -129,19 +166,21 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                         </View>
                     </View>
                 ) : null}
+
+                {jobStarted && !employer ? (
+                    <View style={tailwind('w-full p-2')}>
+                        <EmployerSelector
+                            onEmployersSubmitted={submitEmployer}
+                            potentialEmployers={shift.employers}
+                            submissionStatus={employer ? 'success' : ''}
+                            singleSelect={true}
+                        />
+                    </View>
+                ) : null}
+
                 {shift.active ? (
                     <Pressable
-                        onPress={() => {
-                            LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
-                            if (startJob.status == 'loading' || finishJob.status == 'loading') {
-                                log.debug('Job status is loading, not doing anything...');
-                                return;
-                            } else {
-                                activeJob
-                                    ? finishJob.mutate({ jobId: activeJob.id })
-                                    : startJob.mutate({ shiftId: shift.id, employer });
-                            }
-                        }}
+                        onPress={pressStartOrEndJob}
                         style={[
                             tailwind('mb-0 p-2'),
                             activeJob ? tailwind('bg-red-400') : tailwind('bg-gray-600'),
@@ -156,7 +195,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                                     'underline font-bold text-white text-lg self-center'
                                 )}
                             >
-                                {activeJob ? 'End This Job' : 'Start New Job'}
+                                {getButtonText()}
                             </Text>
                         )}
                     </Pressable>
