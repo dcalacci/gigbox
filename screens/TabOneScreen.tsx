@@ -10,9 +10,6 @@ export default function TabOneScreen() {
         <View style={tailwind('bg-gray-100 h-full')}>
             <TrackingBar />
             <ScrollView style={tailwind('bg-gray-100 h-full')}>
-                <Pressable style={tailwind('bg-white m-2 p-5 rounded-2xl flex-col')}>
-
-                </Pressable>
                 <Pressable style={[tailwind('bg-white m-2 p-5 rounded-2xl flex-col')]}>
                     <Text style={tailwind('text-green-500 text-3xl font-bold underline')}>
                         Today

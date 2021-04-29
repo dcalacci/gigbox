@@ -4,7 +4,7 @@ import { store } from '../../store/store';
 import { LatLng } from 'react-native-maps';
 import { LocationObject } from 'expo-location';
 import * as Location from 'expo-location';
-import { LocationInput } from '@/tyoes';
+import { LocationInput, Employers } from '../../types';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
 
@@ -18,6 +18,7 @@ export const fetchActiveShift = async () => {
                 startTime
                 roadSnappedMiles
                 snappedGeometry
+                employers
                 jobs {
                     id
                     startTime
@@ -78,6 +79,29 @@ export const createShift = () => {
     log.info('Submitted create shift query...');
 
     return client.request(query);
+};
+
+export const setShiftEmployers = ({
+    shiftId,
+    employers,
+}: {
+    shiftId: string;
+    employers: Employers[];
+}) => {
+    const client = getClient(store);
+    const query = gql`
+    mutation mutation($shiftId: ID!, $employers: [EmployerNames]!) {
+        setShiftEmployers(shiftId: $shiftId, employers: $employers) {
+            shift {
+                employers
+            }
+        }
+    }
+    `;
+    return client.request(query, {
+        shiftId,
+        employers
+    })
 };
 
 export const addScreenshotToShift = async ({

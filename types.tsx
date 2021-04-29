@@ -37,6 +37,16 @@ export type LocationInput = {
     accuracy: number
 }
 
+
+// if you change this, make sure this is the same as the enum in our database
+export enum Employers {
+    INSTACART="INSTACART",
+    DOORDASH="DOORDASH",
+    SHIPT="SHIPT",
+    GRUBHUB="GRUBHUB",
+    UBEREATS="UBEREATS"
+}
+
 export type Job = {
     id: string,
    startTime: Date,
@@ -46,7 +56,7 @@ export type Job = {
    estimatedMileage: number | undefined,
    totalPay: number | undefined,
    tip: number | undefined,
-   employer: string
+   employer: Employers
 
 }
 
@@ -56,6 +66,7 @@ export type Shift = {
     startTime: Date;
     roadSnappedMiles: number;
     snappedGeometry: string | MapLine;
+    employers: Employers[]
     jobs: Job[]
 };
 

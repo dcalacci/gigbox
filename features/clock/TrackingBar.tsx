@@ -10,7 +10,6 @@ import { Asset } from 'expo-media-library';
 import { RootState } from '../../store/index';
 import Toggle from '../../components/Toggle';
 
-import { Ionicons } from '@expo/vector-icons';
 import { AuthState } from '../auth/authSlice';
 import { formatElapsedTime } from '../../utils';
 import { startGettingBackgroundLocation, stopGettingBackgroundLocation } from '../../tasks';
@@ -18,6 +17,7 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { fetchActiveShift, endShift, createShift, addScreenshotToShift } from './api';
 import { log } from '../../utils';
 import JobTracker from './JobTracker';
+import EmployerSelector from './EmployerSelector'
 import * as Device from 'expo-device';
 
 export default function TrackingBar() {
@@ -245,7 +245,8 @@ export default function TrackingBar() {
                         <Text style={textStyle}>{elapsedTime}</Text>
                     </View>
                 </View>
-                {shift.active ? <JobTracker shift={shift} /> : null}
+                {shift.active && !shift.employers ? <EmployerSelector shift={shift}/> : null }
+                {shift.active && shift.employers ? <JobTracker shift={shift} /> : null}
             </View>
         );
     } else {
