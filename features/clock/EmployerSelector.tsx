@@ -77,7 +77,7 @@ const EmployerBoxes = ({
             setSelectedEmployers([]);
             // otherwise...
         } else if (!selected && selectedEmployers.includes(e)) {
-            const newEmployers = selectedEmployers.filter((empl) => empl == e);
+            const newEmployers = selectedEmployers.filter((empl) => empl != e);
             console.log('new employers, filtered:', newEmployers);
             setSelectedEmployers(newEmployers);
         } else if (selected && !selectedEmployers.includes(e)) {
