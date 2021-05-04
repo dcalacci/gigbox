@@ -135,6 +135,7 @@ class EndShift(Mutation):
 
         return EndShift(shift=shift)
 
+
 def updateShiftMileageAndGeometry(shift, info):
     """adds mileage and geometry to a shift object using one call to our mapmatch api"""
     locs = sorted(shift.locations, key=lambda l: l.timestamp)
@@ -197,6 +198,11 @@ class AddLocationsToShift(Mutation):
                     shift_id,
                 )
             )
+
+        active_job = JobModel.query.filter_by(
+            user_id=g.user,
+            end_time=None,
+            shift_id=shift_id).first()
         # Every 5 locations added, update the distance on the shift by doing
         # map matching
         n_locations = len(shift.locations)
@@ -204,8 +210,15 @@ class AddLocationsToShift(Mutation):
             current_app.logger.info(
                 "Updating mileage & calculated route on shift...")
             shift = updateShiftMileageAndGeometry(shift, info)
+
+            if (active_job):
+                # update job mileage and geometry, too. Seems cheap to do (just one more api match call)
+                active_job = get_job_mileage_and_geometry(
+                    info, active_job, shift)
+                db.session.add(active_job)
         db.session.add(shift)
         db.session.commit()
+
         return AddLocationsToShift(location=shift.locations[-1], ok=True)
 
 
@@ -231,6 +244,7 @@ class AddScreenshotToShift(Mutation):
     @login_required
     def mutate(self, info, shift_id, asset, device_uri, timestamp, **kwargs):
         shift_id = from_global_id(shift_id)[1]
+        job_id = kwargs.get('job_id', None)
         # Decode base64 image
         decoded = base64.decodebytes(bytes(asset, 'utf-8'))
         f_array = np.asarray(bytearray(decoded))
@@ -250,6 +264,7 @@ class AddScreenshotToShift(Mutation):
             print("Wrote to file...")
             screenshot = ScreenshotModel(
                 shift_id=shift_id,
+                job_id=job_id,
                 on_device_uri=device_uri,
                 img_filename=img_filename,
                 timestamp=timestamp,
@@ -257,6 +272,13 @@ class AddScreenshotToShift(Mutation):
                 employer=app
             )
             db.session.add(screenshot)
+
+            if (job_id):
+                job = JobModel.query.filter_by(
+                    id=job_id, user_id=g.user).first()
+                print("Found job:", job)
+                job.screenshots.append(screenshot)
+
             db.session.commit()
             # df = image_to_df(image)
             # TODO: non-app images should be rejected
@@ -298,7 +320,7 @@ class CreateJob(Mutation):
             shift_id=shift.id,
             lng=start_location.lng,
             lat=start_location.lat,
-            user_id = shift.user_id,
+            user_id=shift.user_id,
             employer=employer
         )
         shift.jobs.append(job)
@@ -307,15 +329,20 @@ class CreateJob(Mutation):
         db.session.commit()
         return CreateJob(job=job, ok=True)
 
-def get_job_mileage_and_geometry(info, job):
+
+def get_job_mileage_and_geometry(info, job, shift=None):
     # don't need this - the shift id here is UUID
     # shift_id = from_global_id(job.shift_id)[1]
     print("getting mileage and geometry for job:", job, job.shift_id)
-    shift = ShiftModel.query.get(job.shift_id)
+    if shift is None:
+        shift = ShiftModel.query.get(job.shift_id)
     # shift = db.session.get(job.shift_id)
     # get only locations between job start and end from this shift
-    job_locations = [l for l in shift.locations if (l.timestamp >= job.start_time and l.timestamp
-            <= job.end_time)]
+    end_time = job.end_time if job.end_time is not None else datetime.utcnow()
+    job_locations = [l for l in shift.locations if (
+        l.timestamp is not None
+        and l.timestamp >= job.start_time
+        and l.timestamp <= end_time)]
     locs = sorted(job_locations, key=lambda l: l.timestamp)
     match_obj = get_route_distance_and_geometry(locs)
 
@@ -332,6 +359,7 @@ def get_job_mileage_and_geometry(info, job):
     job.snapped_geometry = matched
     job.mileage = match_obj['distance']
     return job
+
 
 class EndJob(Mutation):
     job = Field(lambda: Job, description="job to end")
@@ -351,6 +379,56 @@ class EndJob(Mutation):
         db.session.add(job)
         db.session.commit()
         return EndJob(job=job, ok=True)
+
+
+class SetJobTotalPay(Mutation):
+    job = Field(lambda: Job, description="Job to update")
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        job_id = ID(required=True)
+        value = Float(required=True)
+
+    @login_required
+    def mutate(self, info, job_id, value):
+        job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
+        job.total_pay = value 
+        db.session.add(job)
+        db.session.commit()
+        return SetJobTotalPay(job, True)
+
+
+class SetJobTip(Mutation):
+    job = Field(lambda: Job, description="Job to update")
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        job_id = ID(required=True)
+        value = Float(required=True)
+
+    @login_required
+    def mutate(self, info, job_id, value):
+        job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
+        job.tip = value
+        db.session.add(job)
+        db.session.commit()
+        return SetJobTip(job, True)
+
+class SetJobMileage(Mutation):
+    job = Field(lambda: Job, description="Job to update")
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        job_id = ID(required=True)
+        value = Float(required=True)
+
+    @login_required
+    def mutate(self, info, job_id, value):
+        job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
+        job.mileage = value
+        db.session.add(job)
+        db.session.commit()
+        return SetJobTip(job, True)
 
 
 class SetShiftEmployers(Mutation):
@@ -385,6 +463,9 @@ class Mutation(ObjectType):
     createShift = CreateShift.Field()
     endShift = EndShift.Field()
     createJob = CreateJob.Field()
+    setJobTotalPay = SetJobTotalPay.Field()
+    setJobTip = SetJobTip.Field()
+    setJobMileage = SetJobMileage.Field()
     endJob = EndJob.Field()
     setShiftEmployers = SetShiftEmployers.Field()
     addLocationsToShift = AddLocationsToShift.Field()

@@ -3,6 +3,7 @@ from graphene import relay, Field, UUID, String
 from graphene_sqlalchemy import SQLAlchemyObjectType
 from graphene_sqlalchemy.types import ORMField
 from graphene_file_upload.scalars import Upload
+from geoalchemy2.shape import to_shape
 from datetime import datetime
 from dateutil import relativedelta
 import base64
@@ -23,6 +24,12 @@ from functools import lru_cache
 graphene.Enum.from_enum = lru_cache(maxsize=None)(graphene.Enum.from_enum)
 
 
+def resolve_geom(geom):
+    shp = to_shape(geom)
+    return {"lat": shp.y,
+            "lng": shp.x}
+
+
 class User(SQLAlchemyObjectType):
     class Meta:
         model = UserModel
@@ -38,21 +45,27 @@ class Shift(SQLAlchemyObjectType):
 
     # resolve locations for this shift
     locations = graphene.List(lambda: Location)
-    # employers = graphene.List(lambda: Employer)
 
     def resolve_locations(self, info):
         query = Location.get_query(info=info)
         query = query.filter(LocationModel.shift_id == self.id)
         return query.all()
 
-    # def resolve_employers(self, info):
-    #     query = Employer.get_query(info=info)
-    #     query = query.filter(EmployerModel.shift_id == self.id)
-    #     return query.all()
 
 class Job(SQLAlchemyObjectType):
     class Meta:
         model = JobModel
+
+    start_location = Field(Geometry_WKT)
+    end_location = Field(Geometry_WKT)
+
+    # we don't need this because of our Geometry_WKT serializer.
+    # although if we wanted parse-able 
+    # def resolve_start_location(self, info):
+    #     return resolve_geom(self.start_location)
+
+    # def resolve_end_location(self, info):
+    #     return resolve_geom(self.start_location)
 
 
 class Screenshot(SQLAlchemyObjectType):
@@ -74,11 +87,6 @@ class Location(SQLAlchemyObjectType):
     #             "lng": shp.x}
     timestamp = ORMField(model_attr="timestamp")
     accuracy = ORMField(model_attr="accuracy")
-
-
-class Screenshot(SQLAlchemyObjectType):
-    class Meta:
-        model = ScreenshotModel
 
 
 class WeeklySummary(graphene.ObjectType):

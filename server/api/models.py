@@ -77,6 +77,7 @@ def _convert_geometry(thetype, column, registry=None):
         required=not (gsqa.converter.is_column_nullable(column)),
     )
 
+
 class EmployerNames(enum.Enum):
     DOORDASH = "DOORDASH"
     INSTACART = "INSTACART"
@@ -123,8 +124,8 @@ class Shift(db.Model):
     # we store as JSONB because that's what we get back from the map match API, and because it's
     # easier to pass around.
     snapped_geometry = db.Column(JSONB)
-    employers = Column(ARRAY(db.Enum(EmployerNames, 
-                   create_constraint=False, native_enum=False)))
+    employers = Column(ARRAY(db.Enum(EmployerNames,
+                                     create_constraint=False, native_enum=False)))
 
     locations = db.relationship(
         "Location", backref=backref("shift", cascade="all, delete", passive_deletes=True)
@@ -146,19 +147,6 @@ class Shift(db.Model):
         )
 
 
-class Screenshot(db.Model):
-    __tablename__ = "screenshots"
-    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
-    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(
-        Shift.id, ondelete='CASCADE'))
-    # TODO: Why is this a timestamp again?
-    timestamp = db.Column(db.String)
-    on_device_uri = db.Column(db.String)
-    img_filename = db.Column(db.String)
-    user_id = db.Column(db.String, ForeignKey(User.id, ondelete='CASCADE'), )
-    employer = db.Column(db.Enum(EmployerNames))
-
-
 class Job(db.Model):
     __tablename__ = "jobs"
 
@@ -170,13 +158,13 @@ class Job(db.Model):
         Shift.id, ondelete='CASCADE'))
 
     # screenshots -- maybe should make this more flexible (more screenshots)
-    start_screenshot = db.Column(
-        UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
-    end_screenshot = db.Column(
-        UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
-    pay_screenshot = db.Column(
-        UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
+    # start_screenshot = db.Column(
+    #     UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
+    # end_screenshot = db.Column(
+    #     UUID(as_uuid=True), ForeignKey(Screenshot.id), nullable=True)
 
+    screenshots = db.relationship(
+        'Screenshot', backref=backref('job', uselist=True))
 
     # locations
     start_location = db.Column(Geometry("POINT"))
@@ -194,11 +182,28 @@ class Job(db.Model):
     total_pay = db.Column(db.Float, nullable=True)
     tip = db.Column(db.Float, nullable=True)
     employer = db.Column(db.Enum(EmployerNames), nullable=True)
+
     def __init__(self, lng, lat, shift_id, user_id, employer):
         self.start_location = from_shape(geometry.Point(lng, lat))
         self.shift_id = shift_id
         self.user_id = user_id
         self.employer = employer
+
+class Screenshot(db.Model):
+    __tablename__ = "screenshots"
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    date_created = db.Column(DateTime, default=func.now())
+    shift_id = db.Column(UUID(as_uuid=True), ForeignKey(
+        Shift.id, ondelete='CASCADE'))
+    job_id = db.Column(UUID(as_uuid=True), ForeignKey(
+        Job.id, ondelete="CASCADE"))
+    # TODO: Why is this a timestamp again?
+    timestamp = db.Column(db.String)
+    on_device_uri = db.Column(db.String)
+    img_filename = db.Column(db.String)
+    user_id = db.Column(db.String, ForeignKey(User.id, ondelete='CASCADE'), )
+    employer = db.Column(db.Enum(EmployerNames))
+
 
 
 class Location(db.Model):
