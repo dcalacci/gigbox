@@ -6,10 +6,9 @@ import { Region, Marker } from 'react-native-maps';
 import moment from 'moment';
 import TripMap from '../shiftList/TripMap';
 import { parse } from 'wellknown';
-import ScreenshotUploader from './ScreenshotPicker'
+import ScreenshotUploader from './ScreenshotPicker';
 
 //TODO: show start and end of trip in map
-
 
 // Scroll view of screenshots
 const Screenshots = ({ screenshots, onPressAddScreenshots }) => {
@@ -60,7 +59,7 @@ const Screenshots = ({ screenshots, onPressAddScreenshots }) => {
 };
 
 // A single job, including its map, details, and screenshot uploader
-const JobItem = ({ job, screenshots }) => {
+const JobItem = ({ job, screenshots, shift }) => {
     const [region, setRegion] = useState<Region>();
     const [locations, setLocations] = useState([{}]);
 
@@ -129,7 +128,12 @@ const JobItem = ({ job, screenshots }) => {
                 { overflow: 'hidden' },
             ]}
         >
-            <ScreenshotUploader modalVisible={modalVisible} setModalVisible={setModalVisible} />
+            <ScreenshotUploader
+                shiftId={shift.id}
+                jobId={job.id}
+                modalVisible={modalVisible}
+                setModalVisible={setModalVisible}
+            />
 
             <View style={[tailwind('h-36 w-full'), { overflow: 'hidden' }]}>
                 {locations && region ? (
@@ -156,7 +160,7 @@ const JobItem = ({ job, screenshots }) => {
                         ></Marker>
                     </TripMap>
                 ) : (
-                    <Text>A map will appear after you finish this job</Text>
+                    <Text>No locations recorded for this job</Text>
                 )}
             </View>
             <View style={tailwind('flex-row p-5')}>
@@ -172,7 +176,7 @@ const JobItem = ({ job, screenshots }) => {
                         value={job.mileage}
                         prefix={''}
                         suffix={' mi'}
-                        placeholder={'Still Tracking'}
+                        placeholder={''}
                     />
                     <JobDetail
                         label={'Total Pay'}
@@ -194,11 +198,11 @@ const JobItem = ({ job, screenshots }) => {
     );
 };
 //List of job components
-const JobList = ({ jobs, screenshots }) => {
+const JobList = ({ jobs, screenshots, shift}) => {
     return (
         <ScrollView style={[tailwind('flex-col w-full pl-2 pr-2')]}>
             {jobs?.map((j) => (
-                <JobItem job={j} screenshots={screenshots} key={j.id} />
+                <JobItem job={j} screenshots={screenshots} shift={shift} key={j.id} />
             ))}
         </ScrollView>
     );
@@ -220,7 +224,7 @@ const Trips = ({ shift }) => {
         <>
             <View style={tailwind('flex-col')}>
                 <View style={tailwind('flex flex-row flex-auto content-between')}>
-                    <JobList jobs={jobs} screenshots={screenshots} />
+                    <JobList jobs={jobs} screenshots={screenshots} shift={shift}/>
                 </View>
 
                 <View style={tailwind('border-b border-green-500 h-1 mb-2 mr-5 ml-5')} />
@@ -262,7 +266,9 @@ const ShiftDetails = ({ navigation, route }) => {
             </View>
 
             <View style={tailwind('border-b border-green-500 h-1 mb-2 mr-5 ml-5')} />
-            <Text style={tailwind('text-3xl text-green-500 underline font-bold p-2')}>{route.params.shift.jobs.length} Jobs</Text>
+            <Text style={tailwind('text-3xl text-green-500 underline font-bold p-2')}>
+                {route.params.shift.jobs.length} Jobs
+            </Text>
 
             <Trips shift={shift} />
         </ScrollView>

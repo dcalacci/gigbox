@@ -1,10 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { Image, ScrollView, View, Modal, Pressable, Text } from 'react-native';
 import { tailwind } from 'tailwind';
+import { useMutation } from 'react-query';
+import { Asset } from 'expo-media-library';
+import { addScreenshotToShift } from '../clock/api';
+import { log } from '../../utils';
 import * as ImagePicker from 'expo-image-picker';
 
-const ScreenshotUploader = ({ modalVisible, setModalVisible }: { modalVisible: boolean }) => {
-    const [image, setImage] = useState(null);
+const ScreenshotUploader = ({
+    modalVisible,
+    setModalVisible,
+    shiftId,
+    jobId,
+}: {
+    modalVisible: boolean;
+    setModalVisible: Function;
+    shiftId: string;
+    jobId: string;
+}) => {
+    const [imageUri, setImageUri] = useState<string>();
+    const [parsedText, setParsedText] = useState<string>('');
 
     useEffect(() => {
         (async () => {
@@ -15,6 +30,21 @@ const ScreenshotUploader = ({ modalVisible, setModalVisible }: { modalVisible: b
         })();
     }, []);
 
+    const uploadScreenshot = useMutation(addScreenshotToShift, {
+        onSuccess: (data, variables, context) => {
+            log.info('Submitted screenshot!', data, variables, context);
+            setParsedText(data.addScreenshotToShift.data);
+            console.log(data);
+        },
+        onError: (err, problem, context) => {
+            log.error('Had a problem:', err, problem);
+            console.log(err);
+        },
+        onSettled: () => {
+            log.info('Settled adding screenshot.');
+        },
+    });
+
     const pickImage = async () => {
         let result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ImagePicker.MediaTypeOptions.Images,
@@ -24,7 +54,13 @@ const ScreenshotUploader = ({ modalVisible, setModalVisible }: { modalVisible: b
 
         console.log(result);
         if (!result.cancelled) {
-            setImage(result.uri);
+            setImageUri(result.uri);
+            uploadScreenshot.mutate({
+                screenshotLocalUri: result.uri,
+                shiftId: shiftId,
+                modificationTime: new Date(result.exif?.DateTimeOriginal).getTime(),
+                jobId: jobId,
+            });
         }
     };
 
@@ -47,22 +83,38 @@ const ScreenshotUploader = ({ modalVisible, setModalVisible }: { modalVisible: b
                     pay, and tips, you can upload a screenshot for this job. You can upload one of
                     two kinds of screens:
                 </Text>
-                <View style={tailwind('flex-row content-between pt-5 mb-10')}>
-                    <View style={tailwind('flex-1 flex-col p-1 w-36 ')}>
-                        <Text style={tailwind('text-lg underline p-2 self-center')}>
-                            Job Accept Screen
-                        </Text>
-                        <View style={tailwind('bg-gray-100 rounded-lg ml-5 mr-5 h-48')}></View>
+                {!imageUri ? (
+                    <View style={tailwind('flex-row content-between pt-5 mb-10')}>
+                        <View style={tailwind('flex-1 flex-col p-1 w-36 ')}>
+                            <Text style={tailwind('text-lg underline p-2 self-center')}>
+                                Job Accept Screen
+                            </Text>
+                            <View style={tailwind('bg-gray-100 rounded-lg ml-5 mr-5 h-48')}></View>
+                        </View>
+                        <View style={tailwind('flex-1 flex-col p-1 w-36')}>
+                            <Text style={tailwind('text-lg underline p-2 self-center')}>
+                                Job Pay Screen
+                            </Text>
+                            <View style={tailwind('bg-gray-100 rounded-lg ml-5 mr-5 h-48')}></View>
+                        </View>
                     </View>
-                    <View style={tailwind('flex-1 flex-col p-1 w-36')}>
-                        <Text style={tailwind('text-lg underline p-2 self-center')}>
-                            Job Pay Screen
-                        </Text>
-                        <View style={tailwind('bg-gray-100 rounded-lg ml-5 mr-5 h-48')}></View>
+                ) : (
+                    <View style={tailwind('flex flex-row w-1/2 h-1/2 content-center')}>
+                        <Image
+                            source={{ uri: imageUri }}
+                            resizeMethod={'scale'}
+                            resizeMode={'contain'}
+                            style={[tailwind('self-center flex w-full h-full')]}
+                        />
+                        <View style={tailwind('flex flex-grow w-full')}>
+                            {uploadScreenshot.status == 'loading' ? (
+                                <Text>Loading...</Text>
+                            ) : (
+                                <Text>{parsedText}</Text>
+                            )}
+                        </View>
                     </View>
-                </View>
-
-                {image && <Image source={{ uri: image }} style={{ width: 200, height: 200 }} />}
+                )}
 
                 <Pressable
                     style={tailwind('rounded-lg bg-gray-800 self-center w-10/12 m-2')}
@@ -89,7 +141,7 @@ const ScreenshotUploader = ({ modalVisible, setModalVisible }: { modalVisible: b
                         Close
                     </Text>
                 </Pressable>
-                <View style={tailwind('pb-20')}/>
+                <View style={tailwind('pb-20')} />
             </ScrollView>
         </Modal>
     );

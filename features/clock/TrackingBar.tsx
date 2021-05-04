@@ -172,10 +172,14 @@ export default function TrackingBar() {
                                 a.mediaSubtypes.includes('screenshot')
                         );
                         log.info('Shift found, processing a screenshot for shift ', shift_id);
+
+                        const info = await MediaLibrary.getAssetInfoAsync(s);
                         screenshots.map((s: Asset) =>
                             uploadScreenshot.mutate({
-                                screenshot: s,
+                                screenshotLocalUri: info.localUri,
+                                modificationTime: info.modificationTime,
                                 shiftId: shift_id,
+                                jobId: undefined
                             })
                         );
                     }
@@ -189,12 +193,15 @@ export default function TrackingBar() {
                             // you'd think it would be creationTime, but screenshots have a
                             // creationTime of 0 on android it seems
                             sortBy: [[MediaLibrary.SortBy.modificationTime, false]],
-                        }).then((screenshots) => {
+                        }).then( async (screenshots) => {
                             console.log('screenshots:', screenshots.assets);
                             const shift_id = activeShift.data.id;
+                            const info = await MediaLibrary.getAssetInfoAsync(screenshots.assets[0]);
                             uploadScreenshot.mutate({
-                                screenshot: screenshots.assets[0],
+                                screenshotLocalUri: info.localUri,
+                                modificationTime: info.modificationTime,
                                 shiftId: shift_id,
+                                jobId: undefined
                             });
                         });
                         // const scrAlbum = await MediaLibrary.getAlbumAsync('Screenshots')
