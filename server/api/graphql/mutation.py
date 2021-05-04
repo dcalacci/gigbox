@@ -206,7 +206,7 @@ class AddLocationsToShift(Mutation):
         # Every 5 locations added, update the distance on the shift by doing
         # map matching
         n_locations = len(shift.locations)
-        if n_locations % 5 == 0:
+        if n_locations % 5 == 0 and n_locations > 2:
             current_app.logger.info(
                 "Updating mileage & calculated route on shift...")
             shift = updateShiftMileageAndGeometry(shift, info)
@@ -346,21 +346,22 @@ def get_job_mileage_and_geometry(info, job, shift=None):
         l.timestamp is not None
         and l.timestamp >= job.start_time
         and l.timestamp <= end_time)]
-    locs = sorted(job_locations, key=lambda l: l.timestamp)
-    match_obj = get_route_distance_and_geometry(locs)
+    if len(job_locations) > 2:
+        locs = sorted(job_locations, key=lambda l: l.timestamp)
+        match_obj = get_route_distance_and_geometry(locs)
 
-    distance = match_obj['distance']
-    bb = match_obj['geom_obj'][1]
-    geometries = match_obj['geom_obj'][0]
+        distance = match_obj['distance']
+        bb = match_obj['geom_obj'][1]
+        geometries = match_obj['geom_obj'][0]
 
-    bounding_box = {'minLat': bb[1],
-                    'minLng': bb[0],
-                    'maxLat': bb[3],
-                    'maxLng': bb[2]}
-    matched = {'geometries': geometries, 'bounding_box': bounding_box}
-    current_app.logger.info('adding matched geometry to job:')
-    job.snapped_geometry = matched
-    job.mileage = match_obj['distance']
+        bounding_box = {'minLat': bb[1],
+                        'minLng': bb[0],
+                        'maxLat': bb[3],
+                        'maxLng': bb[2]}
+        matched = {'geometries': geometries, 'bounding_box': bounding_box}
+        current_app.logger.info('adding matched geometry to job:')
+        job.snapped_geometry = matched
+        job.mileage = match_obj['distance']
     return job
 
 

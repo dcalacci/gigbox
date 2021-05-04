@@ -7,6 +7,9 @@ from dateutil import parser, relativedelta
 from datetime import datetime
 from graphql_relay.node.node import from_global_id
 from graphql import GraphQLError
+import itertools
+
+import numpy as np
 from flask import g
 
 # import numpy as np
@@ -118,10 +121,25 @@ class Query(graphene.ObjectType):
                       ShiftModel.start_time > dt_weekago))
         n_shifts = shifts.count()
         distances = [shift.road_snapped_miles for shift in shifts]
-
-        # distances = [get_shift_distance(shift, info) for shift in shifts]
         distance_miles = sum(distances)
-        return WeeklySummary(miles=distance_miles, num_shifts=n_shifts)
+
+        jobs = list(itertools.chain(*[shift.jobs for shift in shifts]))
+
+        n_jobs = len(jobs)
+
+        total_pay = sum([job.total_pay for job in jobs if job.total_pay and job.total_pay != 0])
+        total_tips = sum([job.tip for job in jobs if job.tip and job.tip != 0])
+        mean_pay = np.mean([job.total_pay for job in jobs if job.total_pay and job.total_pay != 0])
+        mean_tip = np.mean([job.tip for job in jobs if job.tip and job.tip != 0])
+
+        return WeeklySummary(
+                miles=distance_miles, 
+                num_shifts=n_shifts,
+                num_jobs = n_jobs,
+                mean_pay = mean_pay,
+                mean_tips = mean_tip,
+                total_pay = total_pay,
+                total_tips = total_tips)
 
     @login_required
     def resolve_getTrips(self, info, objectId):

@@ -91,11 +91,16 @@ class Location(SQLAlchemyObjectType):
 
 
 class WeeklySummary(graphene.ObjectType):
-    # earnings = graphene.Float()
-    # expenses = graphene.Float()
+    earnings = graphene.Float()
+    expenses = graphene.Float()
     miles = graphene.Float()
-    # num_jobs = graphene.Int()
+    num_jobs = graphene.Int()
     num_shifts = graphene.Int()
+    mean_pay = graphene.Float()
+    total_pay = graphene.Float()
+    total_tips = graphene.Float()
+    mean_tips = graphene.Float()
+
 
 
 class BoundingBox(graphene.ObjectType):
