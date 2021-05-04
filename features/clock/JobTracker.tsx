@@ -34,17 +34,12 @@ export default function JobTracker({ shift }: { shift: Shift }) {
     }, [shift.jobs]);
 
     useEffect(() => {
-        console.log('trying to set geometry');
-        if (shift && shift.snappedGeometry) {
-            log.info('Setting locations and bounding box for shift.');
-            const { geometries, bounding_box } =
-                typeof shift.snappedGeometry == 'string'
-                    ? JSON.parse(shift.snappedGeometry)
-                    : shift.snappedGeometry;
-
-            const locations: LatLng[] = geometries.map((c: [number, number][]) => {
+        if (activeJob && activeJob?.snappedGeometry) {
+            const { geometries, bounding_box } = JSON.parse(activeJob.snappedGeometry);
+            const locations = geometries.map((c) => {
                 return { latitude: c[1], longitude: c[0] };
             });
+            console.log("setting locations", locations)
             setLocations(locations);
             const bbox = bounding_box;
             setRegion({
@@ -54,7 +49,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                 longitude: bbox.maxLng - (bbox.maxLng - bbox.minLng) / 2,
             });
         }
-    }, [shift]);
+    }, [activeJob]);
 
     const startJob = useMutation(createJob, {
         mutationKey: ['createJob'],

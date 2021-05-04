@@ -30,6 +30,7 @@ export const getShifts = (first: Number, after: String) => {
                             totalPay
                             tip
                             employer
+                            shiftId
                         }
                         screenshots {
                             onDeviceUri

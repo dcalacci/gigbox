@@ -28,6 +28,7 @@ export const fetchActiveShift = async () => {
                     estimatedMileage
                     totalPay
                     tip
+                    snappedGeometry
                     employer
                 }
             }
@@ -41,6 +42,7 @@ export const fetchActiveShift = async () => {
             roadSnappedMiles: 0,
             startTime: new Date(),
             snappedGeometry: '',
+            jobs: []
         };
     } else {
         return data.getActiveShift;
@@ -90,32 +92,43 @@ export const setShiftEmployers = ({
 }) => {
     const client = getClient(store);
     const query = gql`
-    mutation mutation($shiftId: ID!, $employers: [EmployerNames]!) {
-        setShiftEmployers(shiftId: $shiftId, employers: $employers) {
-            shift {
-                employers
+        mutation mutation($shiftId: ID!, $employers: [EmployerNames]!) {
+            setShiftEmployers(shiftId: $shiftId, employers: $employers) {
+                shift {
+                    employers
+                }
             }
         }
-    }
     `;
     return client.request(query, {
         shiftId,
-        employers
-    })
+        employers,
+    });
 };
 
 export const addScreenshotToShift = async ({
-    screenshot,
+    screenshotLocalUri,
+    modificationTime,
     shiftId,
+    jobId = undefined,
 }: {
-    screenshot: MediaLibrary.Asset;
+    screenshotLocalUri: string | undefined;
+    modificationTime: number;
     shiftId: string;
+    jobId: string | undefined;
 }) => {
     const client = getClient(store);
     const query = gql`
-        mutation mutation($Shift: ID!, $File: Upload!, $DeviceURI: String!, $Timestamp: DateTime!) {
+        mutation mutation(
+            $Shift: ID!
+            $Job: ID
+            $File: Upload!
+            $DeviceURI: String!
+            $Timestamp: DateTime!
+        ) {
             addScreenshotToShift(
                 shiftId: $Shift
+                jobId: $Job
                 asset: $File
                 deviceUri: $DeviceURI
                 timestamp: $Timestamp
@@ -134,20 +147,23 @@ export const addScreenshotToShift = async ({
     `;
 
     // const assetSource = Image.resolveAssetSource(screenshot);
-    const info = await MediaLibrary.getAssetInfoAsync(screenshot);
-    log.info('Adding screenshot to shift', shiftId);
-    if (!info.localUri) {
+    // const info = await MediaLibrary.getAssetInfoAsync(screenshot);
+    log.info('Adding screenshot to shift', shiftId, screenshotLocalUri);
+    log.info('modification Time: ', modificationTime);
+    if (!screenshotLocalUri) {
         return false;
     } else {
-        const fileBase64 = await FileSystem.readAsStringAsync(info.localUri, {
+        const fileBase64 = await FileSystem.readAsStringAsync(screenshotLocalUri, {
+            // encoding: FileSystem.EncodingType.UTF8,
             encoding: FileSystem.EncodingType.Base64,
         });
-        log.info('Screenshot encoded.', info);
+        log.info('Screenshot encoded.', screenshotLocalUri);
         return client.request(query, {
             Shift: shiftId,
+            Job: jobId,
             File: fileBase64,
-            DeviceURI: info.localUri,
-            Timestamp: new Date(info.modificationTime),
+            DeviceURI: screenshotLocalUri,
+            Timestamp: modificationTime ? new Date(modificationTime) : new Date(),
         });
     }
 };
