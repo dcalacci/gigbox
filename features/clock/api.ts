@@ -20,16 +20,20 @@ export const fetchActiveShift = async () => {
                 snappedGeometry
                 employers
                 jobs {
-                    id
-                    startTime
-                    endTime
-                    startLocation
-                    mileage
-                    estimatedMileage
-                    totalPay
-                    tip
-                    snappedGeometry
-                    employer
+                    edges {
+                        node {
+                            id
+                            startTime
+                            endTime
+                            startLocation
+                            mileage
+                            estimatedMileage
+                            totalPay
+                            tip
+                            snappedGeometry
+                            employer
+                        }
+                    }
                 }
             }
         }
@@ -42,7 +46,7 @@ export const fetchActiveShift = async () => {
             roadSnappedMiles: 0,
             startTime: new Date(),
             snappedGeometry: '',
-            jobs: []
+            jobs: [],
         };
     } else {
         return data.getActiveShift;

@@ -19,18 +19,22 @@ export const getShifts = (first: Number, after: String) => {
                         roadSnappedMiles
                         snappedGeometry
                         jobs {
-                            id
-                            startTime
-                            endTime
-                            startLocation
-                            endLocation
-                            mileage
-                            snappedGeometry
-                            estimatedMileage
-                            totalPay
-                            tip
-                            employer
-                            shiftId
+                            edges {
+                                node {
+                                    id
+                                    startTime
+                                    endTime
+                                    startLocation
+                                    endLocation
+                                    mileage
+                                    snappedGeometry
+                                    estimatedMileage
+                                    totalPay
+                                    tip
+                                    employer
+                                    shiftId
+                                }
+                            }
                         }
                         screenshots {
                             onDeviceUri

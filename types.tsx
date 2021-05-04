@@ -50,7 +50,8 @@ export type Job = {
     id: string;
     startTime: Date;
     endTime: Date | undefined;
-    startLocation: LatLng;
+    startLocation: LatLng | string;
+    endLocation: LatLng | string;
     mileage: number;
     estimatedMileage: number | undefined;
     totalPay: number | undefined;
@@ -67,10 +68,11 @@ export type Shift = {
     roadSnappedMiles: number;
     snappedGeometry: string | MapLine;
     employers: Employers[];
-    jobs: Job[];
+    jobs: {edges: [{node: Job}]}
 };
 
 export type Screenshot = {
+    id: string;
     shiftId: string;
     onDeviceUri: string;
     imgFilename: string;
