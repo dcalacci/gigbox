@@ -244,7 +244,10 @@ class AddScreenshotToShift(Mutation):
     @login_required
     def mutate(self, info, shift_id, asset, device_uri, timestamp, **kwargs):
         shift_id = from_global_id(shift_id)[1]
+
         job_id = kwargs.get('job_id', None)
+        if job_id:
+            job_id = from_global_id(job_id)[1]
         # Decode base64 image
         decoded = base64.decodebytes(bytes(asset, 'utf-8'))
         f_array = np.asarray(bytearray(decoded))
@@ -371,6 +374,8 @@ class EndJob(Mutation):
 
     @login_required
     def mutate(self, info, job_id, end_location):
+
+        job_id = from_global_id(job_id)[1]
         job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
         job.end_time = datetime.now()
         job.end_location = from_shape(
@@ -391,6 +396,7 @@ class SetJobTotalPay(Mutation):
 
     @login_required
     def mutate(self, info, job_id, value):
+        job_id = from_global_id(job_id)[1]
         job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
         job.total_pay = value 
         db.session.add(job)
@@ -408,6 +414,8 @@ class SetJobTip(Mutation):
 
     @login_required
     def mutate(self, info, job_id, value):
+        job_id = from_global_id(job_id)[1]
+        job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
         job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
         job.tip = value
         db.session.add(job)
@@ -424,6 +432,7 @@ class SetJobMileage(Mutation):
 
     @login_required
     def mutate(self, info, job_id, value):
+        job_id = from_global_id(job_id)[1]
         job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
         job.mileage = value
         db.session.add(job)
