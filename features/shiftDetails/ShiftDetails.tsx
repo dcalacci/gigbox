@@ -1,12 +1,14 @@
 import React, { useState, FunctionComponent, useEffect } from 'react';
-import { ScrollView, View, Text, Image, StyleSheet, Pressable, Modal, Alert } from 'react-native';
+import { ScrollView, View, Text, Image, StyleSheet, Pressable, Modal, Alert, TextInput } from 'react-native';
 import { tailwind } from 'tailwind';
-import { Job } from '../../types';
 import { Region, Marker } from 'react-native-maps';
+import { useQueryClient, useMutation } from 'react-query'
 import moment from 'moment';
+import { Job } from '../../types';
 import TripMap from '../shiftList/TripMap';
 import { parse } from 'wellknown';
 import ScreenshotUploader from './ScreenshotPicker';
+import {updateJobTip, updateJobTotalPay, updateJobValue} from './api'
 
 //TODO: show start and end of trip in map
 
@@ -81,41 +83,110 @@ const JobItem = ({ job, screenshots, shift }) => {
             });
         }
     }, [job.snappedGeometry]);
+
     console.log('Rendering job item:', job);
+
     const JobDetail = ({
         label,
         value,
         prefix,
         suffix,
         placeholder,
+        mutationKey,
+        dataKey
     }: {
         label: string;
         value: number | string;
         prefix: string;
         suffix: string;
         placeholder: string;
+        mutationKey: string;
+        dataKey: string;
     }) => {
-        const valueString = typeof value === 'number' ? value.toFixed(2) : value;
+        const [displayValue, setDisplayValue] = useState<string>()
+        const [isFocused, setFocused] = useState<boolean>()
+        const queryClient = useQueryClient()
+
+        const setJobValue = useMutation(updateJobValue, {
+            onSuccess: (data, variables) => {
+                console.log("updating job value:", data, variables)
+                queryClient.invalidateQueries('shifts')
+            }
+        })
+
+        // set value from our input, and submit mutation
+        useEffect(() => {
+            console.log(`${label} value: ${value}`)
+            if (value) {
+                setDisplayValue(typeof(value) === 'number' ? value.toFixed(2) : parseFloat(value).toFixed(2))
+            }
+        }, [value])
+
+        const setFormattedValue = (input: string) => {
+            console.log("Setting formatted val:", input)
+            setDisplayValue(input)
+        }
+
+        const onSubmit = (data) => {
+
+            if (displayValue) {
+                const val = parseFloat(displayValue).toFixed(2)
+                console.log("Submitted. data:", val)
+                setJobValue.mutate({
+                    jobId: job.id,
+                    mutationKey: mutationKey,
+                    key: dataKey,
+                    value: val
+                })
+                //TODO: Submit to server on mutation
+                //TODO: decimal formatting (for convenience)
+            }
+        }
+
+        const onFocus = () => {
+            console.log("Focused text input!")
+        }
+
+        const onBlur = () => {
+            console.log("Blurred text input!")
+        }
+
 
         return (
             <View style={tailwind('flex flex-col pt-1')}>
                 <Text style={tailwind('text-xs text-black p-0 m-0')}>{label}</Text>
                 <View
                     style={[
-                        tailwind('rounded-lg p-2 h-12'),
-                        value == null
+                        tailwind('rounded-lg h-12 flex-row w-36 items-center'),
+                        isFocused ? tailwind('border-2') : null,
+                        displayValue == undefined 
                             ? tailwind('bg-gray-100')
                             : tailwind('bg-green-500 bg-opacity-50'),
                     ]}
                 >
-                    <Text
-                        style={[
-                            tailwind('text-lg text-black'),
-                            value == null ? null : tailwind('text-black font-bold underline'),
-                        ]}
-                    >
-                        {prefix} {value ? `${valueString} ${suffix}` : placeholder}
+                    <Text style={tailwind('ml-2 text-xl text-black flex-auto')}>
+                        {prefix}
                     </Text>
+                    <TextInput
+                        style={[
+                            tailwind('text-xl mb-2 text-black w-full flex-auto'),
+                            displayValue == undefined ? null : tailwind('text-black font-bold underline'),
+                        ]}
+                        key={`${value}`}
+                        onChangeText={setFormattedValue}
+                        maxLength={5}
+                        keyboardType={'decimal-pad'}
+                        onSubmitEditing={onSubmit}
+                        returnKeyType={'done'}
+                        onFocus={() => setFocused(true)}
+                        onBlur={() => setFocused(false)}
+                    >
+                        {displayValue}
+                    </TextInput>
+                    <Text style={tailwind('text-xl text-black flex-grow font-bold mr-4')}>
+                        {suffix}
+                    </Text>
+
                 </View>
             </View>
         );
@@ -177,6 +248,8 @@ const JobItem = ({ job, screenshots, shift }) => {
                         prefix={''}
                         suffix={' mi'}
                         placeholder={''}
+                        mutationKey={'setJobMileage'}
+                        dataKey={'mileage'}
                     />
                     <JobDetail
                         label={'Total Pay'}
@@ -184,6 +257,8 @@ const JobItem = ({ job, screenshots, shift }) => {
                         prefix={'$ '}
                         suffix={''}
                         placeholder={''}
+                        mutationKey={'setJobTotalPay'}
+                        dataKey={'totalPay'}
                     ></JobDetail>
                     <JobDetail
                         label={'Tip'}
@@ -191,6 +266,8 @@ const JobItem = ({ job, screenshots, shift }) => {
                         prefix={'$ '}
                         suffix={''}
                         placeholder={''}
+                        mutationKey={'setJobTip'}
+                        dataKey={'tip'}
                     ></JobDetail>
                 </View>
             </View>
@@ -253,7 +330,6 @@ const ShiftDetails = ({ navigation, route }) => {
                     isActive={false}
                     tripLocations={route.params.locations}
                     region={route.params.region}
-                    shiftId={shift.id}
                 />
             </View>
             <View style={tailwind('pl-2 flex-auto flex-col rounded-lg bg-white m-2 p-3')}>
