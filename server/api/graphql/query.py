@@ -11,35 +11,50 @@ from flask import g
 
 # import numpy as np
 from api.controllers.auth.decorators import login_required
-from api.graphql.object import User, Shift, Location, WeeklySummary, Trips, Route, BoundingBox, Screenshot
-from api.models import User as UserModel, Shift as ShiftModel, Location as LocationModel, Screenshot as ScreenshotModel, Geometry_WKT
+from api.graphql.object import User, Shift, Job, Location, WeeklySummary, Trips, Route, BoundingBox, Screenshot
+from api.models import User as UserModel, Shift as ShiftModel, Job as JobModel, Location as LocationModel, Screenshot as ScreenshotModel, Geometry_WKT
 from api.routing.mapmatch import get_shift_distance, get_shift_geometry
 
-
-# A good way of hacking together role authorization would be this, from here:
-# https://github.com/graphql-python/graphene-sqlalchemy/issues/137#issuecomment-582727580
-# Instead, we just use the SQLAlchemyConnectionField as an interface, and add a filter for user_id
 class AuthorizedConnectionField(SQLAlchemyConnectionField):
-
-    def __init__(self, type, *args, **kwargs):
-        # fields = {name: field.type() for name, field in input_type._meta.fields.items()}
-        # kwargs.update(fields)
-        super().__init__(type, *args, **kwargs)
+    RELAY_ARGS = ['first', 'last', 'before', 'after']
 
     @classmethod
     @login_required
     def get_query(cls, model, info, sort=None, **args):
-        query = super().get_query(model, info, sort=sort, **args)
+        query = super(AuthorizedConnectionField, cls).get_query(model, info, sort=sort, **args)
         query = query.filter_by(user_id=str(g.user))
         omitted = ('first', 'last', 'hasPreviousPage',
                    'hasNextPage', 'startCursor', 'endCursor')
-        for name, val in args.items():
-            if name in omitted:
-                continue
-            col = getattr(model, name, None)
-            if col:
-                query = query.filter(col == val)
+
+        for field, value in args.items():
+            if field not in cls.RELAY_ARGS and field not in omitted:
+                query = query.filter(getattr(model, field) == value)
         return query
+
+# A good way of hacking together role authorization would be this, from here:
+# https://github.com/graphql-python/graphene-sqlalchemy/issues/137#issuecomment-582727580
+# Instead, we just use the SQLAlchemyConnectionField as an interface, and add a filter for user_id
+# class AuthorizedConnectionField(SQLAlchemyConnectionField):
+
+#     def __init__(self, type, *args, **kwargs):
+#         # fields = {name: field.type() for name, field in input_type._meta.fields.items()}
+#         # kwargs.update(fields)
+#         super().__init__(type, *args, **kwargs)
+
+#     @classmethod
+#     @login_required
+#     def get_query(cls, model, info, sort=None, **args):
+#         query = super().get_query(model, info, sort=sort, **args)
+#         query = query.filter_by(user_id=str(g.user))
+#         omitted = ('first', 'last', 'hasPreviousPage',
+#                    'hasNextPage', 'startCursor', 'endCursor')
+#         for name, val in args.items():
+#             if name in omitted:
+#                 continue
+#             col = getattr(model, name, None)
+#             if col:
+#                 query = query.filter(col == val)
+#         return query
 
 
 class Query(graphene.ObjectType):
@@ -50,6 +65,7 @@ class Query(graphene.ObjectType):
     getWeeklySummary = graphene.Field(WeeklySummary)
     getShiftScreenshots = graphene.Field(graphene.List(Screenshot), shiftId=graphene.ID())
     allShifts = AuthorizedConnectionField(Shift, sort=Shift.sort_argument())
+    allJobs = AuthorizedConnectionField(Job, sort=Job.sort_argument())
 
     shifts = graphene.List(Shift,
                            cursor=graphene.Int(),

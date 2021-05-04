@@ -55,6 +55,7 @@ class Shift(SQLAlchemyObjectType):
 class Job(SQLAlchemyObjectType):
     class Meta:
         model = JobModel
+        interfaces = [graphene.Node]
 
     start_location = Field(Geometry_WKT)
     end_location = Field(Geometry_WKT)
