@@ -28,6 +28,9 @@ export interface JobFilter {
     minMileage: number
   }
 
+export const JobFilterList = ({filters}: {filters: JobFilter}) => {
+}
+
 
 //List of job components
 //TODO: remove shift screenshot bits here

@@ -7,7 +7,7 @@ import { FlatList } from 'react-native-gesture-handler';
 import { log } from '../../utils';
 import { tailwind } from 'tailwind';
 import { getShifts } from './api';
-import ShiftDetails from '../shiftDetails/ShiftDetails';
+import ShiftDetails from './ShiftDetails';
 import ShiftCard from './ShiftCard';
 import Statistics from './Statistics';
 

@@ -10,7 +10,7 @@ import {
 import { tailwind } from 'tailwind';
 import { Job, Shift} from '../../types';
 import { JobList } from '../job/JobList'
-import TripMap from '../shiftList/TripMap';
+import TripMap from './TripMap';
 
 export const ShiftTrips = ({ shift }: { shift: Shift }) => {
     const [jobs, setJobs] = useState<[{ node: Job }]>();
