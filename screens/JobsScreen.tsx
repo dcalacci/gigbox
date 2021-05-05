@@ -3,6 +3,9 @@ import { StyleSheet, View, Text} from 'react-native';
 
 import JobsList from '../components/JobsList'
 
+import {JobList} from '../features/job/JobList'
+
+
 export default function JobsScreen() {
   return (
     <View style={styles.container}>

@@ -22,16 +22,3 @@ export const updateJobValue = (
             value
         })
 }
-
-export const updateJobTip = (jobId: string, value: number) => {
-    return updateJobValue(
-        jobId=jobId, "setJobTip", "tip", value
-    )
-
-}
-
-export const updateJobTotalPay = (jobId: string, value: number) => {
-    return updateJobValue(
-        jobId=jobId, "setJobTotalPay", "totalPay", value
-    )
-}

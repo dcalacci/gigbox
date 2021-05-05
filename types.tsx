@@ -71,6 +71,7 @@ export type Job = {
     employer: Employers;
     snappedGeometry: string;
     shiftId: string;
+    screenshots: Screenshot[]
 };
 
 export type Shift = {
