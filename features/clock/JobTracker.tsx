@@ -5,7 +5,7 @@ import { tailwind } from 'tailwind';
 import { log } from '../../utils';
 import { Shift, Job, Employers } from '@/types';
 import { LatLng, Marker, Region } from 'react-native-maps';
-import { QueryClient, useMutation } from 'react-query';
+import { useQueryClient, useMutation } from 'react-query';
 import { useToast } from 'react-native-fast-toast';
 import moment from 'moment';
 
@@ -25,11 +25,12 @@ export default function JobTracker({ shift }: { shift: Shift }) {
     const [region, setRegion] = useState<Region>();
     const [employer, setEmployer] = useState<Employers>();
     const [activeJob, setActiveJob] = useState<Job>();
+    const queryClient = useQueryClient()
     const toast = useToast();
 
     useEffect(() => {
-        const activeJobs: Job[] = shift.jobs.filter((j) => !j.endTime);
-        const activeJob: Job | undefined = activeJobs.length == 0 ? undefined : activeJobs[0];
+        const activeJobs: {node: Job}[] = shift.jobs.edges.filter((j) => !j.node.endTime);
+        const activeJob: Job | undefined = activeJobs.length == 0 ? undefined : activeJobs[0].node;
         setActiveJob(activeJob);
     }, [shift.jobs]);
 
@@ -39,7 +40,6 @@ export default function JobTracker({ shift }: { shift: Shift }) {
             const locations = geometries.map((c) => {
                 return { latitude: c[1], longitude: c[0] };
             });
-            console.log("setting locations", locations)
             setLocations(locations);
             const bbox = bounding_box;
             setRegion({
@@ -85,7 +85,10 @@ export default function JobTracker({ shift }: { shift: Shift }) {
         },
         onError: (err, variables) => {
             //TODO: send toast
+            queryClient.invalidateQueries('activeShift');
             log.error('Couldnt finish job.');
+            err.response.errors.map((e) => toast?.show(e.message))
+            setJobStarted(false)
         },
     });
 

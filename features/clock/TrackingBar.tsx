@@ -69,9 +69,11 @@ export default function TrackingBar() {
             return { previousShift };
         },
         onError: (err, newShift, context) => {
+            // queryClient.setQueryData('activeShift', context.previousShift);
+            queryClient.invalidateQueries('activeShift');
             log.error(`Problem ending shift: ${err}`);
-            queryClient.setQueryData('activeShift', context.previousShift);
-            toast?.show('Encountered a problem ending your shift... Try again?');
+            // toast?.show(err)
+            err.response.errors.map((e) => toast?.show(e.message))
         },
     });
 

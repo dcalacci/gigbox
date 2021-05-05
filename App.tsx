@@ -41,8 +41,7 @@ TaskManager.defineTask('gigbox.mileageTracker', async ({ data, error }) => {
         }) as Location[];
         //TODO: reduce the amount of data coming back from server to make response time better
         // i.e. get only latest location point, or just an 'ok'
-        const data = await addLocationsToShift(shiftResponse.id, locs);
-        log.info('Sent location data:', data);
+        return addLocationsToShift(shiftResponse.id, locs)
         //TODO: collect errors in adding locations, or save them to a cache
     }
 });
