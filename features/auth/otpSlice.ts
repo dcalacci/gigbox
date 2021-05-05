@@ -6,6 +6,7 @@ interface OtpState {
     tokenSent: boolean
     errorMessage: string
     isLoading: boolean
+    phone: string
     tokenExpiresIn: number
 }
 
@@ -21,7 +22,7 @@ export const requestOtp = createAsyncThunk(
         if (data.status != 200) {
             return thunkApi.rejectWithValue(data)
         }
-        return data;
+        return data
     }
 );
 
@@ -39,6 +40,7 @@ export const loginWithOtp = createAsyncThunk(
 const initialState: OtpState = {
     tokenSent: false,
     isLoading: false,
+    phone: "",
     errorMessage: "",
     tokenExpiresIn: 0
 }
@@ -57,6 +59,7 @@ const otpSlice = createSlice({
             .addCase(requestOtp.fulfilled, (state, action) => {
                 console.log("OTP request fulfilled", action.payload)
                 state.tokenSent = true
+                state.phone = action.payload.phone
             })
             .addCase(requestOtp.rejected, (state, action: any) => {
                 console.log("Request failed:", action)

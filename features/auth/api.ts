@@ -4,6 +4,7 @@ import { fetchWithQueryParams, uri } from '../../utils';
 export interface OtpResponse {
     status: number;
     message: string;
+    phone: string
 }
 
 /**
@@ -17,8 +18,8 @@ export const getOtp = async (phone: string): Promise<OtpResponse> => {
         { phone: phone },
         'POST'
     );
-    const data = response.json();
-    return data;
+    const data = await response.json();
+    return {...data, phone};
 };
 
 export interface VerifyOtpResponse {

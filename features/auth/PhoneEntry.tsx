@@ -18,6 +18,7 @@ const PhoneEntry: React.FC = (props) => {
     const otpIsLoading = useSelector((state: RootState): boolean => state.otp.isLoading);
     const queryClient = useQueryClient();
     const dispatch = useDispatch();
+    const submittedPhone = useSelector((state: RootState): string => state.otp.phone);
 
     const ayt = new AsYouType('US');
     const toast = useToast();
@@ -51,7 +52,7 @@ const PhoneEntry: React.FC = (props) => {
         }
     };
 
-    console.log("otp is loading? ", otpIsLoading)
+    console.log('otp is loading? ', otpIsLoading);
     return (
         <SafeAreaView style={tailwind('px-10')}>
             {tokenSent || otpIsLoading ? (
@@ -76,15 +77,18 @@ const PhoneEntry: React.FC = (props) => {
                     <Pressable
                         style={tailwind('items-center rounded-md py-2 w-full mt-6 bg-green-500')}
                         onPress={() => {
-                            queryClient.refetchQueries('loggedIn')
-                            dispatch(loginWithOtp({ phone, otp }));
+                            queryClient.refetchQueries('loggedIn');
+                            dispatch(loginWithOtp({ phone: submittedPhone, otp }));
                         }}
                     >
                         <Text style={tailwind('text-white font-semibold')}>Verify</Text>
                     </Pressable>
                     <Pressable
                         style={tailwind('items-center rounded-md py-2 w-full mt-6 bg-gray-800')}
-                        onPress={() => dispatch(requestOtp(phone))}
+                        onPress={() => {
+                            toast?.show(`Sending code to ${phone}`)
+                            dispatch(requestOtp(phone))
+                        }}
                     >
                         <Text style={tailwind('text-white font-semibold')}>Re-Send Passcode</Text>
                     </Pressable>
@@ -124,7 +128,10 @@ const PhoneEntry: React.FC = (props) => {
                             phoneIsValid ? tailwind('bg-green-500') : tailwind('bg-gray-600'),
                         ]}
                         disabled={!phoneIsValid}
-                        onPress={() => dispatch(requestOtp(phone))}
+                        onPress={() =>  {
+                            toast?.show(`Sending code to ${phone}`)
+                            dispatch(requestOtp(phone))}
+                        }
                     >
                         <Text style={tailwind('text-white font-semibold')}>Request Code</Text>
                     </Pressable>
