@@ -1,15 +1,8 @@
-
-import React, { useEffect, useState} from 'react'
-import {
-    ScrollView,
-    View,
-    Text,
-    StyleSheet,
-    Pressable
-} from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { ScrollView, View, Text, StyleSheet, Pressable } from 'react-native';
 import { tailwind } from 'tailwind';
-import { Job, Shift} from '../../types';
-import { JobList } from '../job/JobList'
+import { Job, Shift } from '../../types';
+import { JobList } from '../job/JobList';
 import TripMap from './TripMap';
 
 export const ShiftTrips = ({ shift }: { shift: Shift }) => {
@@ -26,7 +19,7 @@ export const ShiftTrips = ({ shift }: { shift: Shift }) => {
         <>
             <View style={tailwind('flex-col')}>
                 <View style={tailwind('flex flex-row flex-auto content-between')}>
-                    <JobList jobs={jobs} shift={shift} />
+                    <JobList jobs={jobs} />
                 </View>
 
                 <View style={tailwind('border-b border-green-500 h-1 mb-2 mr-5 ml-5')} />
@@ -43,7 +36,6 @@ export const ShiftTrips = ({ shift }: { shift: Shift }) => {
         </>
     );
 };
-
 
 const ShiftDetails = ({ route }) => {
     console.log('Showing details for shift:', route.params);
