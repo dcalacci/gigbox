@@ -43,6 +43,11 @@ class TokenCreationError(Exception):
 class ValidationError(Exception):
     pass
 
-
 class DatabaseProcessError(Exception):
+    pass
+
+class ShiftInvalidError(Exception):
+    pass
+
+class JobInvalidError(Exception):
     pass

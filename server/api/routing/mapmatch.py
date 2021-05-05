@@ -12,17 +12,20 @@ OSRM_URI = "http://osrm:5000"
 def match(coordinates):
     coord_str = requests.utils.quote(
         ';'.join([f'{c["lng"]},{c["lat"]}' for c in coordinates]))
-    timestamp_str = requests.utils.quote(';'.join([f'{int(c["timestamp"].timestamp())}' for c in
-                                                   coordinates]))
-    payload = {'timestamps': timestamp_str,
-               "geometries": "geojson"}
+    # timestamp_str = requests.utils.quote(';'.join([f'{int(c["timestamp"].timestamp())}' for c in
+    #                                                coordinates]))
+    payload = {#'timestamps': timestamp_str,
+               "geometries": "geojson",
+               "tidy": "true"}
     MATCH_URI = f'{OSRM_URI}/match/v1/car/{coord_str}'
     return requests.post(MATCH_URI, params=payload)
 
+
 def get_match_for_locations(locations):
     coords = [{'lat': to_shape(s.geom).y,
-               'lng': to_shape(s.geom).x,
-               'timestamp': s.timestamp} for s in locations]
+               'lng': to_shape(s.geom).x
+               # 'timestamp': s.timestamp ## remove -- not needed for mileage and route matching
+               } for s in locations]
 
     return match(coords).json()
 
@@ -56,12 +59,21 @@ def get_match_geometry(res):
         return (geometries, bounding_box(geometries))
     return False
 
+
 def get_route_distance_and_geometry(locations):
     res = get_match_for_locations(locations)
-    distance = get_match_distance(res)
-    geom_obj = get_match_geometry(res)
-    return {"distance": distance,
-            "geom_obj": geom_obj}
+    if res['code'] == 'TooBig':
+        return {'status': 'error',
+                'message': 'trace too large'}
+    elif 'matchings' not in res:
+        return {'status': 'error',
+                'message': 'failed to match route'}
+    else:
+        distance = get_match_distance(res)
+        geom_obj = get_match_geometry(res)
+        return {"status": "ok",
+                "distance": distance,
+                "geom_obj": geom_obj}
 
 
 def get_shift_distance(shift, info):

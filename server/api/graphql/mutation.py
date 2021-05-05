@@ -52,6 +52,7 @@ from api.utils import generate_filename
 from api.routing.mapmatch import get_route_distance_and_geometry
 from api.screenshots.parser import predict_app, image_to_df, parse_image
 from flask import current_app
+from api.controllers.errors import ShiftInvalidError, JobInvalidError
 
 # we use a traditional REST endpoint to create JWT tokens and for first login
 # So, honestly, unsure if we need a Createuser mutation. We will only ever create
@@ -125,8 +126,25 @@ class EndShift(Mutation):
                 id=shift_id, user_id=g.user).first()
         )
 
+        if (end_time - shift.start_time).seconds < 5*60:
+            shift.end_time = end_time
+            shift.active = False
+            shift = endAnyActiveJobs(shift, info)
+            db.session.delete(shift)
+            db.session.commit()
+            raise ShiftInvalidError("Shift not tracked - it was under 5 minutes.")
+
         # calculate final mileage for this shift
         shift = updateShiftMileageAndGeometry(shift, info)
+
+        if (shift.road_snapped_miles is None or shift.road_snapped_miles < 1):
+            shift.end_time = end_time
+            shift.active = False
+            shift = endAnyActiveJobs(shift, info)
+            db.session.delete(shift)
+            db.session.commit()
+            raise ShiftInvalidError("Shift not tracked - it was under 1 mile long.")
+
         shift = endAnyActiveJobs(shift, info)
         shift.end_time = end_time
         shift.active = False
@@ -140,7 +158,7 @@ def updateShiftMileageAndGeometry(shift, info):
     """adds mileage and geometry to a shift object using one call to our mapmatch api"""
     locs = sorted(shift.locations, key=lambda l: l.timestamp)
     match_obj = get_route_distance_and_geometry(locs)
-    if not match_obj['geom_obj']:
+    if 'geom_obj' not in match_obj or not match_obj['geom_obj']:
         current_app.logger.error(f'Failed to match a route to shift...')
         return shift
 
@@ -350,6 +368,10 @@ def get_job_mileage_and_geometry(info, job, shift=None):
         locs = sorted(job_locations, key=lambda l: l.timestamp)
         match_obj = get_route_distance_and_geometry(locs)
 
+        if 'geom_obj' not in match_obj or not match_obj['geom_obj']:
+            current_app.logger.error("Failed to match a route to job...")
+            return job
+
         distance = match_obj['distance']
         bb = match_obj['geom_obj'][1]
         geometries = match_obj['geom_obj'][0]
@@ -381,7 +403,15 @@ class EndJob(Mutation):
         job.end_time = datetime.now()
         job.end_location = from_shape(
             geometry.Point(end_location.lng, end_location.lat))
+        if (job.end_time - job.start_time).seconds < 5 * 60:
+            db.session.delete(job)
+            db.session.commit()
+            raise JobInvalidError("Job not saved - it was under 5 minutes")
         job = get_job_mileage_and_geometry(info, job)
+        if (job.mileage is None or job.mileage < 1):
+            db.session.delete(job)
+            db.session.commit()
+            raise JobInvalidError("Job not saved - it was under 1 mile")
         db.session.add(job)
         db.session.commit()
         return EndJob(job=job, ok=True)
@@ -399,7 +429,7 @@ class SetJobTotalPay(Mutation):
     def mutate(self, info, job_id, value):
         job_id = from_global_id(job_id)[1]
         job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
-        job.total_pay = value 
+        job.total_pay = value
         db.session.add(job)
         db.session.commit()
         return SetJobTotalPay(job, True)
@@ -422,6 +452,7 @@ class SetJobTip(Mutation):
         db.session.add(job)
         db.session.commit()
         return SetJobTip(job, True)
+
 
 class SetJobMileage(Mutation):
     job = Field(lambda: Job, description="Job to update")
