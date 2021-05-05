@@ -135,6 +135,7 @@ const JobItem = ({
             onSuccess: (data, variables) => {
                 console.log('updating job value:', data, variables);
                 queryClient.invalidateQueries('shifts');
+                queryClient.invalidateQueries('weeklySummary');
             },
         });
 
@@ -177,7 +178,7 @@ const JobItem = ({
         };
 
         return (
-            <View style={tailwind('flex flex-col pt-1')}>
+            <View style={[tailwind('flex flex-col pt-1')]}>
                 <Text style={tailwind('text-xs text-black p-0 m-0')}>{label}</Text>
                 <View
                     style={[

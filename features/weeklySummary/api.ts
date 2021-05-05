@@ -9,6 +9,13 @@ export const fetchWeeklySummary = () => {
             getWeeklySummary {
                 miles
                 numShifts
+                numJobs
+                totalPay
+                totalTips
+                meanTips
+                meanPay
+                earnings
+                expenses
             }
         }
     `;

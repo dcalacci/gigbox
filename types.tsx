@@ -46,6 +46,18 @@ export enum Employers {
     UBEREATS = 'UBEREATS',
 }
 
+export type WeeklySummary = {
+    earnings: number,
+    expenses: number,
+    miles: number,
+    numJobs: number,
+    numShifts: number,
+    totalPay: number,
+    totalTips: number,
+    meanTips: number,
+    meanPay: number
+}
+
 export type Job = {
     id: string;
     startTime: Date;

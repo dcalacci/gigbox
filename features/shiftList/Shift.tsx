@@ -6,9 +6,10 @@ import { FlatList } from 'react-native-gesture-handler';
 
 import { log } from '../../utils';
 import { tailwind } from 'tailwind';
-import { getShifts} from './api';
+import { getShifts } from './api';
 import ShiftDetails from '../shiftDetails/ShiftDetails';
 import ShiftCard from './ShiftCard';
+import Statistics from './Statistics';
 
 export default function ShiftList({ navigation }) {
     const queryClient = useQueryClient();
@@ -27,22 +28,24 @@ export default function ShiftList({ navigation }) {
     } = useInfiniteQuery('shifts', fetchShifts, {
         onSettled: () => {
             setRefreshing(false);
-            log.info("Done refreshing shift list.")
+            log.info('Done refreshing shift list.');
         },
         getNextPageParam: (lastPage, pages) => {
             return lastPage.allShifts.pageInfo.endCursor;
         },
-        refetchInterval: 10000
+        refetchInterval: 10000,
     });
     const [refreshing, setRefreshing] = useState(false);
     const onRefresh = () => {
         setRefreshing(true);
-        log.info("Refreshing shift list..")
+        log.info('Refreshing shift list..');
         queryClient.invalidateQueries('shifts');
     };
 
     const Header = () => (
-        <Text style={tailwind('text-3xl text-black font-bold pl-2 pt-20')}>Shifts</Text>
+        <>
+            <Text style={tailwind('text-3xl text-black font-bold pl-2 pt-20')}>Shifts</Text>
+        </>
     );
 
     const flattened_data = data?.pages.map((a) => a.allShifts.edges).flat();
@@ -55,11 +58,13 @@ export default function ShiftList({ navigation }) {
             <View style={styles.container}>
                 <FlatList
                     ListHeaderComponent={<Header />}
-                    style={[
-                        tailwind('h-full w-full flex-auto flex-col flex-grow'),
-                    ]}
+                    style={[tailwind('h-full w-full flex-auto flex-col flex-grow')]}
                     data={flattened_data}
-                    renderItem={(props) => (props.item.node == null ? null : <ShiftCard {...props} navigation={navigation} />)}
+                    renderItem={(props) =>
+                        props.item.node == null ? null : (
+                            <ShiftCard {...props} navigation={navigation} />
+                        )
+                    }
                     refreshControl={
                         <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
                     }
