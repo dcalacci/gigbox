@@ -6,8 +6,8 @@ import { tailwind } from 'tailwind';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 
-import ShiftList from '../features/shiftList/Shift';
-import ShiftDetails from '../features/shiftDetails/ShiftDetails';
+import ShiftList from '../features/shiftList/Shifts';
+import ShiftDetails from '../features/shiftList/ShiftDetails';
 
 const ShiftStack = createStackNavigator();
 
