@@ -74,7 +74,7 @@ export const Screenshots = ({
 };
 
 // A single job, including its map, details, and screenshot uploader
-export const JobItem = ({ job, shift }: { job: Job; shift: Shift }) => {
+export const JobItem = ({ job}: { job: Job}) => {
     const [region, setRegion] = useState<Region>();
     const [locations, setLocations] = useState<LatLng>();
 
@@ -213,7 +213,7 @@ export const JobItem = ({ job, shift }: { job: Job; shift: Shift }) => {
             ]}
         >
             <ScreenshotUploader
-                shiftId={shift.id}
+                shiftId={job.shiftId}
                 jobId={job.id}
                 modalVisible={modalVisible}
                 setModalVisible={setModalVisible}

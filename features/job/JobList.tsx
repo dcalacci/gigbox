@@ -18,6 +18,13 @@ import ScreenshotUploader from './ScreenshotPicker';
 import { updateJobValue } from './api';
 import { JobItem } from './Job'
 
+enum SortArgs {
+    START,
+    END,
+    PAY,
+    TIP,
+    MILES
+}
 
 export interface JobFilter {
     after: Date
@@ -26,6 +33,7 @@ export interface JobFilter {
     minTotalPay: number
     minTip: number
     minMileage: number
+    sort: SortArgs
   }
 
 export const JobFilterList = ({filters}: {filters: JobFilter}) => {
