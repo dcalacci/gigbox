@@ -227,21 +227,23 @@ export const JobItem = ({ job}: { job: Job}) => {
                         tripLocations={locations}
                         region={region}
                     >
+                        {job.endLocation ?
                         <Marker
                             pinColor={'red'}
                             coordinate={{
                                 longitude: parse(job.endLocation)?.coordinates[0] as number,
                                 latitude: parse(job.endLocation)?.coordinates[1] as number,
                             }}
-                        ></Marker>
+                        ></Marker> : null}
 
+                        {job.endLocation ?
                         <Marker
                             pinColor={'green'}
                             coordinate={{
                                 longitude: parse(job.startLocation)?.coordinates[0] as number,
                                 latitude: parse(job.startLocation)?.coordinates[1] as number,
                             }}
-                        ></Marker>
+                        ></Marker> : null}
                     </TripMap>
                 ) : (
                     <Text>No locations recorded for this job</Text>
