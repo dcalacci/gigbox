@@ -31,12 +31,12 @@ from api import db
 from api.controllers.auth.decorators import login_required
 from api.graphql.object import (
     User,
-    Shift,
+    ShiftNode,
     Location,
     LocationInput,
     EmployerInput,
     Screenshot,
-    Job
+    JobNode
 )
 from api.models import (
     User as UserModel,
@@ -82,7 +82,7 @@ class CreateUser(Mutation):
 class CreateShift(Mutation):
     """Creates a shift"""
 
-    shift = Field(lambda: Shift, description="Shift that was created")
+    shift = Field(lambda: ShiftNode, description="Shift that was created")
 
     # For optional fields in graphene mutations, see:
     # https://github.com/graphql-python/graphene/issues/769#issuecomment-397596754
@@ -112,7 +112,7 @@ class CreateShift(Mutation):
 class EndShift(Mutation):
     """Ends a shift"""
 
-    shift = Field(lambda: Shift, description="Shift that is being ended")
+    shift = Field(lambda: ShiftNode, description="Shift that is being ended")
 
     class Arguments:
         shift_id = String(required=True, description="ID of the shift to end")
@@ -320,7 +320,7 @@ class AddScreenshotToShift(Mutation):
 
 
 class CreateJob(Mutation):
-    job = Field(lambda: Job, description='Job that was created')
+    job = Field(lambda: JobNode, description='Job that was created')
     ok = Field(lambda: Boolean)
 
     class Arguments:
@@ -388,7 +388,7 @@ def get_job_mileage_and_geometry(info, job, shift=None):
 
 
 class EndJob(Mutation):
-    job = Field(lambda: Job, description="job to end")
+    job = Field(lambda: JobNode, description="job to end")
     ok = Field(lambda: Boolean)
 
     class Arguments:
@@ -418,7 +418,7 @@ class EndJob(Mutation):
 
 
 class SetJobTotalPay(Mutation):
-    job = Field(lambda: Job, description="Job to update")
+    job = Field(lambda: JobNode, description="Job to update")
     ok = Field(lambda: Boolean)
 
     class Arguments:
@@ -436,7 +436,7 @@ class SetJobTotalPay(Mutation):
 
 
 class SetJobTip(Mutation):
-    job = Field(lambda: Job, description="Job to update")
+    job = Field(lambda: JobNode, description="Job to update")
     ok = Field(lambda: Boolean)
 
     class Arguments:
@@ -455,7 +455,7 @@ class SetJobTip(Mutation):
 
 
 class SetJobMileage(Mutation):
-    job = Field(lambda: Job, description="Job to update")
+    job = Field(lambda: JobNode, description="Job to update")
     ok = Field(lambda: Boolean)
 
     class Arguments:
@@ -473,7 +473,7 @@ class SetJobMileage(Mutation):
 
 
 class SetShiftEmployers(Mutation):
-    shift = Field(lambda: Shift, description="Shift to update")
+    shift = Field(lambda: ShiftNode, description="Shift to update")
 
     class Arguments:
         shift_id = ID(

@@ -14,25 +14,11 @@ from flask import g
 
 # import numpy as np
 from api.controllers.auth.decorators import login_required
-from api.graphql.object import User, Shift, Job, Location, WeeklySummary, Trips, Route, BoundingBox, Screenshot
+from api.graphql.object import User, Location, WeeklySummary, ShiftNode, JobNode, Trips, Route, BoundingBox, Screenshot, FilterableAuthConnectionField, JobConnection, ShiftConnection
 from api.models import User as UserModel, Shift as ShiftModel, Job as JobModel, Location as LocationModel, Screenshot as ScreenshotModel, Geometry_WKT
 from api.routing.mapmatch import get_shift_distance, get_shift_geometry
+from graphene_sqlalchemy_filter import FilterSet, FilterableConnectionField
 
-class AuthorizedConnectionField(SQLAlchemyConnectionField):
-    RELAY_ARGS = ['first', 'last', 'before', 'after']
-
-    @classmethod
-    @login_required
-    def get_query(cls, model, info, sort=None, **args):
-        query = super(AuthorizedConnectionField, cls).get_query(model, info, sort=sort, **args)
-        query = query.filter_by(user_id=str(g.user))
-        omitted = ('first', 'last', 'hasPreviousPage',
-                   'hasNextPage', 'startCursor', 'endCursor')
-
-        for field, value in args.items():
-            if field not in cls.RELAY_ARGS and field not in omitted:
-                query = query.filter(getattr(model, field) == value)
-        return query
 
 # A good way of hacking together role authorization would be this, from here:
 # https://github.com/graphql-python/graphene-sqlalchemy/issues/137#issuecomment-582727580
@@ -64,19 +50,14 @@ class Query(graphene.ObjectType):
     node = relay.Node.Field()
 
     getTrips = graphene.Field(Trips)
-    getActiveShift = graphene.Field(Shift)
+    getActiveShift = graphene.Field(ShiftNode)
     getWeeklySummary = graphene.Field(WeeklySummary)
-    getShiftScreenshots = graphene.Field(graphene.List(Screenshot), shiftId=graphene.ID())
-    allShifts = AuthorizedConnectionField(Shift, sort=Shift.sort_argument())
-    allJobs = AuthorizedConnectionField(Job, sort=Job.sort_argument())
+    getShiftScreenshots = graphene.Field(
+        graphene.List(Screenshot), shiftId=graphene.ID())
+    allShifts = FilterableAuthConnectionField(ShiftNode.connection)
+    allJobs = FilterableAuthConnectionField(JobNode.connection)
 
-    shifts = graphene.List(Shift,
-                           cursor=graphene.Int(),
-                           n=graphene.Int(),
-                           after=graphene.DateTime(),
-                           before=graphene.DateTime())
-
-    # doing pagination as in https://www.howtographql.com/graphql-python/8-pagination/
+   # doing pagination as in https://www.howtographql.com/graphql-python/8-pagination/
     @login_required
     def resolve_shifts(self, info,  cursor=None, n=None, after=None, before=None):
         qs = ShiftModel.query
@@ -99,7 +80,7 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_getShiftScreenshots(self, info, shiftId):
         userId = str(g.user)
-        shiftId= from_global_id(shiftId)[1]
+        shiftId = from_global_id(shiftId)[1]
         return ScreenshotModel.query.filter_by(
             user_id=userId,
             shift_id=shiftId)
@@ -114,7 +95,7 @@ class Query(graphene.ObjectType):
         userId = str(g.user)
         dt_weekago = datetime.now() + relativedelta.relativedelta(weeks=-1)
 
-        shiftQuery = Shift.get_query(info=info)
+        shiftQuery = ShiftNode.get_query(info=info)
         shifts = (shiftQuery
                   .filter(ShiftModel.user_id == userId)
                   .filter(
@@ -127,23 +108,26 @@ class Query(graphene.ObjectType):
 
         n_jobs = len(jobs)
 
-        total_pay = sum([job.total_pay for job in jobs if job.total_pay and job.total_pay != 0])
+        total_pay = sum(
+            [job.total_pay for job in jobs if job.total_pay and job.total_pay != 0])
         total_tips = sum([job.tip for job in jobs if job.tip and job.tip != 0])
-        mean_pay = np.mean([job.total_pay for job in jobs if job.total_pay and job.total_pay != 0])
-        mean_tip = np.mean([job.tip for job in jobs if job.tip and job.tip != 0])
+        mean_pay = np.mean(
+            [job.total_pay for job in jobs if job.total_pay and job.total_pay != 0])
+        mean_tip = np.mean(
+            [job.tip for job in jobs if job.tip and job.tip != 0])
 
         return WeeklySummary(
-                miles=distance_miles, 
-                num_shifts=n_shifts,
-                num_jobs = n_jobs,
-                mean_pay = mean_pay,
-                mean_tips = mean_tip,
-                total_pay = total_pay,
-                total_tips = total_tips)
+            miles=distance_miles,
+            num_shifts=n_shifts,
+            num_jobs=n_jobs,
+            mean_pay=mean_pay,
+            mean_tips=mean_tip,
+            total_pay=total_pay,
+            total_tips=total_tips)
 
     @login_required
     def resolve_getTrips(self, info, objectId):
         shift_id = from_global_id(objectId)[1]
-        shift = Shift.get_query(info=info).get(shift_id)
+        shift = ShiftNode.get_query(info=info).get(shift_id)
         distance = get_shift_distance(shift, info)
         return Trips(miles=distance)
