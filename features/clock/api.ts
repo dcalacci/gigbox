@@ -1,12 +1,12 @@
 import { gql } from 'graphql-request';
 import { log, getClient, graphqlUri } from '../../utils';
 import { store } from '../../store/store';
-import { LatLng } from 'react-native-maps';
 import { LocationObject } from 'expo-location';
 import * as Location from 'expo-location';
 import { LocationInput, Employers } from '../../types';
 import * as FileSystem from 'expo-file-system';
-import * as MediaLibrary from 'expo-media-library';
+import { useQuery } from 'react-query'
+import moment from 'moment'
 
 export const fetchActiveShift = async () => {
     const client = getClient(store);
@@ -53,6 +53,30 @@ export const fetchActiveShift = async () => {
     }
 };
 
+
+export const useNumTrackedShifts = () => {
+    return useQuery(
+        ['trackedShifts'],
+        () => {
+            const client = getClient(store);
+            const todayString = moment().format();
+            const query = gql`query {
+            allShifts(filters: {startTimeGte: "${todayString}"}) {
+                edges {
+                    node { 
+                        id
+                    }
+                }
+            }
+        }
+        `;
+            return client.request(query);
+        },
+        {
+            select: (d) => d.allShifts.edges.length,
+        }
+    );
+};
 export const endShift = (shiftId: string) => {
     const client = getClient(store);
     const query = gql`mutation {
