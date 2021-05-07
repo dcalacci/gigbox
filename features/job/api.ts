@@ -93,6 +93,7 @@ export const getFilteredJobs = ({ queryKey }) => {
                     startTime
                     endTime
                     startLocation
+                    endLocation
                     mileage
                     estimatedMileage
                     totalPay
@@ -147,6 +148,7 @@ export const useFilteredJobs = (filters: JobFilter | undefined): UseQueryResult 
                     startTime
                     endTime
                     startLocation
+                    endLocation
                     mileage
                     estimatedMileage
                     totalPay
