@@ -33,23 +33,6 @@ export interface JobFilter {
     sort: SortArgs | undefined;
 }
 
-{
-    /* <DateRangePicker
-                    backdropStyle={tailwind('bg-transparent')}
-                    presetButtons={true}
-                    onChange={(newDates: { startDate: Date | null; endDate: Date | null }) => {
-                        console.log('dates:', dates);
-                        setDates({ ...dates, ...newDates });
-                    }}
-                    endDate={dates.endDate}
-                    startDate={dates.startDate}
-                    displayedDate={displayedDate}
-                    open={true}
-                    range={true}
-                >
-                    <Text></Text>
-                </DateRangePicker> */
-}
 const defaultFilter: JobFilter = {
     startDate: null,
     endDate: null,
