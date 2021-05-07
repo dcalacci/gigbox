@@ -4,6 +4,7 @@ import { store } from '../../store/store';
 import { useQuery, UseQueryResult } from 'react-query';
 import { JobFilterList, JobFilter, SortArgs } from './JobList';
 import { Job } from '@/types';
+import moment from 'moment';
 
 export const updateJobValue = ({
     jobId,
@@ -32,13 +33,37 @@ export const updateJobValue = ({
     });
 };
 
-export const getFilteredJobs = ({queryKey}) => {
-    const filters = queryKey[1]
-    console.log("filters in query:", filters)
+export const useNumTrackedJobs = () => {
+    return useQuery(
+        ['trackedJobs'],
+        () => {
+            const client = getClient(store);
+            const todayString = moment().format();
+            const query = gql`query {
+            allJobs(filters: {startTimeGte: "${todayString}"}) {
+                edges {
+                    node { 
+                        id
+                    }
+                }
+            }
+        }
+        `;
+            return client.request(query);
+        },
+        {
+            select: (d) => d.allJobs.edges.length,
+        }
+    );
+};
+
+export const getFilteredJobs = ({ queryKey }) => {
+    const filters = queryKey[1];
+    console.log('filters in query:', filters);
     const client = getClient(store);
     const createFilterString = (filters: JobFilter): string => {
         let or_filters = [];
-        let and_filters = [];
+        let and_filters = [`{mileageIsNull: false}`];
 
         if (filters.needsEntry) {
             or_filters.push(`{totalPayIsNull: true}`);
@@ -49,11 +74,17 @@ export const getFilteredJobs = ({queryKey}) => {
             and_filters.push(`{totalPayIsNull: false}`);
             and_filters.push(`{tipIsNull: false}`);
         }
+
         if (filters.minMileage) or_filters.push(`{mileageGte: ${filters.minMileage}}`);
+
+        if (filters.startDate && filters.endDate) {
+            and_filters.push(`{startTimeGte: "${filters.startDate?.format()}"}`);
+            and_filters.push(`{endTimeGte: "${filters.endDate?.format()}"}`);
+        }
 
         const orFilterString = or_filters.join(', ');
         const andFilterString = and_filters.join(', ');
-        return `{and: [{or: [${orFilterString}]}, ${andFilterString}]}`;
+        return `{and: [{or: [${orFilterString}]}, ${andFilterString},]}`;
     };
     const coreQuery = `
        edges {

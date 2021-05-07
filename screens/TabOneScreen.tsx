@@ -4,8 +4,12 @@ import { Ionicons } from '@expo/vector-icons';
 import { tailwind } from 'tailwind';
 import TrackingBar from '../features/clock/TrackingBar';
 import WeeklyCard from '../features/weeklySummary/WeeklyCard';
+import { useNumTrackedJobs } from '../features/job/api'
+import { useNumTrackedShifts} from '../features/clock/api'
 
 export default function TabOneScreen() {
+    const numTrackedJobsStatus = useNumTrackedJobs()
+    const numTrackedShiftsStatus = useNumTrackedShifts()
     return (
         <View style={tailwind('bg-gray-100 h-full')}>
             <TrackingBar />
@@ -18,14 +22,15 @@ export default function TabOneScreen() {
                     <View style={tailwind('border-b border-green-500 -mr-5 ml-5 p-0 pt-1 pb-2')}></View>
                     <View style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}>
                         <Text style={tailwind('text-gray-800 text-lg font-bold')}>
-                            2 tracked jobs
+                            {numTrackedJobsStatus.isLoading || numTrackedJobsStatus.isError ? "... tracked jobs" : `${numTrackedJobsStatus.data} tracked jobs`}
                         </Text>
                         <Ionicons name="caret-forward-outline" size={24} color="black" />
                     </View>
                     <View style={tailwind('border-b border-gray-200 ml-5 mr-5')}></View>
                     <View style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}>
                         <Text style={tailwind('text-gray-800 text-lg font-bold')}>
-                            1 total shifts
+
+                            {numTrackedShiftsStatus.isLoading || numTrackedShiftsStatus.isError ? "... tracked shifts" : `${numTrackedJobsStatus.data} tracked shifts`}
                         </Text>
                         <Ionicons name="caret-forward-outline" size={24} color="black" />
                     </View>

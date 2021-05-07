@@ -90,8 +90,28 @@ const DateRangeFilterPill = ({
     console.log('start end end props:', start, end);
     return (
         <>
+            <Pressable
+                style={[
+                    tailwind('rounded-2xl m-2 p-1 pl-2 pr-2 bg-gray-200'),
+                    start && end ? tailwind('bg-black') : null,
+                ]}
+                onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    setOpen(!open);
+                }}
+            >
+                <Text
+                    style={[
+                        tailwind('text-sm font-bold'),
+                        start && end ? tailwind('text-white') : tailwind('text-black'),
+                    ]}
+                >
+                    {pillText}
+                </Text>
+            </Pressable>
+
             <Modal
-                style={tailwind('flex-col h-full')}
+                style={tailwind('flex-col')}
                 onDismiss={() => setOpen(false)}
                 isVisible={open}
                 hasBackdrop={true}
@@ -99,7 +119,9 @@ const DateRangeFilterPill = ({
                     console.log('backdrop pressed');
                     setOpen(false);
                 }}
+                backdropOpacity={0.9}
                 presentationStyle={'overFullScreen'}
+                useNativeDriverForBackdrop={true}
                 swipeDirection={'down'}
                 onSwipeComplete={() => setOpen(false)}
                 onModalWillHide={() => {
@@ -147,22 +169,6 @@ const DateRangeFilterPill = ({
                     <Text style={tailwind('text-white text-xl font-bold self-center')}>Filter</Text>
                 </Pressable>
             </Modal>
-            <Pressable
-                style={[
-                    tailwind('rounded-2xl border m-2 p-1'),
-                    start && end ? tailwind('bg-black') : null,
-                ]}
-                onPress={() => setOpen(!open)}
-            >
-                <Text
-                    style={[
-                        tailwind('text-sm font-bold'),
-                        start && end ? tailwind('text-white') : tailwind('text-black'),
-                    ]}
-                >
-                    {pillText}
-                </Text>
-            </Pressable>
         </>
     );
 };
@@ -177,7 +183,10 @@ const NumericFilterPill = ({
     value: boolean;
 }) => (
     <Pressable
-        style={[tailwind('rounded-2xl border m-2 p-1'), value ? tailwind('bg-black') : null]}
+        style={[
+            tailwind('rounded-2xl m-2 p-1 pl-2 pr-2 bg-gray-200'),
+            value ? tailwind('bg-black') : null,
+        ]}
         onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onPress();
@@ -204,7 +213,10 @@ const BinaryFilterPill = ({
     value: boolean;
 }) => (
     <Pressable
-        style={[tailwind('rounded-2xl border m-2 p-1'), value ? tailwind('bg-black') : null]}
+        style={[
+            tailwind('rounded-2xl m-2 p-1 pl-2 pr-2 bg-gray-200'),
+            value ? tailwind('bg-black') : null,
+        ]}
         onPress={() => {
             Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             onPress();
@@ -247,8 +259,6 @@ export const JobFilterList = () => {
         )
     );
 
-    console.log('allJobs:', allJobs);
-
     return (
         <View style={tailwind('p-5 pt-10')}>
             <View style={tailwind('content-end flex-col')}>
@@ -290,13 +300,30 @@ export const JobFilterList = () => {
                     </View>
                     <View style={tailwind('flex-row p-2')}>
                         <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                            $
-                            {allJobs.edges
-                                .map((n) => n.node.tip)
-                                .reduce((a, b) => a + b, 0)
-                                .toFixed(1)}
+                            {(
+                                allJobs.edges
+                                    .map((n) =>
+                                        moment(n.node.endTime).diff(
+                                            moment(n.node.startTime),
+                                            'minutes'
+                                        )
+                                    )
+                                    .reduce((a, b) => a + b, 0) /
+                                (allJobs.edges.length > 0 ? allJobs.edges.length : 1) // don't divide by 0
+                            ).toFixed(0)}
                         </Text>
-                        <Text style={tailwind('text-xl font-bold')}> Tips</Text>
+                        <Text style={tailwind('text-xl font-bold')}> min (avg)</Text>
+                    </View>
+                    <View style={tailwind('flex-row p-2')}>
+                        <Text style={tailwind('text-xl text-green-500 font-bold')}>
+                            {allJobs.edges
+                                .map((n) =>
+                                    moment(n.node.endTime).diff(moment(n.node.startTime), 'minutes')
+                                )
+                                .reduce((a, b) => a + b, 0)
+                                .toFixed(0)}
+                        </Text>
+                        <Text style={tailwind('text-xl font-bold')}> min (total)</Text>
                     </View>
                 </View>
 
@@ -340,8 +367,8 @@ export const JobFilterList = () => {
                     />
                 </View>
             </View>
-            {filteredJobsStatus.isLoading || filteredJobsStatus.isError ? (
-                <Text>is loading...</Text>
+            {filteredJobsStatus.isLoading || filteredJobsStatus.isError || filteredJobsStatus.data.allJobs.edges.length === 0 ? (
+                <Text style={tailwind("text-xl font-bold text-black")}>No Jobs that match your filters!</Text>
             ) : (
                 <JobList jobs={filteredJobsStatus.data.allJobs.edges}></JobList>
             )}
