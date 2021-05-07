@@ -33,12 +33,12 @@ class JobFilter(FilterSet):
     class Meta:
         model = JobModel
         fields = {
-            'start_time': [...],
-            'end_time': [...],
-            'mileage': [...],
+            'start_time': ['gt', 'gte', 'lt', 'lte', 'range'],
+            'end_time': ['gt', 'gte', 'lt', 'lte', 'range'],
+            'mileage': ['gt', 'gte', 'lte', 'eq', 'range'],
             'employer': ['not_in', 'in', 'eq', 'ilike'],
-            'total_pay': [...],
-            'tip': [...]
+            'total_pay': ['is_null', 'gt', 'gte', 'lte', 'eq', 'range'],
+            'tip': ['is_null', 'gt', 'gte', 'lte', 'eq', 'range'],
         }
 
 
@@ -52,7 +52,6 @@ class FilterableAuthConnectionField(FilterableConnectionField):
     @classmethod
     @login_required
     def get_query(cls, model, info, sort=None, **args):
-
 
         query = super(FilterableAuthConnectionField, cls).get_query(
             model, info, sort=sort, **args)
