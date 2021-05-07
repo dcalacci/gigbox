@@ -1,15 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutAnimation, ScrollView, View, Text, Image, Pressable, TextInput } from 'react-native';
+import Modal from 'react-native-modal';
 import { tailwind } from 'tailwind';
 import { Region, Marker, LatLng } from 'react-native-maps';
 import { useQueryClient, useQuery, useMutation } from 'react-query';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 import { Job, Screenshot, Shift } from '../../types';
 import { parse } from 'wellknown';
 import TripMap from '../shiftList/TripMap';
 import ScreenshotUploader from './ScreenshotPicker';
+import DateRangePicker from './DateRangePicker';
 import { getFilteredJobs } from './api';
 import { JobItem } from './Job';
+import * as Haptics from 'expo-haptics';
 
 export enum SortArgs {
     START,
@@ -20,8 +23,8 @@ export enum SortArgs {
 }
 
 export interface JobFilter {
-    after: Date | undefined;
-    before: Date | undefined;
+    startDate: Moment | null;
+    endDate: Moment | null;
     needsEntry: boolean;
     saved: boolean;
     minTotalPay: number | undefined;
@@ -30,9 +33,26 @@ export interface JobFilter {
     sort: SortArgs | undefined;
 }
 
+{
+    /* <DateRangePicker
+                    backdropStyle={tailwind('bg-transparent')}
+                    presetButtons={true}
+                    onChange={(newDates: { startDate: Date | null; endDate: Date | null }) => {
+                        console.log('dates:', dates);
+                        setDates({ ...dates, ...newDates });
+                    }}
+                    endDate={dates.endDate}
+                    startDate={dates.startDate}
+                    displayedDate={displayedDate}
+                    open={true}
+                    range={true}
+                >
+                    <Text></Text>
+                </DateRangePicker> */
+}
 const defaultFilter: JobFilter = {
-    after: undefined,
-    before: undefined,
+    startDate: null,
+    endDate: null,
     needsEntry: false,
     saved: false,
     minTotalPay: undefined,
@@ -40,6 +60,113 @@ const defaultFilter: JobFilter = {
     minMileage: undefined,
     sort: undefined,
 };
+const DateRangeFilterPill = ({
+    displayText,
+    onPress,
+    onDateRangeChange,
+    start,
+    end,
+}: {
+    displayText: string;
+    onPress: () => void;
+    onDateRangeChange: (dates: { startDate: Moment | null; endDate: Moment | null }) => void;
+    start: Moment | null;
+    end: Moment | null;
+}) => {
+    const [open, setOpen] = useState<boolean>(false);
+    const [dates, setDates] = useState<{ startDate: Moment | null; endDate: Moment | null }>({
+        startDate: start,
+        endDate: end,
+    });
+    const [pillText, setPillText] = useState<string>(displayText);
+    useEffect(() => {
+        if (start !== null && end != null) {
+            setPillText(`${start.format('MM/DD/YY')}-${end.format('MM/DD/YY')}`);
+        } else {
+            setPillText(displayText);
+        }
+    }, [start, end]);
+
+    console.log('start end end props:', start, end);
+    return (
+        <>
+            <Modal
+                style={tailwind('flex-col h-full')}
+                onDismiss={() => setOpen(false)}
+                isVisible={open}
+                hasBackdrop={true}
+                onBackdropPress={() => {
+                    console.log('backdrop pressed');
+                    setOpen(false);
+                }}
+                presentationStyle={'overFullScreen'}
+                swipeDirection={'down'}
+                onSwipeComplete={() => setOpen(false)}
+                onModalWillHide={() => {
+                    if (dates.startDate == null || dates.endDate == null) {
+                        onDateRangeChange({ startDate: null, endDate: null });
+                    } else if (dates.startDate != start || dates.endDate != end) {
+                        onDateRangeChange(dates);
+                    }
+                }}
+            >
+                <DateRangePicker
+                    initialRange={[
+                        moment(dates.startDate).format('YYYY-MM-DD'),
+                        moment(dates.endDate).format('YYYY-MM-DD'),
+                    ]}
+                    onSuccess={(start, end) => {
+                        setDates({ startDate: moment(start), endDate: moment(end) });
+                    }}
+                    theme={{ markColor: '#0FB981', markTextColor: 'white' }}
+                />
+
+                <Pressable
+                    style={tailwind('justify-self-end rounded-2xl m-2 p-2 bg-red-300')}
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        onDateRangeChange({ startDate: null, endDate: null });
+                        setDates({ startDate: null, endDate: null });
+                        setOpen(false);
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
+                    }}
+                >
+                    <Text style={tailwind('text-white text-xl font-bold self-center')}>
+                        Clear Filter
+                    </Text>
+                </Pressable>
+                <Pressable
+                    style={tailwind('justify-self-end rounded-2xl m-2 p-2 bg-green-500')}
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        onDateRangeChange(dates);
+                        setOpen(false);
+                        LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
+                    }}
+                >
+                    <Text style={tailwind('text-white text-xl font-bold self-center')}>Filter</Text>
+                </Pressable>
+            </Modal>
+            <Pressable
+                style={[
+                    tailwind('rounded-2xl border m-2 p-1'),
+                    start && end ? tailwind('bg-black') : null,
+                ]}
+                onPress={() => setOpen(!open)}
+            >
+                <Text
+                    style={[
+                        tailwind('text-sm font-bold'),
+                        start && end ? tailwind('text-white') : tailwind('text-black'),
+                    ]}
+                >
+                    {pillText}
+                </Text>
+            </Pressable>
+        </>
+    );
+};
+
 const NumericFilterPill = ({
     displayText,
     onPress,
@@ -51,7 +178,10 @@ const NumericFilterPill = ({
 }) => (
     <Pressable
         style={[tailwind('rounded-2xl border m-2 p-1'), value ? tailwind('bg-black') : null]}
-        onPress={onPress}
+        onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onPress();
+        }}
     >
         <Text
             style={[
@@ -75,7 +205,10 @@ const BinaryFilterPill = ({
 }) => (
     <Pressable
         style={[tailwind('rounded-2xl border m-2 p-1'), value ? tailwind('bg-black') : null]}
-        onPress={onPress}
+        onPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            onPress();
+        }}
     >
         <Text
             style={[
@@ -114,7 +247,7 @@ export const JobFilterList = () => {
         )
     );
 
-    console.log("allJobs:", allJobs)
+    console.log('allJobs:', allJobs);
 
     return (
         <View style={tailwind('p-5 pt-10')}>
@@ -190,6 +323,20 @@ export const JobFilterList = () => {
                                 needsEntry: false,
                             })
                         }
+                    />
+                    <DateRangeFilterPill
+                        displayText={'Date Range'}
+                        onDateRangeChange={(dates: {
+                            startDate: Moment | null;
+                            endDate: Moment | null;
+                        }) => {
+                            setFilter({ ...filter, ...dates });
+                        }}
+                        start={filter.startDate}
+                        end={filter.endDate}
+                        onPress={() => {
+                            console.log('pressed date pill');
+                        }}
                     />
                 </View>
             </View>
