@@ -60,6 +60,9 @@ const defaultFilter: JobFilter = {
     minMileage: undefined,
     sort: undefined,
 };
+
+
+
 const DateRangeFilterPill = ({
     displayText,
     onPress,
@@ -85,9 +88,10 @@ const DateRangeFilterPill = ({
         } else {
             setPillText(displayText);
         }
+        setDates({startDate: start, endDate: end})
     }, [start, end]);
 
-    console.log('start end end props:', start, end);
+    console.log('start end end props:', start, end, dates);
     return (
         <>
             <Pressable
@@ -382,6 +386,28 @@ export const JobFilterList = () => {
                             }
                         }}
                     />
+                    <BinaryFilterPill
+                        displayText={'This Month'}
+                        value={
+                            filter.startDate?.isSame(moment().startOf('month')) &&
+                            filter.endDate?.isSame(moment().startOf('day'))
+                        }
+                        onPress={() => {
+                            if (
+                                filter.startDate?.isSame(moment().startOf('month')) &&
+                                filter.endDate?.isSame(moment().startOf('day'))
+                            ) {
+                                setFilter({ ...filter, startDate: null, endDate: null });
+                            } else {
+                                setFilter({
+                                    ...filter,
+                                    startDate: moment().startOf('month'),
+                                    endDate: moment().startOf('day'),
+                                });
+                            }
+                        }}
+                    />
+
                     <DateRangeFilterPill
                         displayText={'Date Range'}
                         onDateRangeChange={(dates: {
@@ -394,6 +420,27 @@ export const JobFilterList = () => {
                         end={filter.endDate}
                         onPress={() => {
                             console.log('pressed date pill');
+                        }}
+                    />
+                    <BinaryFilterPill
+                        displayText={'Past 30 Days'}
+                        value={
+                            filter.startDate?.isSame(moment().subtract(1, 'month').startOf('day')) &&
+                            filter.endDate?.isSame(moment().startOf('day'))
+                        }
+                        onPress={() => {
+                            if (
+                                filter.startDate?.isSame(moment().subtract(1, 'month').startOf('day')) &&
+                                filter.endDate?.isSame(moment().startOf('day'))
+                            ) {
+                                setFilter({ ...filter, startDate: null, endDate: null });
+                            } else {
+                                setFilter({
+                                    ...filter,
+                                    startDate: moment().subtract(1, 'month').startOf('day'),
+                                    endDate: moment().startOf('day'),
+                                });
+                            }
                         }}
                     />
                 </ScrollView>

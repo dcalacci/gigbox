@@ -79,7 +79,7 @@ export const getFilteredJobs = ({ queryKey }) => {
 
         if (filters.startDate && filters.endDate) {
             and_filters.push(`{startTimeGte: "${filters.startDate?.format()}"}`);
-            and_filters.push(`{endTimeGte: "${filters.endDate?.format()}"}`);
+            and_filters.push(`{endTimeLte: "${filters.endDate?.format()}"}`);
         }
 
         const orFilterString = or_filters.join(', ');
@@ -120,6 +120,8 @@ export const getFilteredJobs = ({ queryKey }) => {
                     }
                 }`;
     }
+
+    console.log("here's the whole query:", query)
     return client.request(query);
 };
 
