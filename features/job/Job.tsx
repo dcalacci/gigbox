@@ -1,12 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import {
-    ScrollView,
-    View,
-    Text,
-    Image,
-    Pressable,
-    TextInput,
-} from 'react-native';
+import { ScrollView, View, Text, Image, Pressable, TextInput } from 'react-native';
 import { tailwind } from 'tailwind';
 import { Region, Marker, LatLng } from 'react-native-maps';
 import { useQueryClient, useMutation } from 'react-query';
@@ -74,7 +67,7 @@ export const Screenshots = ({
 };
 
 // A single job, including its map, details, and screenshot uploader
-export const JobItem = ({ job}: { job: Job}) => {
+export const JobItem = ({ job }: { job: Job }) => {
     const [region, setRegion] = useState<Region>();
     const [locations, setLocations] = useState<LatLng>();
 
@@ -227,63 +220,78 @@ export const JobItem = ({ job}: { job: Job}) => {
                         tripLocations={locations}
                         region={region}
                     >
-                        {job.endLocation ?
-                        <Marker
-                            pinColor={'red'}
-                            coordinate={{
-                                longitude: parse(job.endLocation)?.coordinates[0] as number,
-                                latitude: parse(job.endLocation)?.coordinates[1] as number,
-                            }}
-                        ></Marker> : null}
+                        {job.endLocation ? (
+                            <Marker
+                                pinColor={'red'}
+                                coordinate={{
+                                    longitude: parse(job.endLocation)?.coordinates[0] as number,
+                                    latitude: parse(job.endLocation)?.coordinates[1] as number,
+                                }}
+                            ></Marker>
+                        ) : null}
 
-                        {job.endLocation ?
-                        <Marker
-                            pinColor={'green'}
-                            coordinate={{
-                                longitude: parse(job.startLocation)?.coordinates[0] as number,
-                                latitude: parse(job.startLocation)?.coordinates[1] as number,
-                            }}
-                        ></Marker> : null}
+                        {job.endLocation ? (
+                            <Marker
+                                pinColor={'green'}
+                                coordinate={{
+                                    longitude: parse(job.startLocation)?.coordinates[0] as number,
+                                    latitude: parse(job.startLocation)?.coordinates[1] as number,
+                                }}
+                            ></Marker>
+                        ) : null}
                     </TripMap>
                 ) : (
                     <Text>No locations recorded for this job</Text>
                 )}
             </View>
-            <View style={tailwind('flex-row p-5')}>
-                <Screenshots
-                    screenshots={job.screenshots}
-                    onPressAddScreenshots={() => setModalVisible(true)}
-                />
-                <View
-                    style={tailwind('flex flex-col flex-grow p-2 content-between justify-between')}
-                >
-                    <JobDetail
-                        label={'Mileage'}
-                        value={job.mileage}
-                        prefix={''}
-                        suffix={' mi'}
-                        placeholder={''}
-                        mutationKey={'setJobMileage'}
-                        dataKey={'mileage'}
+            <View style={tailwind('flex-col')}>
+                <View style={tailwind('flex-row justify-between p-2')}>
+                    <Text style={tailwind('text-xl font-bold')}>
+                        {moment(job.startTime).format('LL')}{' '}
+                    </Text>
+
+                    <Text style={tailwind('text-xl font-bold')}>
+                        {moment(job.startTime).format('LT')} - {moment(job.endTime).format('LT')}{' '}
+                    </Text>
+                </View>
+                <View style={tailwind('flex-row p-5')}>
+                    <Screenshots
+                        screenshots={job.screenshots}
+                        onPressAddScreenshots={() => setModalVisible(true)}
                     />
-                    <JobDetail
-                        label={'Total Pay'}
-                        value={job.totalPay}
-                        prefix={'$ '}
-                        suffix={''}
-                        placeholder={''}
-                        mutationKey={'setJobTotalPay'}
-                        dataKey={'totalPay'}
-                    ></JobDetail>
-                    <JobDetail
-                        label={'Tip'}
-                        value={job.tip}
-                        prefix={'$ '}
-                        suffix={''}
-                        placeholder={''}
-                        mutationKey={'setJobTip'}
-                        dataKey={'tip'}
-                    ></JobDetail>
+                    <View
+                        style={tailwind(
+                            'flex flex-col flex-grow p-2 content-between justify-between'
+                        )}
+                    >
+                        <JobDetail
+                            label={'Mileage'}
+                            value={job.mileage}
+                            prefix={''}
+                            suffix={' mi'}
+                            placeholder={''}
+                            mutationKey={'setJobMileage'}
+                            dataKey={'mileage'}
+                        />
+                        <JobDetail
+                            label={'Total Pay'}
+                            value={job.totalPay}
+                            prefix={'$ '}
+                            suffix={''}
+                            placeholder={''}
+                            mutationKey={'setJobTotalPay'}
+                            dataKey={'totalPay'}
+                        ></JobDetail>
+                        <JobDetail
+                            label={'Tip'}
+                            value={job.tip}
+                            prefix={'$ '}
+                            suffix={''}
+                            placeholder={''}
+                            mutationKey={'setJobTip'}
+                            dataKey={'tip'}
+                        ></JobDetail>
+                    </View>
                 </View>
             </View>
         </View>

@@ -235,7 +235,7 @@ const BinaryFilterPill = ({
 
 export const JobFilterList = () => {
     const [filter, setFilter] = useState<JobFilter>(defaultFilter);
-    const [allJobs, setAllJobs] = useState<{ edges: Job[] }>({ edges: [] });
+    const [allJobs, setAllJobs] = useState<{ edges: { node: Job }[] }>({ edges: [] });
     const filteredJobsStatus = useQuery(['filteredJobs', filter], getFilteredJobs, {
         keepPreviousData: true,
         onSuccess: (data) => {
@@ -259,9 +259,41 @@ export const JobFilterList = () => {
         )
     );
 
+    const avgTime = (edges: { node: Job }[]) => {
+        const m =
+            edges
+                .map((n) => moment(n.node.endTime).diff(moment(n.node.startTime), 'minutes'))
+                .reduce((a, b) => a + b, 0) / (edges.length > 0 ? edges.length : 1);
+        const hr = m > 60;
+        return (
+            <>
+                <Text style={tailwind('text-xl text-green-500 font-bold')}>
+                    {hr ? (m / 60).toFixed(0) : m.toFixed(0)}
+                </Text>
+                <Text style={tailwind('text-xl font-bold')}> {hr ? 'hr' : 'min'} (avg)</Text>
+            </>
+        );
+    };
+
+    const totalTime = (edges: { node: Job }[]) => {
+        const m = edges
+            .map((n) => moment(n.node.endTime).diff(moment(n.node.startTime), 'minutes'))
+            .reduce((a, b) => a + b, 0);
+        
+        const hr = m > 60;
+        return (
+            <>
+                <Text style={tailwind('text-xl text-green-500 font-bold')}>
+                    {hr ? (m / 60).toFixed(0) : m.toFixed(0)}
+                </Text>
+                <Text style={tailwind('text-xl font-bold')}> {hr ? 'hr' : 'min'} (total)</Text>
+            </>
+        );
+    };
+
     return (
-        <View style={tailwind('p-5 pt-10')}>
-            <View style={tailwind('content-end flex-col')}>
+        <View style={tailwind('p-5 pt-10 flex-col')}>
+            <View style={tailwind('flex-col')}>
                 <View style={tailwind('flex-row p-2')}>
                     <Text style={tailwind('text-3xl text-green-500 font-bold')}>
                         {allJobs.edges.length}
@@ -282,7 +314,7 @@ export const JobFilterList = () => {
                         <Text style={tailwind('text-xl text-green-500 font-bold')}>
                             $
                             {allJobs.edges
-                                .map((n) => n.node.totalPay)
+                                .map((n) => (n.node.totalPay ? n.node.totalPay : 0))
                                 .reduce((a, b) => a + b, 0)
                                 .toFixed(1)}
                         </Text>
@@ -292,43 +324,21 @@ export const JobFilterList = () => {
                         <Text style={tailwind('text-xl text-green-500 font-bold')}>
                             $
                             {allJobs.edges
-                                .map((n) => n.node.tip)
+                                .map((n) => (n.node.tip ? n.node.tip : 0))
                                 .reduce((a, b) => a + b, 0)
                                 .toFixed(1)}
                         </Text>
                         <Text style={tailwind('text-xl font-bold')}> Tips</Text>
                     </View>
-                    <View style={tailwind('flex-row p-2')}>
-                        <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                            {(
-                                allJobs.edges
-                                    .map((n) =>
-                                        moment(n.node.endTime).diff(
-                                            moment(n.node.startTime),
-                                            'minutes'
-                                        )
-                                    )
-                                    .reduce((a, b) => a + b, 0) /
-                                (allJobs.edges.length > 0 ? allJobs.edges.length : 1) // don't divide by 0
-                            ).toFixed(0)}
-                        </Text>
-                        <Text style={tailwind('text-xl font-bold')}> min (avg)</Text>
-                    </View>
-                    <View style={tailwind('flex-row p-2')}>
-                        <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                            {allJobs.edges
-                                .map((n) =>
-                                    moment(n.node.endTime).diff(moment(n.node.startTime), 'minutes')
-                                )
-                                .reduce((a, b) => a + b, 0)
-                                .toFixed(0)}
-                        </Text>
-                        <Text style={tailwind('text-xl font-bold')}> min (total)</Text>
-                    </View>
+                    <View style={tailwind('flex-row p-2')}>{avgTime(allJobs.edges)}</View>
+                    <View style={tailwind('flex-row p-2')}>{totalTime(allJobs.edges)}</View>
                 </View>
 
-                <View style={tailwind('border-b border-gray-200 h-1 mb-2 mr-5 ml-0')} />
-                <View style={tailwind('overflow-scroll content-around flex-row ')}>
+                <View style={tailwind('border-b border-gray-200 h-1 mb-2 mr-5 ml-5')} />
+                <ScrollView
+                    horizontal={true}
+                    style={tailwind('content-around flex-row flex-none border-b border-gray-200')}
+                >
                     <BinaryFilterPill
                         displayText={'Needs Entry'}
                         value={filter.needsEntry}
@@ -351,6 +361,27 @@ export const JobFilterList = () => {
                             })
                         }
                     />
+                    <BinaryFilterPill
+                        displayText={'This Week'}
+                        value={
+                            filter.startDate?.isSame(moment().startOf('week')) &&
+                            filter.endDate?.isSame(moment().startOf('day'))
+                        }
+                        onPress={() => {
+                            if (
+                                filter.startDate?.isSame(moment().startOf('week')) &&
+                                filter.endDate?.isSame(moment().startOf('day'))
+                            ) {
+                                setFilter({ ...filter, startDate: null, endDate: null });
+                            } else {
+                                setFilter({
+                                    ...filter,
+                                    startDate: moment().startOf('week'),
+                                    endDate: moment().startOf('day'),
+                                });
+                            }
+                        }}
+                    />
                     <DateRangeFilterPill
                         displayText={'Date Range'}
                         onDateRangeChange={(dates: {
@@ -365,10 +396,16 @@ export const JobFilterList = () => {
                             console.log('pressed date pill');
                         }}
                     />
-                </View>
+                </ScrollView>
             </View>
-            {filteredJobsStatus.isLoading || filteredJobsStatus.isError || filteredJobsStatus.data.allJobs.edges.length === 0 ? (
-                <Text style={tailwind("text-xl font-bold text-black")}>No Jobs that match your filters!</Text>
+            {filteredJobsStatus.isLoading ||
+            filteredJobsStatus.isError ||
+            filteredJobsStatus.data.allJobs.edges.length === 0 ? (
+                <View style={tailwind('flex-col flex-grow justify-center items-center')}>
+                    <Text style={tailwind('text-xl font-bold text-black pt-20')}>
+                        No Jobs that match your filters!
+                    </Text>
+                </View>
             ) : (
                 <JobList jobs={filteredJobsStatus.data.allJobs.edges}></JobList>
             )}
