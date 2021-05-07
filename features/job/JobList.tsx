@@ -90,6 +90,7 @@ const BinaryFilterPill = ({
 
 export const JobFilterList = () => {
     const [filter, setFilter] = useState<JobFilter>(defaultFilter);
+    const [allJobs, setAllJobs] = useState<{ edges: Job[] }>({ edges: [] });
     const filteredJobsStatus = useQuery(['filteredJobs', filter], getFilteredJobs, {
         keepPreviousData: true,
         onSuccess: (data) => {
@@ -105,19 +106,29 @@ export const JobFilterList = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
     }, [filter]);
 
+    useEffect(() =>
+        setAllJobs(
+            filteredJobsStatus.isLoading || filteredJobsStatus.isError
+                ? { edges: [] }
+                : filteredJobsStatus.data.allJobs
+        )
+    );
+
+    console.log("allJobs:", allJobs)
+
     return (
         <View style={tailwind('p-5 pt-10')}>
             <View style={tailwind('content-end flex-col')}>
                 <View style={tailwind('flex-row p-2')}>
                     <Text style={tailwind('text-3xl text-green-500 font-bold')}>
-                        {filteredJobsStatus.data.allJobs.edges.length}
+                        {allJobs.edges.length}
                     </Text>
                     <Text style={tailwind('text-3xl font-bold')}> Jobs</Text>
                 </View>
                 <View style={tailwind('flex-row p-2 flex-wrap')}>
                     <View style={tailwind('flex-row p-2')}>
                         <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                            {filteredJobsStatus.data.allJobs.edges
+                            {allJobs.edges
                                 .map((n) => n.node.mileage)
                                 .reduce((a, b) => a + b, 0)
                                 .toFixed(1)}
@@ -127,7 +138,7 @@ export const JobFilterList = () => {
                     <View style={tailwind('flex-row p-2')}>
                         <Text style={tailwind('text-xl text-green-500 font-bold')}>
                             $
-                            {filteredJobsStatus.data.allJobs.edges
+                            {allJobs.edges
                                 .map((n) => n.node.totalPay)
                                 .reduce((a, b) => a + b, 0)
                                 .toFixed(1)}
@@ -137,7 +148,7 @@ export const JobFilterList = () => {
                     <View style={tailwind('flex-row p-2')}>
                         <Text style={tailwind('text-xl text-green-500 font-bold')}>
                             $
-                            {filteredJobsStatus.data.allJobs.edges
+                            {allJobs.edges
                                 .map((n) => n.node.tip)
                                 .reduce((a, b) => a + b, 0)
                                 .toFixed(1)}
@@ -147,7 +158,7 @@ export const JobFilterList = () => {
                     <View style={tailwind('flex-row p-2')}>
                         <Text style={tailwind('text-xl text-green-500 font-bold')}>
                             $
-                            {filteredJobsStatus.data.allJobs.edges
+                            {allJobs.edges
                                 .map((n) => n.node.tip)
                                 .reduce((a, b) => a + b, 0)
                                 .toFixed(1)}
@@ -162,14 +173,22 @@ export const JobFilterList = () => {
                         displayText={'Needs Entry'}
                         value={filter.needsEntry}
                         onPress={() =>
-                            setFilter({ ...filter, needsEntry: !filter.needsEntry ? true : false, saved: false})
+                            setFilter({
+                                ...filter,
+                                needsEntry: !filter.needsEntry ? true : false,
+                                saved: false,
+                            })
                         }
                     />
                     <BinaryFilterPill
                         displayText={'Saved'}
                         value={filter.saved}
                         onPress={() =>
-                            setFilter({ ...filter, saved: !filter.saved ? true : false, needsEntry: false})
+                            setFilter({
+                                ...filter,
+                                saved: !filter.saved ? true : false,
+                                needsEntry: false,
+                            })
                         }
                     />
                 </View>
