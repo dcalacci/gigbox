@@ -13,6 +13,7 @@ import DateRangePicker from './DateRangePicker';
 import { getFilteredJobs } from './api';
 import { JobItem } from './Job';
 import * as Haptics from 'expo-haptics';
+import { fileAsyncTransport } from 'react-native-logs';
 
 export enum SortArgs {
     START,
@@ -44,8 +45,6 @@ const defaultFilter: JobFilter = {
     sort: undefined,
 };
 
-
-
 const DateRangeFilterPill = ({
     displayText,
     onPress,
@@ -71,7 +70,7 @@ const DateRangeFilterPill = ({
         } else {
             setPillText(displayText);
         }
-        setDates({startDate: start, endDate: end})
+        setDates({ startDate: start, endDate: end });
     }, [start, end]);
 
     console.log('start end end props:', start, end, dates);
@@ -220,15 +219,25 @@ const BinaryFilterPill = ({
     </Pressable>
 );
 
-export const JobFilterList = () => {
-    const [filter, setFilter] = useState<JobFilter>(defaultFilter);
+export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
+    console.log('input filters:', inputFilters);
+    // routing gives us dates as strings, so convert them
+    const [filter, setFilter] = useState<JobFilter>(inputFilters ? inputFilters : defaultFilter);
     const [allJobs, setAllJobs] = useState<{ edges: { node: Job }[] }>({ edges: [] });
+
     const filteredJobsStatus = useQuery(['filteredJobs', filter], getFilteredJobs, {
         keepPreviousData: true,
         onSuccess: (data) => {
             console.log('SUCCESS:', data);
         },
     });
+
+    useEffect(() => {
+        if (inputFilters) {
+            setFilter({ ...inputFilters });
+        }
+    }, [inputFilters]);
+
     const queryClient = useQueryClient();
     console.log('Filtered jobs status:', filteredJobsStatus);
     console.log('new filter:', filter);
@@ -266,7 +275,7 @@ export const JobFilterList = () => {
         const m = edges
             .map((n) => moment(n.node.endTime).diff(moment(n.node.startTime), 'minutes'))
             .reduce((a, b) => a + b, 0);
-        
+
         const hr = m > 60;
         return (
             <>
@@ -349,22 +358,47 @@ export const JobFilterList = () => {
                         }
                     />
                     <BinaryFilterPill
+                        displayText={'Today'}
+                        value={
+                            // use 'hour' here because the endOf is not precise when parsed from a string, like from our route params (not sure why)
+                            (filter.startDate?.isSame(moment().startOf('day'), 'hour') &&
+                                filter.endDate?.isSame(moment().endOf('day'), 'hour')) ||
+                            false
+                        }
+                        onPress={() => {
+                            if (
+                                filter.startDate?.isSame(moment().startOf('day'), 'hour') &&
+                                filter.endDate?.isSame(moment().endOf('day'), 'hour')
+                            ) {
+                                setFilter({ ...filter, startDate: null, endDate: null });
+                            } else {
+                                setFilter({
+                                    ...filter,
+                                    startDate: moment().startOf('day'),
+                                    endDate: moment().endOf('day'),
+                                });
+                            }
+                        }}
+                    />
+
+                    <BinaryFilterPill
                         displayText={'This Week'}
                         value={
-                            filter.startDate?.isSame(moment().startOf('week')) &&
-                            filter.endDate?.isSame(moment().startOf('day'))
+                            (filter.startDate?.isSame(moment().startOf('week')) &&
+                                filter.endDate?.isSame(moment().endOf('day'))) ||
+                            false
                         }
                         onPress={() => {
                             if (
                                 filter.startDate?.isSame(moment().startOf('week')) &&
-                                filter.endDate?.isSame(moment().startOf('day'))
+                                filter.endDate?.isSame(moment().endOf('day'))
                             ) {
                                 setFilter({ ...filter, startDate: null, endDate: null });
                             } else {
                                 setFilter({
                                     ...filter,
                                     startDate: moment().startOf('week'),
-                                    endDate: moment().startOf('day'),
+                                    endDate: moment().endOf('day'),
                                 });
                             }
                         }}
@@ -373,19 +407,19 @@ export const JobFilterList = () => {
                         displayText={'This Month'}
                         value={
                             filter.startDate?.isSame(moment().startOf('month')) &&
-                            filter.endDate?.isSame(moment().startOf('day'))
+                            filter.endDate?.isSame(moment().endOf('day'))
                         }
                         onPress={() => {
                             if (
                                 filter.startDate?.isSame(moment().startOf('month')) &&
-                                filter.endDate?.isSame(moment().startOf('day'))
+                                filter.endDate?.isSame(moment().endOf('day'))
                             ) {
                                 setFilter({ ...filter, startDate: null, endDate: null });
                             } else {
                                 setFilter({
                                     ...filter,
                                     startDate: moment().startOf('month'),
-                                    endDate: moment().startOf('day'),
+                                    endDate: moment().endOf('day'),
                                 });
                             }
                         }}
@@ -408,12 +442,15 @@ export const JobFilterList = () => {
                     <BinaryFilterPill
                         displayText={'Past 30 Days'}
                         value={
-                            filter.startDate?.isSame(moment().subtract(1, 'month').startOf('day')) &&
-                            filter.endDate?.isSame(moment().startOf('day'))
+                            filter.startDate?.isSame(
+                                moment().subtract(1, 'month').startOf('day')
+                            ) && filter.endDate?.isSame(moment().startOf('day'))
                         }
                         onPress={() => {
                             if (
-                                filter.startDate?.isSame(moment().subtract(1, 'month').startOf('day')) &&
+                                filter.startDate?.isSame(
+                                    moment().subtract(1, 'month').startOf('day')
+                                ) &&
                                 filter.endDate?.isSame(moment().startOf('day'))
                             ) {
                                 setFilter({ ...filter, startDate: null, endDate: null });

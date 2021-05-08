@@ -73,7 +73,6 @@ export const JobItem = ({ job }: { job: Job }) => {
 
     const [modalVisible, setModalVisible] = useState(false);
     useEffect(() => {
-        console.log('job snapped geometry:', job.snappedGeometry);
         if (job.snappedGeometry) {
             const { geometries, bounding_box } = JSON.parse(job.snappedGeometry);
             const locations = geometries.map((c: [number, number]) => {
@@ -89,8 +88,6 @@ export const JobItem = ({ job }: { job: Job }) => {
             });
         }
     }, [job.snappedGeometry]);
-
-    console.log('Rendering job item:', job);
 
     const JobDetail = ({
         label,
@@ -123,7 +120,6 @@ export const JobItem = ({ job }: { job: Job }) => {
 
         // set value from our input, and submit mutation
         useEffect(() => {
-            console.log(`${label} value: ${value}`);
             if (value) {
                 setDisplayValue(
                     typeof value === 'number' ? value.toFixed(2) : parseFloat(value).toFixed(2)

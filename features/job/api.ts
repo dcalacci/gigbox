@@ -33,7 +33,7 @@ export const updateJobValue = ({
     });
 };
 
-export const useNumTrackedJobs = () => {
+export const useNumTrackedJobsToday = () => {
     return useQuery(
         ['trackedJobs'],
         () => {
@@ -41,6 +41,31 @@ export const useNumTrackedJobs = () => {
             const todayString = moment().format();
             const query = gql`query {
             allJobs(filters: {startTimeGte: "${todayString}"}) {
+                edges {
+                    node { 
+                        id
+                    }
+                }
+            }
+        }
+        `;
+            return client.request(query);
+        },
+        {
+            select: (d) => d.allJobs.edges.length,
+        }
+    );
+};
+
+
+export const useNumJobsNeedEntryToday= () => {
+    return useQuery(
+        ['trackedJobs'],
+        () => {
+            const client = getClient(store);
+            const todayString = moment().format();
+            const query = gql`query {
+            allJobs(filters: {and: [{startTimeGte: "${todayString}"}, {or: [{totalPayIsNull: true}, {tipIsNull: true}]}]}) {
                 edges {
                     node { 
                         id
@@ -123,69 +148,4 @@ export const getFilteredJobs = ({ queryKey }) => {
 
     console.log("here's the whole query:", query)
     return client.request(query);
-};
-
-export const useFilteredJobs = (filters: JobFilter | undefined): UseQueryResult => {
-    console.log('Recieved filters:', filters);
-    return useQuery<{ allJobs: { data: { edges: [{ node: Job }] } } }>(
-        ['filteredJobs', filters],
-        (filters) => {
-            const client = getClient(store);
-            const createFilterString = (filters: JobFilter): string => {
-                let or_filters = [];
-
-                if (filters.needsEntry) {
-                    or_filters.push(`{totalPayIsNull: true}`);
-                    or_filters.push(`{tipIsNull: true}`);
-                }
-                if (filters.minMileage) or_filters.push(`{mileageGte: ${filters.minMileage}}`);
-
-                const orFilterString = or_filters.join(', ');
-                return `{or: [${orFilterString}]}`;
-            };
-            const coreQuery = `
-       edges {
-                node {
-                    id
-                    startTime
-                    endTime
-                    startLocation
-                    endLocation
-                    mileage
-                    estimatedMileage
-                    totalPay
-                    tip
-                    snappedGeometry
-                    employer
-                }
-            }
-        `;
-
-            let query;
-            if (filters) {
-                const filterString = createFilterString(filters);
-                console.log('filter string:', filterString);
-
-                query = gql`query {
-                allJobs(filters: ${filterString}) {
-                ${coreQuery}
-         }}`;
-            } else {
-                query = gql`query {
-                    allJobs {
-                        ${coreQuery}
-                    }
-                }`;
-            }
-            return client.request(query);
-        },
-        {
-            onSuccess: (data) => {
-                console.log('SUCCESS:', data);
-            },
-            onError: (err) => {
-                console.log('ERROR', err);
-            },
-        }
-    );
 };
