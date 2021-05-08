@@ -4,12 +4,15 @@ import { Ionicons } from '@expo/vector-icons';
 import { tailwind } from 'tailwind';
 import TrackingBar from '../features/clock/TrackingBar';
 import WeeklyCard from '../features/weeklySummary/WeeklyCard';
-import { useNumTrackedJobs } from '../features/job/api'
-import { useNumTrackedShifts} from '../features/clock/api'
+import { useNumJobsNeedEntryToday, useNumTrackedJobsToday } from '../features/job/api';
+import { useNumTrackedShifts } from '../features/clock/api';
+import { useLinkProps } from '@react-navigation/native';
+import moment from 'moment';
 
-export default function TabOneScreen() {
-    const numTrackedJobsStatus = useNumTrackedJobs()
-    const numTrackedShiftsStatus = useNumTrackedShifts()
+export default function TabOneScreen({ navigation }) {
+    const numTrackedJobsStatus = useNumTrackedJobsToday();
+    const numJobsTodayNeedEntry = useNumJobsNeedEntryToday();
+    const numTrackedShiftsStatus = useNumTrackedShifts();
     return (
         <View style={tailwind('bg-gray-100 h-full')}>
             <TrackingBar />
@@ -19,18 +22,54 @@ export default function TabOneScreen() {
                         Today
                     </Text>
 
-                    <View style={tailwind('border-b border-green-500 -mr-5 ml-5 p-0 pt-1 pb-2')}></View>
-                    <View style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}>
+                    <View
+                        style={tailwind('border-b border-green-500 -mr-5 ml-5 p-0 pt-1 pb-2')}
+                    ></View>
+                    <Pressable
+                        style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}
+                        onPress={() =>
+                            navigation.navigate('Jobs List', {
+                                filters: {
+                                    startDate: moment().startOf('day').format(),
+                                    endDate: moment().endOf('day').format(),
+                                },
+                            })
+                        }
+                    >
                         <Text style={tailwind('text-gray-800 text-lg font-bold')}>
-                            {numTrackedJobsStatus.isLoading || numTrackedJobsStatus.isError ? "... tracked jobs" : `${numTrackedJobsStatus.data} tracked jobs`}
+                            {numTrackedJobsStatus.isLoading || numTrackedJobsStatus.isError
+                                ? '... tracked jobs'
+                                : `${numTrackedJobsStatus.data} tracked jobs`}
                         </Text>
                         <Ionicons name="caret-forward-outline" size={24} color="black" />
-                    </View>
+                    </Pressable>
+
+                    <View style={tailwind('border-b border-gray-200 ml-5 mr-5')}></View>
+                    <Pressable
+                        style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}
+                        onPress={() =>
+                            navigation.navigate('Jobs List', {
+                                filters: {
+                                    needsEntry: true,
+                                    startDate: moment().startOf('day').format(),
+                                    endDate: moment().endOf('day').format(),
+                                },
+                            })
+                        }
+                    >
+                        <Text style={tailwind('text-gray-800 text-lg font-bold')}>
+                            {numJobsTodayNeedEntry.isLoading || numJobsTodayNeedEntry.isError
+                                ? '... tracked jobs'
+                                : `${numJobsTodayNeedEntry.data} jobs that need entry`}
+                        </Text>
+                        <Ionicons name="caret-forward-outline" size={24} color="black" />
+                    </Pressable>
                     <View style={tailwind('border-b border-gray-200 ml-5 mr-5')}></View>
                     <View style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}>
                         <Text style={tailwind('text-gray-800 text-lg font-bold')}>
-
-                            {numTrackedShiftsStatus.isLoading || numTrackedShiftsStatus.isError ? "... tracked shifts" : `${numTrackedJobsStatus.data} tracked shifts`}
+                            {numTrackedShiftsStatus.isLoading || numTrackedShiftsStatus.isError
+                                ? '... tracked shifts'
+                                : `${numTrackedJobsStatus.data} tracked shifts`}
                         </Text>
                         <Ionicons name="caret-forward-outline" size={24} color="black" />
                     </View>

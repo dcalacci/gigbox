@@ -26,15 +26,7 @@ const WeeklyCard: FunctionComponent = () => {
                 </Text>
 
                 <View style={tailwind('border-b border-green-500 -mr-5 ml-5 p-0 pt-1 pb-2')}></View>
-                <View style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}>
-                    <Text style={tailwind('text-gray-800 text-lg font-bold')}>
-                        2 Jobs with no entered earnings
-                    </Text>
-                    <Ionicons name="caret-forward-outline" size={24} color="black" />
-                </View>
-                <View style={tailwind('border-b border-gray-200 ml-5 mr-5')}></View>
-
-                <View style={tailwind('flex-row flex-wrap items-start mt-5')}>
+                <View style={tailwind('flex-row flex-wrap items-start content-around mt-5 pb-5')}>
                     <View style={tailwind('flex-col items-start w-1/3 flex-auto')}>
                         <Text style={tailwind('ml-1')}>jobs with pay</Text>
 
@@ -49,8 +41,6 @@ const WeeklyCard: FunctionComponent = () => {
                             {summary.numJobs}
                         </Text>
                     </View>
-
-
 
                     <View style={tailwind('flex-col items-start w-1/3 flex-auto')}>
                         <Text style={tailwind('ml-1')}>total pay</Text>
@@ -73,6 +63,14 @@ const WeeklyCard: FunctionComponent = () => {
                             {summary.miles.toFixed(2)}mi
                         </Text>
                     </View>
+                </View>
+
+                <View style={tailwind('border-b border-gray-200 ml-5 mr-5')}></View>
+                <View style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}>
+                    <Text style={tailwind('text-gray-800 text-lg font-bold')}>
+                        2 Jobs with no entered earnings
+                    </Text>
+                    <Ionicons name="caret-forward-outline" size={24} color="black" />
                 </View>
             </View>
         );
