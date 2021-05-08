@@ -1,13 +1,16 @@
 import React, { FunctionComponent, useState } from 'react';
-import { StyleSheet, Text, View, SafeAreaView } from 'react-native';
+import { Pressable, StyleSheet, Text, View, SafeAreaView } from 'react-native';
+import moment from 'moment'
 import { tailwind } from 'tailwind';
 import { useQuery } from 'react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchWeeklySummary } from './api';
 import { log } from '../../utils';
+import { useNumJobsNeedEntryThisWeek } from '../job/api';
 
-const WeeklyCard: FunctionComponent = () => {
+const WeeklyCard: FunctionComponent = ({navigation}) => {
     const weeklySummary = useQuery('weeklySummary', fetchWeeklySummary);
+    const jobsNeedEntryStatus = useNumJobsNeedEntryThisWeek();
     if (weeklySummary.isError) log.error(weeklySummary);
     if (weeklySummary.isLoading || weeklySummary.isError) {
         return (
@@ -35,14 +38,6 @@ const WeeklyCard: FunctionComponent = () => {
                         </Text>
                     </View>
                     <View style={tailwind('flex-col items-start w-1/3 flex-auto')}>
-                        <Text style={tailwind('ml-1')}>jobs w/ no pay</Text>
-
-                        <Text style={tailwind('text-2xl text-red-500 font-bold')}>
-                            {summary.numJobs}
-                        </Text>
-                    </View>
-
-                    <View style={tailwind('flex-col items-start w-1/3 flex-auto')}>
                         <Text style={tailwind('ml-1')}>total pay</Text>
 
                         <Text style={tailwind('text-2xl text-green-500 font-bold')}>
@@ -66,12 +61,25 @@ const WeeklyCard: FunctionComponent = () => {
                 </View>
 
                 <View style={tailwind('border-b border-gray-200 ml-5 mr-5')}></View>
-                <View style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}>
+                <Pressable
+                    style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}
+                    onPress={() =>
+                        navigation.navigate('Jobs List', {
+                            filters: {
+                                startDate: moment().startOf('week').format(),
+                                endDate: moment().endOf('day').format(),
+                                needsEntry: true
+                            },
+                        })
+                    }
+                >
                     <Text style={tailwind('text-gray-800 text-lg font-bold')}>
-                        2 Jobs with no entered earnings
+                        {jobsNeedEntryStatus.isLoading || jobsNeedEntryStatus.isError
+                            ? '... jobs that need entry'
+                            : `${jobsNeedEntryStatus.data} jobs that need entry`}
                     </Text>
                     <Ionicons name="caret-forward-outline" size={24} color="black" />
-                </View>
+                </Pressable>
             </View>
         );
     }

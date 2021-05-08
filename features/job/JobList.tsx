@@ -35,8 +35,8 @@ export interface JobFilter {
 }
 
 const defaultFilter: JobFilter = {
-    startDate: null,
-    endDate: null,
+    startDate: moment().startOf('week'),
+    endDate: moment().endOf('day'),
     needsEntry: false,
     saved: false,
     minTotalPay: undefined,
@@ -73,7 +73,6 @@ const DateRangeFilterPill = ({
         setDates({ startDate: start, endDate: end });
     }, [start, end]);
 
-    console.log('start end end props:', start, end, dates);
     return (
         <>
             <Pressable
@@ -384,14 +383,14 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
                     <BinaryFilterPill
                         displayText={'This Week'}
                         value={
-                            (filter.startDate?.isSame(moment().startOf('week')) &&
-                                filter.endDate?.isSame(moment().endOf('day'))) ||
+                            (filter.startDate?.isSame(moment().startOf('week'), 'day') &&
+                                filter.endDate?.isSame(moment().endOf('day'), 'day')) ||
                             false
                         }
                         onPress={() => {
                             if (
-                                filter.startDate?.isSame(moment().startOf('week')) &&
-                                filter.endDate?.isSame(moment().endOf('day'))
+                                filter.startDate?.isSame(moment().startOf('week'), 'day') &&
+                                filter.endDate?.isSame(moment().endOf('day'), 'day')
                             ) {
                                 setFilter({ ...filter, startDate: null, endDate: null });
                             } else {
@@ -406,13 +405,13 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
                     <BinaryFilterPill
                         displayText={'This Month'}
                         value={
-                            filter.startDate?.isSame(moment().startOf('month')) &&
-                            filter.endDate?.isSame(moment().endOf('day'))
+                            filter.startDate?.isSame(moment().startOf('month'), 'day') &&
+                            filter.endDate?.isSame(moment().endOf('day'), 'day')
                         }
                         onPress={() => {
                             if (
-                                filter.startDate?.isSame(moment().startOf('month')) &&
-                                filter.endDate?.isSame(moment().endOf('day'))
+                                filter.startDate?.isSame(moment().startOf('month'), 'day') &&
+                                filter.endDate?.isSame(moment().endOf('day'), 'day')
                             ) {
                                 setFilter({ ...filter, startDate: null, endDate: null });
                             } else {

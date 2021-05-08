@@ -76,7 +76,7 @@ export default function TabOneScreen({ navigation }) {
                     <View style={tailwind('border-b border-gray-200 ml-5 mr-5')}></View>
                 </Pressable>
 
-                <WeeklyCard />
+                <WeeklyCard navigation={navigation} />
             </ScrollView>
         </View>
     );
