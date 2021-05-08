@@ -38,7 +38,7 @@ export const useNumTrackedJobsToday = () => {
         ['trackedJobs'],
         () => {
             const client = getClient(store);
-            const todayString = moment().format();
+            const todayString = moment().startOf('day').format();
             const query = gql`query {
             allJobs(filters: {startTimeGte: "${todayString}"}) {
                 edges {
@@ -57,13 +57,12 @@ export const useNumTrackedJobsToday = () => {
     );
 };
 
-
-export const useNumJobsNeedEntryToday= () => {
+export const useNumJobsNeedEntryToday = () => {
     return useQuery(
         ['trackedJobs'],
         () => {
             const client = getClient(store);
-            const todayString = moment().format();
+            const todayString = moment().startOf('day').format();
             const query = gql`query {
             allJobs(filters: {and: [{startTimeGte: "${todayString}"}, {or: [{totalPayIsNull: true}, {tipIsNull: true}]}]}) {
                 edges {
@@ -82,13 +81,39 @@ export const useNumJobsNeedEntryToday= () => {
     );
 };
 
+export const useNumJobsNeedEntryThisWeek = () => {
+    return useQuery(
+        ['trackedJobs'],
+        () => {
+            const client = getClient(store);
+            const startStr = moment().startOf('week').format();
+            const query = gql`query {
+            allJobs(filters: {and: [{startTimeGte: "${startStr}"}, {or: [{totalPayIsNull: true}, {tipIsNull: true}]}]}) {
+                edges {
+                    node { 
+                        id
+                    }
+                }
+            }
+        }
+        `;
+            return client.request(query);
+        },
+        {
+            select: (d) => d.allJobs.edges.length,
+        }
+    );
+};
+
+
+
 export const getFilteredJobs = ({ queryKey }) => {
     const filters = queryKey[1];
     console.log('filters in query:', filters);
     const client = getClient(store);
     const createFilterString = (filters: JobFilter): string => {
         let or_filters = [];
-        let and_filters = [`{mileageIsNull: false}`];
+        let and_filters = [`{mileageIsNull: false}, {endTimeIsNull: false}`];
 
         if (filters.needsEntry) {
             or_filters.push(`{totalPayIsNull: true}`);
@@ -146,6 +171,5 @@ export const getFilteredJobs = ({ queryKey }) => {
                 }`;
     }
 
-    console.log("here's the whole query:", query)
     return client.request(query);
 };
