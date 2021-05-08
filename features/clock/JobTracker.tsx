@@ -77,6 +77,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                 setActiveJob(undefined);
                 setJobStarted(false);
                 setEmployer(undefined);
+                queryClient.invalidateQueries('trackedJobs')
             } else {
                 //TODO: send toast
                 log.error('failed to end job...');
