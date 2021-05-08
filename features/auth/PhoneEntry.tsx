@@ -86,8 +86,8 @@ const PhoneEntry: React.FC = (props) => {
                     <Pressable
                         style={tailwind('items-center rounded-md py-2 w-full mt-6 bg-gray-800')}
                         onPress={() => {
-                            toast?.show(`Sending code to ${phone}`)
-                            dispatch(requestOtp(phone))
+                            toast?.show(`Sending code to ${submittedPhone}`)
+                            dispatch(requestOtp(submittedPhone))
                         }}
                     >
                         <Text style={tailwind('text-white font-semibold')}>Re-Send Passcode</Text>
