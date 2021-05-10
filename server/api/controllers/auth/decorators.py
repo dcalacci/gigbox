@@ -27,11 +27,13 @@ def login_required(f):
         if user_id is None:
             current_app.logger.error("Token parsed to none")
             raise InvalidTokenError()
-        g.user = str(db.session.query(User).get(user_id))
         # g.user = User.get(user_id)
+        g.user = db.session.query(User).get(user_id)
         if g.user is None:
             current_app.logger.error(
                 "Token corresponds to a user that doesn't exist: {}".format(user_id))
-            raise InvalidTokenError()
+            raise InvalidTokenError("Bad or expired authorization token")
+        else:
+            g.user = str(g.user)
         return f(*args, **kwargs)
     return func

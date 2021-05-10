@@ -6,6 +6,7 @@ export interface AuthState {
     jwt: string | null;
     userId: string | null;
     authenticated: boolean;
+    isLoading: boolean;
     permissions: {
         location: boolean;
         notification: boolean;
@@ -17,6 +18,7 @@ const initialState: AuthState = {
     jwt: null,
     userId: null,
     authenticated: false,
+    isLoading: false,
     permissions: {
         location: false,
         notification: false,
@@ -34,6 +36,9 @@ const authSlice = createSlice({
         denyLocationPermissions(state) {
             state.permissions.location = false;
         },
+        setLoggedIn(state, action) {
+            state.userId = action.payload.user_id ? action.payload.user_id : state.userId
+        }
     },
     extraReducers: (builder) => {
         builder
@@ -42,15 +47,19 @@ const authSlice = createSlice({
                     state.jwt = action.payload.token;
                     state.authenticated = true;
                     state.userId = action.payload.user_id;
+                    state.isLoading = false;
                     state.lastLoggedIn = new Date().getTime();
                 }
             })
+            .addCase(loginWithOtp.pending, (state, action) => {
+                state.isLoading = true;
+            })
             .addCase(loginWithOtp.rejected, (state, action: any) => {
                 console.log('OTP Verification REJECTED', action);
+                state.isLoading = false;
             });
     },
 });
 
-export const { reset, grantLocationPermissions, denyLocationPermissions } = authSlice.actions;
+export const { reset, grantLocationPermissions, denyLocationPermissions, setLoggedIn} = authSlice.actions;
 export default authSlice.reducer;
-

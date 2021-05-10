@@ -6,6 +6,7 @@ import numpy as np
 import json
 import base64
 import binascii
+import graphene
 from graphene import (
     Mutation,
     Float,
@@ -25,40 +26,39 @@ from dateutil import parser
 from flask import g, current_app
 from PIL import Image
 from graphene_file_upload.scalars import Upload
+from geoalchemy2.shape import from_shape
 from api import db
 from api.controllers.auth.decorators import login_required
 from api.graphql.object import (
     User,
-    Shift,
+    ShiftNode,
     Location,
     LocationInput,
     EmployerInput,
-    Employer,
-    Screenshot
+    Screenshot,
+    JobNode
 )
 from api.models import (
     User as UserModel,
     Shift as ShiftModel,
     Location as LocationModel,
-    Employer as EmployerModel,
     Screenshot as ScreenshotModel,
+    Job as JobModel,
     Geometry_WKT,
     _convert_geometry,
     EmployerNames,
 )
 from api.utils import generate_filename
-from api.routing.mapmatch import get_shift_distance
+from api.routing.mapmatch import get_route_distance_and_geometry
 from api.screenshots.parser import predict_app, image_to_df, parse_image
 from flask import current_app
+from api.controllers.errors import ShiftInvalidError, JobInvalidError
 
 # we use a traditional REST endpoint to create JWT tokens and for first login
 # So, honestly, unsure if we need a Createuser mutation. We will only ever create
 # users from the server anyway.
 
 # All requests are associated with a token.
-# TODO: How can we augment each mutation with a JWT token to make sure they are authorized?
-# Check out get_jwt_identity here: https://dev.to/curiouspaul1/graphql-by-example-with-graphene-flask-and-fauna-jio
-
 
 class CreateUser(Mutation):
     """Mutation to create a user. must be given a UID"""
@@ -79,7 +79,7 @@ class CreateUser(Mutation):
 class CreateShift(Mutation):
     """Creates a shift"""
 
-    shift = Field(lambda: Shift, description="Shift that was created")
+    shift = Field(lambda: ShiftNode, description="Shift that was created")
 
     # For optional fields in graphene mutations, see:
     # https://github.com/graphql-python/graphene/issues/769#issuecomment-397596754
@@ -109,14 +109,13 @@ class CreateShift(Mutation):
 class EndShift(Mutation):
     """Ends a shift"""
 
-    shift = Field(lambda: Shift, description="Shift that is being ended")
+    shift = Field(lambda: ShiftNode, description="Shift that is being ended")
 
     class Arguments:
         shift_id = String(required=True, description="ID of the shift to end")
 
     @login_required
     def mutate(self, info, shift_id):
-        print("SHIFT ID:", shift_id)
         shift_id = from_global_id(shift_id)[1]
         end_time = datetime.now()
         shift = (
@@ -124,33 +123,66 @@ class EndShift(Mutation):
                 id=shift_id, user_id=g.user).first()
         )
 
+        if (end_time - shift.start_time).seconds < 5*60:
+            shift.end_time = end_time
+            shift.active = False
+            shift = endAnyActiveJobs(shift, info)
+            db.session.delete(shift)
+            db.session.commit()
+            raise ShiftInvalidError(
+                "Shift not tracked - it was under 5 minutes.")
+
         # calculate final mileage for this shift
-        shift = updateShiftMileage(shift, info)
+        shift = updateShiftMileageAndGeometry(shift, info)
+
+        if (shift.road_snapped_miles is None or shift.road_snapped_miles < 1):
+            shift.end_time = end_time
+            shift.active = False
+            shift = endAnyActiveJobs(shift, info)
+            db.session.delete(shift)
+            db.session.commit()
+            raise ShiftInvalidError(
+                "Shift not tracked - it was under 1 mile long.")
+
+        shift = endAnyActiveJobs(shift, info)
         shift.end_time = end_time
         shift.active = False
         db.session.add(shift)
         db.session.commit()
 
-        # locs = db.session.query(LocationModel).filter_by(
-        #     shift_id=shift_id).order_by(LocationModel.timestamp.asc())
-        # current_app.logger.info("Found locs...")
-        # coords = [{'lat': to_shape(s.geom).y,
-        #            'lng': to_shape(s.geom).x,
-        #            'timestamp': s.timestamp} for s in locs]
-        # res = match(coords).json()
-        # print("matchings:", res.json()['matchings'])
-        # print("tracepoints:", res.json()['tracepoints'])
-        # # res_json = json.loads(res)
-        # total_distance = res['matchings']['distance']
-
         return EndShift(shift=shift)
 
 
-def updateShiftMileage(shift, info):
-    meters = get_shift_distance(shift, info)
-    mileage = meters * 0.0006213712
-    shift.road_snapped_miles = mileage
-    current_app.logger.info(f"mileage: {mileage}")
+def updateShiftMileageAndGeometry(shift, info):
+    """adds mileage and geometry to a shift object using one call to our mapmatch api"""
+    locs = sorted(shift.locations, key=lambda l: l.timestamp)
+    match_obj = get_route_distance_and_geometry(locs)
+    if 'geom_obj' not in match_obj or not match_obj['geom_obj']:
+        current_app.logger.error(f'Failed to match a route to shift...')
+        return shift
+
+    distance = match_obj['distance']
+    bb = match_obj['geom_obj'][1]
+    geometries = match_obj['geom_obj'][0]
+
+    bounding_box = {'minLat': bb[1],
+                    'minLng': bb[0],
+                    'maxLat': bb[3],
+                    'maxLng': bb[2]}
+    matched = {'geometries': geometries, 'bounding_box': bounding_box}
+    current_app.logger.info('adding matched geometry to shift:')
+    shift.snapped_geometry = matched
+    shift.road_snapped_miles = match_obj['distance']
+    current_app.logger.info(f'matched route added to shift...')
+    return shift
+
+
+def endAnyActiveJobs(shift, info):
+    for j in shift.jobs:
+        if (j.end_time is None):
+            print("Found an active job. Ending...")
+            j.end_time = datetime.now()
+            j.end_location = shift.locations[-1].geom
     return shift
 
 
@@ -183,21 +215,33 @@ class AddLocationsToShift(Mutation):
                     shift_id,
                 )
             )
+
+        active_job = JobModel.query.filter_by(
+            user_id=g.user,
+            end_time=None,
+            shift_id=shift_id).first()
         # Every 5 locations added, update the distance on the shift by doing
         # map matching
         n_locations = len(shift.locations)
-        if n_locations % 5 == 0:
+        if n_locations % 5 == 0 and n_locations > 2:
             current_app.logger.info(
-                "Updating mileage on shift...")
-            shift = updateShiftMileage(shift, info)
+                "Updating mileage & calculated route on shift...")
+            shift = updateShiftMileageAndGeometry(shift, info)
+
+            if (active_job):
+                # update job mileage and geometry, too. Seems cheap to do (just one more api match call)
+                active_job = get_job_mileage_and_geometry(
+                    info, active_job, shift)
+                db.session.add(active_job)
         db.session.add(shift)
         db.session.commit()
+
         return AddLocationsToShift(location=shift.locations[-1], ok=True)
 
 
 class AddScreenshotToShift(Mutation):
     class Arguments:
-        shift_id = ID(required=True)
+        object_id = ID(required=True)
         asset = Upload(required=True)
         device_uri = String(required=True)
         timestamp = DateTime(required=True)
@@ -209,13 +253,22 @@ class AddScreenshotToShift(Mutation):
     # employer details if parsed as an app image
     employer = Field(lambda: String)
     data = Field(lambda: String)
-    shift_id = Field(lambda: ID)
+    obj_id = Field(lambda: ID)
     screenshot = Field(lambda: Screenshot,
                        description="Screenshot that was created.")
 
     @login_required
-    def mutate(self, info, shift_id, asset, device_uri, timestamp, **kwargs):
-        shift_id = from_global_id(shift_id)[1]
+    def mutate(self, info, object_id, asset, device_uri, timestamp, **kwargs):
+        obj_type, obj_id = from_global_id(object_id)
+
+        print(obj_type, obj_id)
+
+        if obj_type == 'job':
+            job_id = obj_id
+
+        elif obj_type == 'shift':
+            shift_id = obj_id
+
         # Decode base64 image
         decoded = base64.decodebytes(bytes(asset, 'utf-8'))
         f_array = np.asarray(bytearray(decoded))
@@ -225,21 +278,45 @@ class AddScreenshotToShift(Mutation):
         text = parse_image(image)
         app = predict_app(text)
 
+        # IMAGE_DIR = current_app.config.IMAGE_DIR
+        # TODO: if they give us a job, add the screenshot to the job, and parse it.
         if app:
-            img_filename = os.path.join('/tmp',
-                                        generate_filename(shift_id))
+            img_filename = os.path.join('/opt/images',
+                                        generate_filename(obj_id))
             print("IMAGE FILENAME:", img_filename)
             cv2.imwrite(img_filename, image)
             print("Wrote to file...")
-            screenshot = ScreenshotModel(
-                shift_id=shift_id,
-                on_device_uri=device_uri,
-                img_filename=img_filename,
-                timestamp=timestamp,
-                user_id=g.user,
-                employer=app
-            )
-            db.session.add(screenshot)
+            if obj_type == 'JobNode':
+                job = JobModel.query.filter_by(
+                    id=obj_id, user_id=g.user).first()
+
+                print("Found job:", job)
+                screenshot = ScreenshotModel(
+                    job_id=obj_id,
+                    shift_id=job.shift_id,
+                    on_device_uri=device_uri,
+                    img_filename=img_filename,
+                    timestamp=timestamp,
+                    user_id=g.user,
+                    employer=app
+                )
+                job.screenshots.append(screenshot)
+                db.session.add(screenshot)
+                db.session.add(job)
+            elif obj_type == 'ShiftNode':
+                shift = ShiftModel.query.filter_by(
+                    id=obj_id, user_id=g.user).first()
+
+                screenshot = ScreenshotModel(
+                    shift_id=obj_id,
+                    on_device_uri=device_uri,
+                    img_filename=img_filename,
+                    timestamp=timestamp,
+                    user_id=g.user,
+                    employer=app
+                )
+                db.session.add(screenshot)
+
             db.session.commit()
             # df = image_to_df(image)
             # TODO: non-app images should be rejected
@@ -248,7 +325,7 @@ class AddScreenshotToShift(Mutation):
                 isApp=True,
                 employer="SHIPT",
                 data=text,
-                shift_id=shift_id,
+                obj_id=obj_id,
                 screenshot=screenshot
             )
         else:
@@ -259,24 +336,181 @@ class AddScreenshotToShift(Mutation):
             )
 
 
+class CreateJob(Mutation):
+    job = Field(lambda: JobNode, description='Job that was created')
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        shift_id = ID(
+            required=True, description="ID of the shift to make a job in")
+
+        start_location = LocationInput()
+        employer = String()
+
+    @login_required
+    def mutate(self, info, shift_id, start_location, employer):
+        print("creating job...")
+        shift_id = from_global_id(shift_id)[1]
+        shift = ShiftModel.query.filter_by(id=shift_id, user_id=g.user).first()
+
+        employer = EmployerNames.INSTACART
+        job = JobModel(
+            shift_id=shift.id,
+            lng=start_location.lng,
+            lat=start_location.lat,
+            user_id=shift.user_id,
+            employer=employer
+        )
+        shift.jobs.append(job)
+
+        db.session.add(shift)
+        db.session.commit()
+        return CreateJob(job=job, ok=True)
+
+
+def get_job_mileage_and_geometry(info, job, shift=None):
+    # don't need this - the shift id here is UUID
+    # shift_id = from_global_id(job.shift_id)[1]
+    print("getting mileage and geometry for job:", job, job.shift_id)
+    if shift is None:
+        shift = ShiftModel.query.get(job.shift_id)
+    # shift = db.session.get(job.shift_id)
+    # get only locations between job start and end from this shift
+    end_time = job.end_time if job.end_time is not None else datetime.utcnow()
+    job_locations = [l for l in shift.locations if (
+        l.timestamp is not None
+        and l.timestamp >= job.start_time
+        and l.timestamp <= end_time)]
+    if len(job_locations) > 2:
+        locs = sorted(job_locations, key=lambda l: l.timestamp)
+        match_obj = get_route_distance_and_geometry(locs)
+
+        if 'geom_obj' not in match_obj or not match_obj['geom_obj']:
+            current_app.logger.error("Failed to match a route to job...")
+            return job
+
+        distance = match_obj['distance']
+        bb = match_obj['geom_obj'][1]
+        geometries = match_obj['geom_obj'][0]
+
+        bounding_box = {'minLat': bb[1],
+                        'minLng': bb[0],
+                        'maxLat': bb[3],
+                        'maxLng': bb[2]}
+        matched = {'geometries': geometries, 'bounding_box': bounding_box}
+        current_app.logger.info('adding matched geometry to job:')
+        job.snapped_geometry = matched
+        job.mileage = match_obj['distance']
+    return job
+
+
+class EndJob(Mutation):
+    job = Field(lambda: JobNode, description="job to end")
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        job_id = ID(required=True)
+        end_location = LocationInput()
+
+    @login_required
+    def mutate(self, info, job_id, end_location):
+
+        job_id = from_global_id(job_id)[1]
+        job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
+        job.end_time = datetime.now()
+        job.end_location = from_shape(
+            geometry.Point(end_location.lng, end_location.lat))
+        if (job.end_time - job.start_time).seconds < 5 * 60:
+            db.session.delete(job)
+            db.session.commit()
+            raise JobInvalidError("Job not saved - it was under 5 minutes")
+        job = get_job_mileage_and_geometry(info, job)
+        if (job.mileage is None or job.mileage < 1):
+            db.session.delete(job)
+            db.session.commit()
+            raise JobInvalidError("Job not saved - it was under 1 mile")
+        db.session.add(job)
+        db.session.commit()
+        return EndJob(job=job, ok=True)
+
+
+class SetJobTotalPay(Mutation):
+    job = Field(lambda: JobNode, description="Job to update")
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        job_id = ID(required=True)
+        value = Float(required=True)
+
+    @login_required
+    def mutate(self, info, job_id, value):
+        job_id = from_global_id(job_id)[1]
+        job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
+        job.total_pay = value
+        db.session.add(job)
+        db.session.commit()
+        return SetJobTotalPay(job, True)
+
+
+class SetJobTip(Mutation):
+    job = Field(lambda: JobNode, description="Job to update")
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        job_id = ID(required=True)
+        value = Float(required=True)
+
+    @login_required
+    def mutate(self, info, job_id, value):
+        job_id = from_global_id(job_id)[1]
+        job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
+        job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
+        job.tip = value
+        db.session.add(job)
+        db.session.commit()
+        return SetJobTip(job, True)
+
+
+class SetJobMileage(Mutation):
+    job = Field(lambda: JobNode, description="Job to update")
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        job_id = ID(required=True)
+        value = Float(required=True)
+
+    @login_required
+    def mutate(self, info, job_id, value):
+        job_id = from_global_id(job_id)[1]
+        job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
+        job.mileage = value
+        db.session.add(job)
+        db.session.commit()
+        return SetJobTip(job, True)
+
+
 class SetShiftEmployers(Mutation):
-    shift = Field(lambda: Shift, description="Shift to update")
+    shift = Field(lambda: ShiftNode, description="Shift to update")
 
     class Arguments:
         shift_id = ID(
             required=True, description="ID of the shift to set employers for")
-        employers = List(EmployerInput)
+        employers = List(graphene.Enum.from_enum(EmployerNames))
 
+    @login_required
     def mutate(self, info, shift_id, employers):
+        print("Adding employers to shift:", shift_id, employers)
         shift_id = from_global_id(shift_id)[1]
-        shift = db.session.get(shift_id)
+        shift = ShiftModel.query.filter_by(id=shift_id, user_id=g.user).first()
         assert shift.user_id == g.user
-        for e in employers:
-            shift.employers.append(EmployerModel(
-                name=e.name, shift_id=shift.id))
+        # TODO: match employer enum to input
+        # right now we just assume it's correct
+        shift.employers = employers
+
+        print("Adding...", shift.employers)
         db.session.add(shift)
         db.session.commit()
-        return SetShiftEmployers()
+        return SetShiftEmployers(shift)
 
 
 class Mutation(ObjectType):
@@ -286,5 +520,11 @@ class Mutation(ObjectType):
     createUser = CreateUser.Field()
     createShift = CreateShift.Field()
     endShift = EndShift.Field()
+    createJob = CreateJob.Field()
+    setJobTotalPay = SetJobTotalPay.Field()
+    setJobTip = SetJobTip.Field()
+    setJobMileage = SetJobMileage.Field()
+    endJob = EndJob.Field()
+    setShiftEmployers = SetShiftEmployers.Field()
     addLocationsToShift = AddLocationsToShift.Field()
     addScreenshotToShift = AddScreenshotToShift.Field()

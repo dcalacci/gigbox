@@ -17,8 +17,30 @@ export const getShifts = (first: Number, after: String) => {
                         startTime
                         endTime
                         roadSnappedMiles
-                        locations {
-                            geom
+                        snappedGeometry
+                        jobs {
+                            edges {
+                                node {
+                                    id
+                                    startTime
+                                    endTime
+                                    startLocation
+                                    endLocation
+                                    mileage
+                                    snappedGeometry
+                                    estimatedMileage
+                                    totalPay
+                                    tip
+                                    employer
+                                    shiftId
+                                }
+                            }
+                        }
+                        screenshots {
+                            onDeviceUri
+                            id
+                            imgFilename
+                            employer
                             timestamp
                         }
                     }
@@ -31,18 +53,5 @@ export const getShifts = (first: Number, after: String) => {
         first,
         after,
     };
-    // const query = gql`
-    // query {
-    //     shifts(first: ${first} skip: ${skip} before: ${before} after: ${after} ) {
-    //         id
-    //         startTime
-    //         endTime
-    //         locations {
-    //             geom
-    //             timestamp
-    //         }
-    //     }
-    //     }
-    // `;
     return client.request(query, variables);
 };

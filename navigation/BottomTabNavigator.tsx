@@ -6,7 +6,7 @@ import * as React from 'react';
 
 import Colors from '../constants/Colors';
 import TabOneScreen from '../screens/TabOneScreen';
-import TabTwoScreen from '../screens/TabTwoScreen';
+import ShiftsScreen from '../screens/ShiftsScreen';
 import JobsScreen from '../screens/JobsScreen';
 import Onboarding from '../screens/Onboarding';
 import { RootState } from '../store/index';
@@ -16,20 +16,44 @@ import { StackActions } from '@react-navigation/routers';
 import { SafeAreaView, View, Text } from 'react-native';
 
 import { useQuery } from 'react-query';
-import { logIn } from '../features/auth/api';
+import { logIn, LogInResponse } from '../features/auth/api';
+import { setLoggedIn } from '../features/auth/authSlice';
+import { useDispatch } from 'react-redux';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
 export default function BottomTabNavigator() {
     const jwt = useSelector((state: RootState): boolean => state.auth.jwt);
-    const loggedIn = () => { return logIn(jwt)}
-    const loggedInStatus = useQuery('loggedIn', loggedIn, { refetchInterval: 10000});
-
-    console.log('LOGGED IN:', loggedInStatus);
+    const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
+    const authIsLoading = useSelector((state: RootState): boolean => state.auth.isLoading);
+    const loggedIn = () => {
+        return logIn(jwt);
+    };
+    const dispatch = useDispatch();
+    const loggedInStatus = useQuery('loggedIn', loggedIn, {
+        refetchInterval: 5000,
+        onSuccess: (data: LogInResponse) => {
+            if (isAuthenticated && data.authenticated) {
+                // do nothing 
+                return;
+            }
+            // otherwise, set our state appropriately
+            dispatch(setLoggedIn({ authenticated: data.authenticated, user_id: data.user_id }));
+        },
+        onError: (data: LogInResponse) => {
+            dispatch(setLoggedIn({ authenticated: false, user_id: null }));
+        },
+    });
 
     //TODO: check for live (authenticated) token
 
-    if (loggedInStatus.isLoading) {
+    if (authIsLoading) {
+        return (
+            <View>
+                <Text>Loading....</Text>
+            </View>
+        );
+    } else if (loggedInStatus.isLoading) {
         return (
             <View>
                 <Text>Loading....</Text>
@@ -42,7 +66,7 @@ export default function BottomTabNavigator() {
                 initialRouteName="Home"
                 tabBarOptions={{ activeTintColor: Colors.light.tint }}
             >
-                {loggedInStatus.data.authenticated ? (
+                {isAuthenticated ? (
                     <>
                         <BottomTab.Screen
                             name="Home"
@@ -54,8 +78,8 @@ export default function BottomTabNavigator() {
                             }}
                         />
                         <BottomTab.Screen
-                            name="TabTwo"
-                            component={TabTwoNavigator}
+                            name="Shifts"
+                            component={ShiftsScreen}
                             options={{
                                 tabBarIcon: ({ color }) => (
                                     <TabBarIcon name="ios-code" color={color} />
@@ -107,19 +131,5 @@ function TabOneNavigator() {
                 }}
             />
         </TabOneStack.Navigator>
-    );
-}
-
-const TabTwoStack = createStackNavigator<TabTwoParamList>();
-
-function TabTwoNavigator() {
-    return (
-        <TabTwoStack.Navigator>
-            <TabTwoStack.Screen
-                name="TabTwoScreen"
-                component={TabTwoScreen}
-                options={{ headerTitle: 'Shifts' }}
-            />
-        </TabTwoStack.Navigator>
     );
 }

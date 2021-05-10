@@ -103,7 +103,17 @@ class VerifyOtp(Resource):
 class LoggedIn(Resource):
     @login_required
     def post(self):
-        return {'status': 200,
-                'user_id': g.user,
-                'authenticated': True,
-                'message': 'Success'}
+        print("Logging in...")
+        print("g.user:", g.user)
+        if g.user == 'None':
+            print("User not logged in.")
+            return {
+                    'status': 400,
+                    'authenticated': False
+                    }
+        else:
+            print("User logged in:", g.user)
+            return {'status': 200,
+                    'user_id': g.user,
+                    'authenticated': True,
+                    'message': 'Success'}
