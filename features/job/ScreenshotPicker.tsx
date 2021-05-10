@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Image, ScrollView, View, Modal, Pressable, Text } from 'react-native';
 import { tailwind } from 'tailwind';
-import { useMutation } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { Asset } from 'expo-media-library';
 import { addScreenshotToShift } from '../clock/api';
 import { log } from '../../utils';
@@ -20,6 +20,7 @@ const ScreenshotUploader = ({
 }) => {
     const [imageUri, setImageUri] = useState<string>();
     const [parsedText, setParsedText] = useState<string>('');
+    const queryClient = useQueryClient();
 
     useEffect(() => {
         (async () => {
@@ -34,6 +35,9 @@ const ScreenshotUploader = ({
         onSuccess: (data, variables, context) => {
             log.info('Submitted screenshot!', data, variables, context);
             setParsedText(data.addScreenshotToShift.data);
+            queryClient.invalidateQueries('shifts');
+            queryClient.invalidateQueries('weeklySummary');
+
             console.log(data);
         },
         onError: (err, problem, context) => {
@@ -57,9 +61,8 @@ const ScreenshotUploader = ({
             setImageUri(result.uri);
             uploadScreenshot.mutate({
                 screenshotLocalUri: result.uri,
-                shiftId: shiftId,
+                objectId: jobId,
                 modificationTime: new Date(result.exif?.DateTimeOriginal).getTime(),
-                jobId: jobId,
             });
         }
     };
@@ -116,18 +119,37 @@ const ScreenshotUploader = ({
                     </View>
                 )}
 
-                <Pressable
-                    style={tailwind('rounded-lg bg-gray-800 self-center w-10/12 m-2')}
-                    onPress={() => {
-                        pickImage();
-                    }}
-                >
-                    <Text
-                        style={tailwind('text-white font-bold text-lg underline p-2 self-center')}
+                {parsedText == '' ? (
+                    <Pressable
+                        style={tailwind('rounded-lg bg-gray-800 self-center w-10/12 m-2')}
+                        onPress={() => {
+                            pickImage();
+                        }}
                     >
-                        Pick Screenshot
-                    </Text>
-                </Pressable>
+                        <Text
+                            style={tailwind(
+                                'text-white font-bold text-lg underline p-2 self-center'
+                            )}
+                        >
+                            Pick Screenshot
+                        </Text>
+                    </Pressable>
+                ) : (
+                    <Pressable
+                        style={tailwind('rounded-lg bg-gray-800 self-center w-10/12 m-2')}
+                        onPress={() => {
+                            setModalVisible(false)
+                        }}
+                    >
+                        <Text
+                            style={tailwind(
+                                'text-white font-bold text-lg underline p-2 self-center'
+                            )}
+                        >
+                            Done
+                        </Text>
+                    </Pressable>
+                )}
 
                 <Pressable
                     style={tailwind('rounded-lg bg-red-400 self-center w-10/12 m-2')}

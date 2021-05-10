@@ -7,6 +7,7 @@ import { LocationInput, Employers } from '../../types';
 import * as FileSystem from 'expo-file-system';
 import { useQuery } from 'react-query'
 import moment from 'moment'
+import { useNumJobsNeedEntryThisWeek } from '../job/api';
 
 export const fetchActiveShift = async () => {
     const client = getClient(store);
@@ -137,33 +138,29 @@ export const setShiftEmployers = ({
 export const addScreenshotToShift = async ({
     screenshotLocalUri,
     modificationTime,
-    shiftId,
-    jobId = undefined,
+    objectId,
 }: {
     screenshotLocalUri: string | undefined;
     modificationTime: number;
-    shiftId: string;
-    jobId: string | undefined;
+    objectId: string
 }) => {
     const client = getClient(store);
     const query = gql`
         mutation mutation(
-            $Shift: ID!
-            $Job: ID
+            $ObjectId: ID!
             $File: Upload!
             $DeviceURI: String!
             $Timestamp: DateTime!
         ) {
             addScreenshotToShift(
-                shiftId: $Shift
-                jobId: $Job
+                objectId: $ObjectId
                 asset: $File
                 deviceUri: $DeviceURI
                 timestamp: $Timestamp
             ) {
                 data
                 screenshot {
-                    shiftId
+                    jobId 
                     onDeviceUri
                     imgFilename
                     timestamp
@@ -176,7 +173,7 @@ export const addScreenshotToShift = async ({
 
     // const assetSource = Image.resolveAssetSource(screenshot);
     // const info = await MediaLibrary.getAssetInfoAsync(screenshot);
-    log.info('Adding screenshot to shift', shiftId, screenshotLocalUri);
+    log.info('Adding screenshot to shift', objectId, screenshotLocalUri);
     log.info('modification Time: ', modificationTime);
     if (!screenshotLocalUri) {
         return false;
@@ -187,8 +184,7 @@ export const addScreenshotToShift = async ({
         });
         log.info('Screenshot encoded.', screenshotLocalUri);
         return client.request(query, {
-            Shift: shiftId,
-            Job: jobId,
+            ObjectId: objectId,
             File: fileBase64,
             DeviceURI: screenshotLocalUri,
             Timestamp: modificationTime ? new Date(modificationTime) : new Date(),

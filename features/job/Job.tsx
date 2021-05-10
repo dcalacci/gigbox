@@ -19,18 +19,24 @@ export const Screenshots = ({
     screenshots: Screenshot[];
     onPressAddScreenshots: () => void;
 }) => {
+    console.log('Screenshots for job:', screenshots);
+    const uploadScreenshotView = () => (
+        <>
+            <Pressable
+                onPress={onPressAddScreenshots}
+                style={tailwind('self-center justify-self-center bg-gray-800 rounded-lg p-2')}
+            >
+                <Text style={tailwind('text-white font-bold underline')}>Add Screenshots</Text>
+            </Pressable>
+            <Text style={tailwind('text-sm text-center p-1')}>
+                Upload a screenshot of this job to automatically record your pay.
+            </Text>
+        </>
+    );
     if (screenshots == undefined) {
         return (
             <View style={tailwind('flex-col justify-center bg-gray-100 w-1/2 rounded-lg m-2 p-2')}>
-                <Pressable
-                    onPress={onPressAddScreenshots}
-                    style={tailwind('self-center justify-self-center bg-gray-800 rounded-lg p-2')}
-                >
-                    <Text style={tailwind('text-white font-bold underline')}>Add Screenshots</Text>
-                </Pressable>
-                <Text style={tailwind('text-sm text-center p-1')}>
-                    Upload a screenshot of this job to automatically record your pay.
-                </Text>
+                {uploadScreenshotView()}
             </View>
         );
     } else {
@@ -56,10 +62,26 @@ export const Screenshots = ({
         return (
             <ScrollView
                 horizontal={true}
-                style={tailwind('m-2 rounded-lg bg-gray-100 w-1/3 p-2')}
+                style={tailwind('m-2 rounded-lg bg-gray-100 w-1/2 m-2 p-2')}
                 contentContainerStyle={tailwind('justify-center')}
             >
                 {ScreenshotItems}
+                <View style={tailwind('flex-col justify-center m-2 mr-3 w-32')}>
+                    <Pressable
+                        onPress={onPressAddScreenshots}
+                        style={tailwind(
+                            'self-center justify-self-center bg-gray-800 rounded-lg p-2'
+                        )}
+                    >
+                        <Text style={tailwind('text-white font-bold underline')}>
+                            Add Screenshots
+                        </Text>
+                    </Pressable>
+                    <Text style={tailwind('text-sm text-center p-1')}>
+                        Upload more screenshots to track tips. In the future, you'll be able to add
+                        expenses as well.
+                    </Text>
+                </View>
             </ScrollView>
         );
     }
