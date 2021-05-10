@@ -129,7 +129,8 @@ class EndShift(Mutation):
             shift = endAnyActiveJobs(shift, info)
             db.session.delete(shift)
             db.session.commit()
-            raise ShiftInvalidError("Shift not tracked - it was under 5 minutes.")
+            raise ShiftInvalidError(
+                "Shift not tracked - it was under 5 minutes.")
 
         # calculate final mileage for this shift
         shift = updateShiftMileageAndGeometry(shift, info)
@@ -140,7 +141,8 @@ class EndShift(Mutation):
             shift = endAnyActiveJobs(shift, info)
             db.session.delete(shift)
             db.session.commit()
-            raise ShiftInvalidError("Shift not tracked - it was under 1 mile long.")
+            raise ShiftInvalidError(
+                "Shift not tracked - it was under 1 mile long.")
 
         shift = endAnyActiveJobs(shift, info)
         shift.end_time = end_time
@@ -239,8 +241,7 @@ class AddLocationsToShift(Mutation):
 
 class AddScreenshotToShift(Mutation):
     class Arguments:
-        shift_id = ID(required=True)
-        job_id = ID(required=False)
+        object_id = ID(required=True)
         asset = Upload(required=True)
         device_uri = String(required=True)
         timestamp = DateTime(required=True)
@@ -252,17 +253,22 @@ class AddScreenshotToShift(Mutation):
     # employer details if parsed as an app image
     employer = Field(lambda: String)
     data = Field(lambda: String)
-    shift_id = Field(lambda: ID)
+    obj_id = Field(lambda: ID)
     screenshot = Field(lambda: Screenshot,
                        description="Screenshot that was created.")
 
     @login_required
-    def mutate(self, info, shift_id, asset, device_uri, timestamp, **kwargs):
-        shift_id = from_global_id(shift_id)[1]
+    def mutate(self, info, object_id, asset, device_uri, timestamp, **kwargs):
+        obj_type, obj_id = from_global_id(object_id)
 
-        job_id = kwargs.get('job_id', None)
-        if job_id:
-            job_id = from_global_id(job_id)[1]
+        print(obj_type, obj_id)
+
+        if obj_type == 'job':
+            job_id = obj_id
+
+        elif obj_type == 'shift':
+            shift_id = obj_id
+
         # Decode base64 image
         decoded = base64.decodebytes(bytes(asset, 'utf-8'))
         f_array = np.asarray(bytearray(decoded))
@@ -276,26 +282,40 @@ class AddScreenshotToShift(Mutation):
         # TODO: if they give us a job, add the screenshot to the job, and parse it.
         if app:
             img_filename = os.path.join('/opt/images',
-                                        generate_filename(shift_id))
+                                        generate_filename(obj_id))
             print("IMAGE FILENAME:", img_filename)
             cv2.imwrite(img_filename, image)
             print("Wrote to file...")
-            screenshot = ScreenshotModel(
-                shift_id=shift_id,
-                job_id=job_id,
-                on_device_uri=device_uri,
-                img_filename=img_filename,
-                timestamp=timestamp,
-                user_id=g.user,
-                employer=app
-            )
-            db.session.add(screenshot)
-
-            if (job_id):
+            if obj_type == 'JobNode':
                 job = JobModel.query.filter_by(
-                    id=job_id, user_id=g.user).first()
+                    id=obj_id, user_id=g.user).first()
+
                 print("Found job:", job)
+                screenshot = ScreenshotModel(
+                    job_id=obj_id,
+                    shift_id=job.shift_id,
+                    on_device_uri=device_uri,
+                    img_filename=img_filename,
+                    timestamp=timestamp,
+                    user_id=g.user,
+                    employer=app
+                )
                 job.screenshots.append(screenshot)
+                db.session.add(screenshot)
+                db.session.add(job)
+            elif obj_type == 'ShiftNode':
+                shift = ShiftModel.query.filter_by(
+                    id=obj_id, user_id=g.user).first()
+
+                screenshot = ScreenshotModel(
+                    shift_id=obj_id,
+                    on_device_uri=device_uri,
+                    img_filename=img_filename,
+                    timestamp=timestamp,
+                    user_id=g.user,
+                    employer=app
+                )
+                db.session.add(screenshot)
 
             db.session.commit()
             # df = image_to_df(image)
@@ -305,7 +325,7 @@ class AddScreenshotToShift(Mutation):
                 isApp=True,
                 employer="SHIPT",
                 data=text,
-                shift_id=shift_id,
+                obj_id=obj_id,
                 screenshot=screenshot
             )
         else:

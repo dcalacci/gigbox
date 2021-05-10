@@ -1,4 +1,5 @@
 import graphene
+import pendulum
 from graphene import relay
 from graphene_sqlalchemy import SQLAlchemyConnectionField
 from geoalchemy2.shape import to_shape
@@ -93,7 +94,9 @@ class Query(graphene.ObjectType):
     @login_required
     def resolve_getWeeklySummary(self, info):
         userId = str(g.user)
-        dt_weekago = datetime.now() + relativedelta.relativedelta(weeks=-1)
+        today = pendulum.now()
+        dt_weekago = today.start_of('week')
+        # dt_weekago = datetime.now() + relativedelta.relativedelta(weeks=-1)
 
         shiftQuery = ShiftNode.get_query(info=info)
         shifts = (shiftQuery
