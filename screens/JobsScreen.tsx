@@ -5,6 +5,7 @@ import moment from 'moment';
 import JobsList from '../components/JobsList';
 
 import { JobFilterList, JobFilter } from '../features/job/JobList';
+import tailwind from 'tailwind-rn';
 
 export default function JobsScreen({ route }) {
     /* let filter: JobFilter | undefined; */
@@ -18,8 +19,8 @@ export default function JobsScreen({ route }) {
           }
         : undefined;
     return (
-        <View style={styles.container}>
-            <Text style={styles.title}>Jobs</Text>
+        <View style={tailwind('bg-gray-100 items-center justify-start flex-col')}>
+            {/* <Text style={styles.title}>Jobs</Text> */}
             <JobFilterList inputFilters={filter} />
         </View>
     );
@@ -28,7 +29,6 @@ export default function JobsScreen({ route }) {
 const styles = StyleSheet.create({
     container: {
         flex: 0,
-        backgroundColor: 'white',
         alignItems: 'center',
         justifyContent: 'center',
     },

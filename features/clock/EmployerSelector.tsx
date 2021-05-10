@@ -2,29 +2,35 @@
 // on a particular shift.
 import { Ionicons } from '@expo/vector-icons';
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, LayoutAnimation } from 'react-native';
+import { View, Text, Pressable, StyleSheet, LayoutAnimation, ViewStyle } from 'react-native';
 import { tailwind } from 'tailwind';
 import { Employers } from '../../types';
 
 import Ellipsis from '../../components/Ellipsis';
 
-const EmployerBox = ({
+export const EmployerBox = ({
     employer,
     toggleSelect,
     selectedEmployers,
+    size,
+    style,
 }: {
     employer: Employers;
-    selectedEmployers: Employers[];
-    toggleSelect: (e: Employers, selected: boolean) => void;
+    selectedEmployers?: Employers[];
+    toggleSelect?: (e: Employers, selected: boolean) => void;
+    size?: number;
+    style?: ViewStyle;
 }) => {
     const [selected, setSelected] = useState<boolean>(false);
     useEffect(() => {
-        if (selectedEmployers.includes(employer)) {
+        if (selectedEmployers?.includes(employer)) {
             setSelected(true);
         } else {
             setSelected(false);
         }
     }, [selectedEmployers]);
+    const sizeStr = size ? `h-${size} w-${size}` : 'h-12 w-12';
+    const textSize = size && size < 14 ? 'text-sm' : 'text-2xl';
     return (
         <Pressable
             onPress={() => {
@@ -33,14 +39,15 @@ const EmployerBox = ({
             }}
             style={[
                 tailwind(
-                    'h-14 w-14 m-2 flex-col justify-center rounded-lg bg-white border-green-500 border-2'
+                    `${sizeStr} m-1 flex-col justify-center rounded-lg bg-white border-green-500 border-2`
                 ),
                 selected ? tailwind('bg-green-500') : null,
+                style,
             ]}
         >
             <Text
                 style={[
-                    tailwind('self-center text-2xl font-bold'),
+                    tailwind(` ${textSize} self-center font-bold`),
                     selected ? tailwind('text-white') : null,
                 ]}
             >
@@ -98,7 +105,7 @@ const EmployerBoxes = ({
     return (
         <View
             style={[
-                tailwind('flex-row justify-around content-center ml-2 mr-2 pr-2 pl-2 bg-white'),
+                tailwind('flex-row justify-around justify-center content-center ml-2 mr-2 pr-2 pl-2 bg-white'),
                 styles.roundedBottom,
             ]}
         >
@@ -118,7 +125,7 @@ const EmployerBoxes = ({
                         onPress={() => submitEmployers()}
                         style={[
                             tailwind(
-                                'h-14 w-14 m-2 flex-col justify-center rounded-lg bg-white border-green-500 border-4'
+                                'h-12 w-12 m-1 flex-col justify-center rounded-lg bg-white border-green-500 border-4'
                             ),
                         ]}
                     >

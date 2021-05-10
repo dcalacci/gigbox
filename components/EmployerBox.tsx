@@ -14,7 +14,7 @@ type EmployerBoxesProps = {
   hidden: boolean;
 };
 
-const EmployerBox: React.FC<EmployerBoxProps> = ({ employer }) => {
+export const EmployerBox: React.FC<EmployerBoxProps> = ({ employer }) => {
   return (
     <View style={tailwind("h-20 w-20 border-opacity-100 border-black")}>
       <Text style={tailwind("self-center")}>{employer}</Text>
@@ -38,7 +38,7 @@ const EmployerBoxes: React.FC<EmployerBoxesProps> = ({ hidden }) => {
       {activeEmployers.map((e) => (
         <EmployerBox employer={e} key={e}></EmployerBox>
       ))}
-    </View>
+  </View>
   );
 };
 
