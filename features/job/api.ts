@@ -75,8 +75,10 @@ export const getFilteredJobs = ({ queryKey }) => {
                     tip
                     snappedGeometry
                     screenshots {
+                        id
                         jobId
                         onDeviceUri
+                        timestamp
                         imgFilename
                         employer
                     }
