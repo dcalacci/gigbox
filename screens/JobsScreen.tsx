@@ -7,19 +7,16 @@ import JobsList from '../components/JobsList';
 import { JobFilterList, JobFilter } from '../features/job/JobList';
 
 export default function JobsScreen({ route }) {
-
-    let filter: JobFilter | undefined;
-    if (route.params?.filters) {
-        const sentFilters = route.params.filters;
-        filter = {
-            ...route.params.filters,
-            startDate: sentFilters?.startDate ? moment(sentFilters?.startDate) : null,
-            endDate: sentFilters?.endDate ? moment(sentFilters?.endDate) : null,
-        };
-        console.log('Sending filters:', filter);
-    } else {
-        filter = undefined
-    }
+    /* let filter: JobFilter | undefined; */
+    const filter = route.params?.filters
+        ? {
+              ...route.params.filters,
+              startDate: route.params.filters?.startDate
+                  ? moment(route.params.filters?.startDate)
+                  : null,
+              endDate: route.params.filters?.endDate ? moment(route.params.filters?.endDate) : null,
+          }
+        : undefined;
     return (
         <View style={styles.container}>
             <Text style={styles.title}>Jobs</Text>
