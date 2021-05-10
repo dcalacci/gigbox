@@ -242,15 +242,12 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
     useEffect(() => {
         queryClient.invalidateQueries('filteredJobs');
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-    }, [filter]);
-
-    useEffect(() =>
         setAllJobs(
             filteredJobsStatus.isLoading || filteredJobsStatus.isError
                 ? { edges: [] }
                 : filteredJobsStatus.data.allJobs
         )
-    , [filteredJobsStatus]);
+    }, [filter]);
 
     const avgTime = (edges: { node: Job }[]) => {
         const m =

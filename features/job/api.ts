@@ -148,6 +148,12 @@ export const getFilteredJobs = ({ queryKey }) => {
                     totalPay
                     tip
                     snappedGeometry
+                    screenshots {
+                        jobId
+                        onDeviceUri
+                        imgFilename
+                        employer
+                    }
                     employer
                 }
             }
