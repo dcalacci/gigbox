@@ -14,6 +14,7 @@ import { getFilteredJobs } from './api';
 import { JobItem } from './Job';
 import * as Haptics from 'expo-haptics';
 import { fileAsyncTransport } from 'react-native-logs';
+import { log } from '../../utils';
 
 export enum SortArgs {
     START,
@@ -219,7 +220,6 @@ const BinaryFilterPill = ({
 );
 
 export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
-    console.log('input filters:', inputFilters);
     // routing gives us dates as strings, so convert them
     const [filter, setFilter] = useState<JobFilter>(inputFilters ? inputFilters : defaultFilter);
     const [allJobs, setAllJobs] = useState<{ edges: { node: Job }[] }>({ edges: [] });
@@ -227,7 +227,7 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
     const filteredJobsStatus = useQuery(['filteredJobs', filter], getFilteredJobs, {
         keepPreviousData: true,
         onSuccess: (data) => {
-            console.log('SUCCESS:', data);
+            log.info("recieved filtered jobs...")
         },
     });
 
@@ -238,8 +238,6 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
     }, [inputFilters]);
 
     const queryClient = useQueryClient();
-    console.log('Filtered jobs status:', filteredJobsStatus);
-    console.log('new filter:', filter);
 
     useEffect(() => {
         queryClient.invalidateQueries('filteredJobs');
@@ -252,7 +250,7 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
                 ? { edges: [] }
                 : filteredJobsStatus.data.allJobs
         )
-    );
+    , [filteredJobsStatus]);
 
     const avgTime = (edges: { node: Job }[]) => {
         const m =
@@ -487,7 +485,7 @@ export const JobList = ({ jobs }: { jobs: [{ node: Job }] | undefined }) => {
     // console.log('fitlered job status', status);
     // console.log('jobs:', jobs);
     return (
-        <ScrollView style={[tailwind('flex-col w-full pl-2 pr-2 bg-gray-100')]}>
+        <ScrollView style={[tailwind('flex-col w-full ml-0 mr-0 pl-2 mr-2')]}>
             {jobs?.map((j) => (
                 <JobItem job={j.node} key={j.node.id} />
             ))}

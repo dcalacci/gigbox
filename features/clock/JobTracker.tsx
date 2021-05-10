@@ -11,7 +11,7 @@ import moment from 'moment';
 
 import { createJob, endJob } from './api';
 import TripMap from '../shiftList/TripMap';
-import EmployerSelector from './EmployerSelector';
+import EmployerSelector, {EmployerBox} from './EmployerSelector';
 import Ellipsis from '../../components/Ellipsis';
 import parse from 'wellknown';
 
@@ -160,9 +160,10 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                 ) : null}
                 {activeJob ? (
                     <ScrollView horizontal={true} style={tailwind('w-full p-2 flex-row')}>
+                        <EmployerBox employer={activeJob.employer} size={8} style={tailwind("self-center m-0")}/>
                         <View
                             style={tailwind(
-                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around'
+                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around justify-center'
                             )}
                         >
                             <Text style={tailwind('text-sm font-bold text-white flex-initial')}>
@@ -171,7 +172,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                         </View>
                         <View
                             style={tailwind(
-                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around'
+                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around justify-center'
                             )}
                         >
                             <Text style={tailwind('text-sm font-bold text-white flex-initial')}>
@@ -180,7 +181,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                         </View>
                         <View
                             style={tailwind(
-                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around'
+                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around justify-center'
                             )}
                         >
                             <Text style={tailwind('text-sm font-bold text-white flex-initial')}>

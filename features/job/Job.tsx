@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, Image, Pressable, TextInput } from 'react-native';
+import { ScrollView, View, Text, Image, Pressable, TextInput, StyleSheet} from 'react-native';
 import { tailwind } from 'tailwind';
 import { Region, Marker, LatLng } from 'react-native-maps';
 import { useQueryClient, useMutation } from 'react-query';
@@ -9,6 +9,7 @@ import { parse } from 'wellknown';
 import TripMap from '../shiftList/TripMap';
 import ScreenshotUploader from './ScreenshotPicker';
 import { updateJobValue } from './api';
+import { EmployerBox } from '../clock/EmployerSelector';
 
 // Scroll view of screenshots
 export const Screenshots = ({
@@ -140,6 +141,8 @@ export const JobItem = ({ job }: { job: Job }) => {
                     key: dataKey,
                     value: val,
                 });
+                //TODO: Submit to server on mutation
+                //TODO: decimal formatting (for convenience)
             }
         };
 
@@ -168,7 +171,7 @@ export const JobItem = ({ job }: { job: Job }) => {
                         style={[
                             tailwind('text-xl mb-2 text-black w-full flex-auto'),
                             displayValue == undefined
-                                ? null
+                                ? tailwind('border-b-2')
                                 : tailwind('text-black font-bold underline'),
                         ]}
                         key={`${value}`}
@@ -205,6 +208,10 @@ export const JobItem = ({ job }: { job: Job }) => {
             />
 
             <View style={[tailwind('h-36 w-full'), { overflow: 'hidden' }]}>
+                        <View style={styles.mapTitle}>
+                            <EmployerBox employer={job.employer} size={14} style={tailwind('')}/>
+                        </View>
+
                 {locations && region ? (
                     <TripMap
                         interactive={false}
@@ -237,7 +244,7 @@ export const JobItem = ({ job }: { job: Job }) => {
                 )}
             </View>
             <View style={tailwind('flex-col')}>
-                <View style={tailwind('flex-row justify-between p-2')}>
+                <View style={tailwind('flex-row justify-between p-2 pl-5 pr-5')}>
                     <Text style={tailwind('text-xl font-bold')}>
                         {moment(job.startTime).format('LL')}{' '}
                     </Text>
@@ -289,3 +296,13 @@ export const JobItem = ({ job }: { job: Job }) => {
         </View>
     );
 };
+
+
+const styles = StyleSheet.create({
+    mapTitle: {
+        position: 'absolute',
+        top: 2,
+        left: 10,
+        zIndex: 101,
+    },
+});

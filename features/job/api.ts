@@ -109,7 +109,6 @@ export const useNumJobsNeedEntryThisWeek = () => {
 
 export const getFilteredJobs = ({ queryKey }) => {
     const filters = queryKey[1];
-    console.log('filters in query:', filters);
     const client = getClient(store);
     const createFilterString = (filters: JobFilter): string => {
         let or_filters = [];
@@ -160,7 +159,7 @@ export const getFilteredJobs = ({ queryKey }) => {
         console.log('filter string:', filterString);
 
         query = gql`query {
-                allJobs(filters: ${filterString}) {
+                allJobs(filters: ${filterString}, sort: START_TIME_DESC) {
                 ${coreQuery}
          }}`;
     } else {
