@@ -1,5 +1,4 @@
 import { fetchWithQueryParams, uri } from '../../utils';
-//TODO: interface for checking if currently authenticated with server (if token is valid)
 
 export interface OtpResponse {
     status: number;

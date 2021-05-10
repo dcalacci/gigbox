@@ -10,8 +10,6 @@ import TripMap from '../shiftList/TripMap';
 import ScreenshotUploader from './ScreenshotPicker';
 import { updateJobValue } from './api';
 
-//TODO: show start and end of trip in map
-
 // Scroll view of screenshots
 export const Screenshots = ({
     screenshots,
@@ -142,8 +140,6 @@ export const JobItem = ({ job }: { job: Job }) => {
                     key: dataKey,
                     value: val,
                 });
-                //TODO: Submit to server on mutation
-                //TODO: decimal formatting (for convenience)
             }
         };
 

@@ -62,8 +62,6 @@ export const addLocationsToShift = async (shiftId: string, locations: Location[]
     return await client.request(mutation, variables);
 };
 
-//TODO: #6 occasionally tasks show up as undefined, or as being not registered on app reload.
-// not sure why this is.
 export const registerMileageTask = () => {
     TaskManager.isTaskRegisteredAsync('gigbox.mileageTracker').then((isRegistered) => {
         if (isRegistered) {
