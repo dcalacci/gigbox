@@ -33,10 +33,22 @@ class JobFilter(FilterSet):
     class Meta:
         model = JobModel
         fields = {
-            'start_time': ['gt', 'gte', 'lt', 'lte', 'range'],
-            'end_time': ['gt', 'gte', 'lt', 'lte', 'range'],
-            'mileage': ['gt', 'gte', 'lte', 'eq', 'range'],
+            'start_time': ['is_null', 'gt', 'gte', 'lt', 'lte', 'range'],
+            'end_time': ['is_null', 'gt', 'gte', 'lt', 'lte', 'range'],
+            'mileage': ['is_null', 'gt', 'gte', 'lte', 'eq', 'range'],
             'employer': ['not_in', 'in', 'eq', 'ilike'],
+            'total_pay': ['is_null', 'gt', 'gte', 'lte', 'eq', 'range'],
+            'tip': ['is_null', 'gt', 'gte', 'lte', 'eq', 'range'],
+        }
+
+class ShiftFilter(FilterSet):
+    class Meta:
+        model = ShiftModel 
+        fields = {
+            'start_time': ['gt', 'gte', 'lt', 'lte', 'range'],
+            'end_time': ['is_null', 'gt', 'gte', 'lt', 'lte', 'range'],
+            'road_snapped_miles': ['gt', 'gte', 'lte', 'eq', 'range'],
+            'employers': ['contains', 'eq'],
             'total_pay': ['is_null', 'gt', 'gte', 'lte', 'eq', 'range'],
             'tip': ['is_null', 'gt', 'gte', 'lte', 'eq', 'range'],
         }
@@ -46,7 +58,8 @@ class FilterableAuthConnectionField(FilterableConnectionField):
     RELAY_ARGS = ['first', 'last', 'before', 'after']
 
     filters = {
-        JobModel: JobFilter()
+        JobModel: JobFilter(),
+        ShiftModel: ShiftFilter()
     }
 
     @classmethod

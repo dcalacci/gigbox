@@ -111,17 +111,21 @@ class Query(graphene.ObjectType):
         total_pay = sum(
             [job.total_pay for job in jobs if job.total_pay and job.total_pay != 0])
         total_tips = sum([job.tip for job in jobs if job.tip and job.tip != 0])
+
         mean_pay = np.mean(
             [job.total_pay for job in jobs if job.total_pay and job.total_pay != 0])
         mean_tip = np.mean(
             [job.tip for job in jobs if job.tip and job.tip != 0])
 
+        print("returning weekly summary...", mean_tip or 0.)
+
         return WeeklySummary(
             miles=distance_miles,
             num_shifts=n_shifts,
             num_jobs=n_jobs,
-            mean_pay=mean_pay,
-            mean_tips=mean_tip,
+            # make sure we return 0 if mean pay or tip is NaN
+            mean_pay=mean_pay if not np.isnan(mean_pay) else 0.,
+            mean_tips=mean_tip if not np.isnan(mean_tip) else 0.,
             total_pay=total_pay,
             total_tips=total_tips)
 
