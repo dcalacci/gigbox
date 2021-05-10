@@ -9,9 +9,9 @@ import { log } from '../../utils';
 import { useNumJobsNeedEntryThisWeek } from '../job/api';
 
 const WeeklyCard: FunctionComponent = ({navigation}) => {
-    const weeklySummary = useQuery('weeklySummary', fetchWeeklySummary);
+    const weeklySummary = useQuery(['trackedJobs', 'weeklySummary'], fetchWeeklySummary);
     const jobsNeedEntryStatus = useNumJobsNeedEntryThisWeek();
-    if (weeklySummary.isError) log.error(weeklySummary);
+    if (weeklySummary.isError) log.error("Weekly summary error", weeklySummary);
     if (weeklySummary.isLoading || weeklySummary.isError) {
         return (
             <View style={tailwind('flex-1 w-11/12')}>
@@ -31,7 +31,7 @@ const WeeklyCard: FunctionComponent = ({navigation}) => {
                 <View style={tailwind('border-b border-green-500 -mr-5 ml-5 p-0 pt-1 pb-2')}></View>
                 <View style={tailwind('flex-row flex-wrap items-start content-around mt-5 pb-5')}>
                     <View style={tailwind('flex-col items-start w-1/3 flex-auto')}>
-                        <Text style={tailwind('ml-1')}>jobs with pay</Text>
+                        <Text style={tailwind('ml-1')}>jobs</Text>
 
                         <Text style={tailwind('text-2xl text-green-500 font-bold')}>
                             {summary.numJobs}
