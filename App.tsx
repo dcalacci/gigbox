@@ -11,7 +11,7 @@ import Navigation from './navigation';
 import { store, persistor } from './store/store';
 import { QueryClientProvider, QueryClient } from 'react-query';
 import * as TaskManager from 'expo-task-manager'
-import { LocationObject } from 'expo-task-manager'
+import { LocationObject } from 'expo-location'
 import { hasActiveShift, addLocationsToShift, } from './tasks';
 import { log } from './utils'
 
@@ -26,8 +26,6 @@ TaskManager.defineTask('gigbox.mileageTracker', async ({ data, error }) => {
     }
     const shiftResponse = await hasActiveShift();
     const locations = data.locations;
-    //TODO: We no longer need to transform these into our own objects.
-    // make this simpler and just pass native Expo LocationObjects
     if (shiftResponse.active) {
         let locs = locations.map((location: LocationObject) => {
             let obj = {
@@ -39,8 +37,6 @@ TaskManager.defineTask('gigbox.mileageTracker', async ({ data, error }) => {
             };
             return obj;
         }) as Location[];
-        //TODO: reduce the amount of data coming back from server to make response time better
-        // i.e. get only latest location point, or just an 'ok'
         return addLocationsToShift(shiftResponse.id, locs)
         //TODO: collect errors in adding locations, or save them to a cache
     }

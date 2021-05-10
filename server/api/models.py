@@ -197,7 +197,6 @@ class Screenshot(db.Model):
         Shift.id, ondelete='CASCADE'))
     job_id = db.Column(UUID(as_uuid=True), ForeignKey(
         Job.id, ondelete="CASCADE"))
-    # TODO: Why is this a timestamp again?
     timestamp = db.Column(db.String)
     on_device_uri = db.Column(db.String)
     img_filename = db.Column(db.String)

@@ -58,9 +58,6 @@ from flask import current_app
 # users from the server anyway.
 
 # All requests are associated with a token.
-# TODO: How can we augment each mutation with a JWT token to make sure they are authorized?
-# Check out get_jwt_identity here: https://dev.to/curiouspaul1/graphql-by-example-with-graphene-flask-and-fauna-jio
-
 
 class CreateUser(Mutation):
     """Mutation to create a user. must be given a UID"""
