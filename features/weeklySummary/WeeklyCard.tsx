@@ -1,17 +1,31 @@
 import React, { FunctionComponent, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, SafeAreaView } from 'react-native';
-import moment from 'moment'
+import moment from 'moment';
 import { tailwind } from 'tailwind';
 import { useQuery } from 'react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchWeeklySummary } from './api';
 import { log } from '../../utils';
-import { useNumJobsNeedEntryThisWeek } from '../job/api';
+import { Job } from '../../types';
+import { getFilteredJobs } from '../job/api';
 
-const WeeklyCard: FunctionComponent = ({navigation}) => {
+const WeeklyCard: FunctionComponent = ({ navigation }) => {
     const weeklySummary = useQuery(['trackedJobs', 'weeklySummary'], fetchWeeklySummary);
-    const jobsNeedEntryStatus = useNumJobsNeedEntryThisWeek();
-    if (weeklySummary.isError) log.error("Weekly summary error", weeklySummary);
+    const jobsNeedEntryStatus = useQuery(
+        [
+            'trackedJobs',
+            {
+                startDate: moment().startOf('week'),
+                endDate: moment().endOf('week'),
+                needsEntry: true,
+            },
+        ],
+        getFilteredJobs,
+        {
+            select: (d: { allJobs: { edges: { node: Job }[] } }) => d.allJobs.edges.length,
+        }
+    );
+    if (weeklySummary.isError) log.error('Weekly summary error', weeklySummary);
     if (weeklySummary.isLoading || weeklySummary.isError) {
         return (
             <View style={tailwind('flex-1 w-11/12')}>
@@ -68,7 +82,7 @@ const WeeklyCard: FunctionComponent = ({navigation}) => {
                             filters: {
                                 startDate: moment().startOf('week').format(),
                                 endDate: moment().endOf('day').format(),
-                                needsEntry: true
+                                needsEntry: true,
                             },
                         })
                     }

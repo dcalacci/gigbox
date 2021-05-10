@@ -227,7 +227,11 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
     const filteredJobsStatus = useQuery(['filteredJobs', filter], getFilteredJobs, {
         keepPreviousData: true,
         onSuccess: (data) => {
-            log.info("recieved filtered jobs...")
+            setAllJobs(
+                filteredJobsStatus.isLoading || filteredJobsStatus.isError
+                    ? { edges: [] }
+                    : data.allJobs
+            );
         },
     });
 
@@ -240,13 +244,10 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
     const queryClient = useQueryClient();
 
     useEffect(() => {
+        console.log("invalidating filtered jobs query...")
         queryClient.invalidateQueries('filteredJobs');
+        queryClient.invalidateQueries('trackedJobs');
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-        setAllJobs(
-            filteredJobsStatus.isLoading || filteredJobsStatus.isError
-                ? { edges: [] }
-                : filteredJobsStatus.data.allJobs
-        )
     }, [filter]);
 
     const avgTime = (edges: { node: Job }[]) => {
