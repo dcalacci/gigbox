@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, Pressable, StyleSheet, LayoutAnimation } from 'react-native';
+import { ScrollView, View, Text, Pressable, StyleSheet, LayoutAnimation } from 'react-native';
 
 import { tailwind } from 'tailwind';
-import { log } from '../../utils';
+import { formatElapsedTime, log } from '../../utils';
 import { Shift, Job, Employers } from '@/types';
 import { LatLng, Marker, Region } from 'react-native-maps';
 import { useQueryClient, useMutation } from 'react-query';
@@ -25,11 +25,11 @@ export default function JobTracker({ shift }: { shift: Shift }) {
     const [region, setRegion] = useState<Region>();
     const [employer, setEmployer] = useState<Employers>();
     const [activeJob, setActiveJob] = useState<Job>();
-    const queryClient = useQueryClient()
+    const queryClient = useQueryClient();
     const toast = useToast();
 
     useEffect(() => {
-        const activeJobs: {node: Job}[] = shift.jobs.edges.filter((j) => !j.node.endTime);
+        const activeJobs: { node: Job }[] = shift.jobs.edges.filter((j) => !j.node.endTime);
         const activeJob: Job | undefined = activeJobs.length == 0 ? undefined : activeJobs[0].node;
         setActiveJob(activeJob);
     }, [shift.jobs]);
@@ -77,19 +77,21 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                 setActiveJob(undefined);
                 setJobStarted(false);
                 setEmployer(undefined);
-                queryClient.invalidateQueries('trackedJobs')
+                queryClient.invalidateQueries('trackedJobs');
             } else {
                 //TODO: send toast
                 log.error('failed to end job...');
                 toast?.show("Couldn't stop your job. Try again?");
+                queryClient.invalidateQueries('trackedJobs');
             }
         },
         onError: (err, variables) => {
             //TODO: send toast
             queryClient.invalidateQueries('activeShift');
             log.error('Couldnt finish job.');
-            err.response.errors.map((e) => toast?.show(e.message))
-            setJobStarted(false)
+            err.response.errors.map((e) => toast?.show(e.message));
+            setJobStarted(false);
+            queryClient.invalidateQueries('trackedJobs');
         },
     });
 
@@ -157,13 +159,36 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                     </View>
                 ) : null}
                 {activeJob ? (
-                    <View style={tailwind('w-full p-2')}>
-                        <View style={tailwind('flex-initial bg-green-500 rounded-2xl p-1')}>
+                    <ScrollView horizontal={true} style={tailwind('w-full p-2 flex-row')}>
+                        <View
+                            style={tailwind(
+                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around'
+                            )}
+                        >
                             <Text style={tailwind('text-sm font-bold text-white flex-initial')}>
-                                Started: {moment.utc(activeJob.startTime).local().format('h:mm a')}
+                                Started @ {moment.utc(activeJob.startTime).local().format('h:mm a')}
                             </Text>
                         </View>
-                    </View>
+                        <View
+                            style={tailwind(
+                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around'
+                            )}
+                        >
+                            <Text style={tailwind('text-sm font-bold text-white flex-initial')}>
+                                {formatElapsedTime(moment.utc(activeJob.startTime).local())}
+                            </Text>
+                        </View>
+                        <View
+                            style={tailwind(
+                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around'
+                            )}
+                        >
+                            <Text style={tailwind('text-sm font-bold text-white flex-initial')}>
+                                {activeJob.mileage?.toFixed(1)} mi
+                            </Text>
+                        </View>
+
+                    </ScrollView>
                 ) : null}
 
                 {jobStarted && !employer ? (

@@ -1,10 +1,10 @@
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 /**
  *
  * @param startTimestamp A timestamp (number) to calculate elapsed time from.
  * @return {[string]} Hours and minutes since startTimestamp, formatted as "0h 0m"
  */
-export const formatElapsedTime = (startTimestamp: number | Date | null): string => {
+export const formatElapsedTime = (startTimestamp: number | Date | null | Moment): string => {
     if (startTimestamp === null) {
         return '0h 0m 0s';
     } else {
