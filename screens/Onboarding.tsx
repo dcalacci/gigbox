@@ -7,10 +7,11 @@ import PhoneEntry from "../features/auth/PhoneEntry"
 
 export default function OnboardingScreen() {
   const [onboarded, setOnboarded] = useState(false)
+  console.log("onboarded?", onboarded)
   return (
-    <View style={tailwind("bg-white h-full")}>
+    <View style={tailwind("bg-gray-100 h-full")}>
       <SafeAreaView
-        style={tailwind("pt-10 bg-white")}
+        style={tailwind("pt-10 bg-gray-100")}
       >
         {onboarded ? 
         <PhoneEntry />

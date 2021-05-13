@@ -16,10 +16,120 @@ import moment from 'moment';
 import { Job, Screenshot, Shift } from '../../types';
 import { parse } from 'wellknown';
 import TripMap from '../shiftList/TripMap';
+import { Ionicons } from '@expo/vector-icons';
+import * as Haptics from 'expo-haptics';
+
+export const BinarySurveyQuestion = ({
+    onPress,
+    declineText,
+    questionText,
+}: {
+    onPress: (yes: boolean) => void;
+    declineText?: string;
+    questionText?: string;
+}) => {
+    const [pressed, setPressed] = useState<boolean>();
+    const onPressButton = (yes: boolean) => {
+        setPressed(yes);
+        onPress(yes);
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    };
+    return (
+        <View style={tailwind('rounded-lg bg-white p-2')}>
+            <Text style={tailwind('text-lg pt-2 pb-2 underline text-center')}>{questionText}</Text>
+
+            <View style={tailwind('flex-row flex-grow content-around p-2 w-full')}>
+                <Pressable
+                    onPress={() => onPressButton(false)}
+                    style={[
+                        tailwind('rounded-lg flex-grow m-2 p-2 '),
+                        pressed === false
+                            ? tailwind('bg-gray-800')
+                            : tailwind('border-2 border-gray-800'),
+                    ]}
+                >
+                    <Text
+                        style={[
+                            tailwind('text-lg text-white font-bold text-center'),
+                            pressed === false ? tailwind('text-white') : tailwind('text-gray-500'),
+                        ]}
+                    >
+                        <Ionicons
+                            size={24}
+                            name={'close-circle-outline'}
+                            color={pressed === false ? 'white' : 'gray'}
+                        />
+                        No
+                    </Text>
+                </Pressable>
+                <Pressable
+                    onPress={() => onPressButton(true)}
+                    style={[
+                        tailwind('rounded-lg flex-grow m-2 p-2'),
+                        pressed ? tailwind('bg-green-500') : tailwind('border-2 border-green-500'),
+                    ]}
+                >
+                    <Text
+                        style={[
+                            tailwind('text-lg text-white font-bold text-center'),
+                            pressed ? tailwind('text-white') : tailwind('text-green-500'),
+                        ]}
+                    >
+                        <Ionicons
+                            size={24}
+                            name={'checkmark-circle-outline'}
+                            color={pressed ? 'white' : 'green'}
+                        />
+                        Yes
+                    </Text>
+                </Pressable>
+            </View>
+            {pressed === false ? (
+                <View style={tailwind('p-2 ')}>
+                    <Text style={tailwind('text-red-500 font-bold text-center')}>
+                        {declineText}
+                    </Text>
+                </View>
+            ) : null}
+        </View>
+    );
+};
+
+export const DataConsentSection = ({
+    sectionTitle,
+    sectionText,
+    questionText,
+    declineText,
+    onConsent,
+}: {
+    sectionTitle: string;
+    sectionText: string;
+    questionText: string;
+    declineText: string;
+    onConsent: (yes: boolean) => void;
+}) => {
+    return (
+        <>
+            <Text style={tailwind('text-lg font-bold text-green-500 pt-5 pb-2')}>
+                {sectionTitle}
+            </Text>
+            <Text style={tailwind('text-base pt-2 pb-2')}>{sectionText}</Text>
+
+            <BinarySurveyQuestion
+                questionText={questionText}
+                declineText={declineText}
+                onPress={onConsent}
+            />
+        </>
+    );
+};
 
 export const ConsentFlow = ({}) => {
+    const [locationConsent, setLocationConsent] = useState<boolean>();
+    const [photoConsent, setPhotoConsent] = useState<boolean>();
+
     return (
-        <ScrollView>
+        <ScrollView style={tailwind('bg-gray-100 ')}>
             <View style={tailwind('p-2')}>
                 <Text style={[tailwind('text-2xl font-bold text-green-500')]}>
                     By using gigbox, you consent to being part of an MIT research study.
@@ -39,7 +149,7 @@ export const ConsentFlow = ({}) => {
                 <Text style={tailwind('text-xl font-bold text-green-500 underline pb-2')}>
                     What are the study goals? 🎯
                 </Text>
-                <Text style={tailwind('text-sm')}>
+                <Text style={tailwind('text-base')}>
                     By participating in this study, you will help estimate the effective wages of
                     app-based workers like yourself, and help researchers make better tools for
                     workers to track wages, time, and expenses. You will also help uncover any pay
@@ -50,21 +160,21 @@ export const ConsentFlow = ({}) => {
                 <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
                     Procedures: what you need to do
                 </Text>
-                <Text style={tailwind('text-sm')}>
+                <Text style={tailwind('text-base')}>
                     If you volunteer to be part of this study, we’d ask you to:
                 </Text>
 
-                <Text style={tailwind('text-sm p-2 font-bold')}>
+                <Text style={tailwind('text-base p-2 font-bold')}>
                     Use gigbox during your normal working day to track jobs so we can help measure
                     your pay and expenses
                 </Text>
 
-                <Text style={tailwind('text-sm p-2 font-bold')}>
+                <Text style={tailwind('text-base p-2 font-bold')}>
                     Answer a series of survey questions to help measure potential pay differences
                     between people of different backgrounds
                 </Text>
 
-                <Text style={tailwind('text-sm')}>
+                <Text style={tailwind('text-base')}>
                     Your participation is completely voluntary, and you’re free to choose if you’d
                     like to be in it. You can choose to withdraw at any time without any
                     consequences.
@@ -76,7 +186,7 @@ export const ConsentFlow = ({}) => {
                     <Text style={tailwind('text-2xl font-bold text-green-500 pr-1')}>2/5</Text>
                     <Text style={tailwind('text-2xl font-bold')}>Privacy & Data 🔐</Text>
                 </View>
-                <Text style={tailwind('text-sm pt-2 pb-2')}>
+                <Text style={tailwind('text-base pt-2 pb-2')}>
                     The only people who will know that you are a research subject are members of the
                     research team which might include outside collaborators not affiliated with MIT.
                     No information about you, or provided by you during the research will be
@@ -85,7 +195,7 @@ export const ConsentFlow = ({}) => {
                     information may be reviewed by authorized MIT representatives to ensure
                     compliance with MIT policies and procedures.
                 </Text>
-                <Text style={tailwind('text-sm pt-2 pb-2')}>
+                <Text style={tailwind('text-base pt-2 pb-2')}>
                     When the results of the research are published or discussed in conferences, no
                     information will be included that would reveal your identity. If photographs,
                     videos, or audio-tape recordings of you will be used for educational purposes,
@@ -95,7 +205,7 @@ export const ConsentFlow = ({}) => {
                     Data about you
                 </Text>
 
-                <Text style={tailwind('text-sm pt-2 pb-2')}>
+                <Text style={tailwind('text-base pt-2 pb-2')}>
                     Three kinds of data will be collected through your device.
                     <Text style={tailwind('font-bold')}>
                         {' '}
@@ -109,18 +219,126 @@ export const ConsentFlow = ({}) => {
                     name, phone number, or any other identifier.
                 </Text>
 
-                <Text style={tailwind('text-lg font-bold text-green-500 pt-5 pb-2')}>
-                    1. Your Location + accelerometer📍
+                <DataConsentSection
+                    sectionTitle={' 1. Your Location + accelerometer 📍'}
+                    sectionText={
+                        'We’ll keep track of your location + accelerometer readings in the background while you use the app, to track how far you travel for jobs, how much you’re standing, sitting, and walking while on the job, and to help make job tracking more accurate in the future.'
+                    }
+                    questionText={
+                        'Do you consent to your location being tracked to estimate your pay, expenses, and to improve job tracking?'
+                    }
+                    declineText={
+                        "You can't use gigbox without consenting to your location data being used."
+                    }
+                    onConsent={(yes: boolean) => console.log('Location consent:', yes)}
+                ></DataConsentSection>
+
+                <DataConsentSection
+                    sectionTitle={'2. Your Photos (screenshots) 📸'}
+                    sectionText={
+                        'To track jobs, and make job tracking better, the app will automatically find screenshots you take of apps like Instacart, Doordash, or GrubHub, and collect them together. We’ll use these screenshots, and your location, to re-construct your working days. We won’t access, analyze, or do anything with photos that aren’t screenshots from these apps.'
+                    }
+                    questionText={
+                        'Do you consent to sharing screenshots you take of your working apps so we can estimate your pay and improve job tracking?'
+                    }
+                    declineText={
+                        "You can't use gigbox without granting permissions for your photos."
+                    }
+                    onConsent={(yes: boolean) => console.log('photos consent:', yes)}
+                ></DataConsentSection>
+
+                <DataConsentSection
+                    sectionTitle={'3. Survey responses❓'}
+                    sectionText={
+                        'We’ll also ask you to respond to 3 surveys - one during the start of the study, one in the middle, and one at the end. Your responses to these surveys will also be saved.'
+                    }
+                    questionText={
+                        'Do you consent to recieving and responding to 3 surveys while enrolled in the study?'
+                    }
+                    declineText={"You can't use gigbox without consenting to the surveys."}
+                    onConsent={(yes: boolean) => console.log('survey consent:', yes)}
+                ></DataConsentSection>
+            </View>
+            <View style={tailwind('flex-col p-5')}>
+                <View style={tailwind('flex-row -ml-3 pb-5')}>
+                    <Text style={tailwind('text-2xl font-bold text-green-500 pr-1')}>3/5</Text>
+                    <Text style={tailwind('text-2xl font-bold')}>Study info and Risks</Text>
+                </View>
+                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                    How long will I be enrolled?
                 </Text>
-                <Text style={tailwind('text-sm pt-2 pb-2')}>
-                    We’ll keep track of your location + accelerometer readings in the background
-                    while you use the app, to track how far you travel for jobs, how much you’re
-                    standing, sitting, and walking while on the job, and to help make job tracking
-                    more accurate in the future.
+
+                <Text style={tailwind('text-base pt-2 pb-2')}>
+                    As soon as you sign for consent below, you will be enrolled. You can leave the
+                    study at any time in the settings screen of the app.
                 </Text>
-                <Text style={tailwind('text-lg pt-2 pb-2 underline text-center')}>
-                    Do you consent to your location being tracked to estimate your pay, expenses,
-                    and to improve job tracking?
+
+                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                    What are the risks?
+                </Text>
+                <Text style={tailwind('text-base pt-2 pb-2')}>
+                    It’s possible that using the app or participating in interviews might put you at
+                    risk of retribution from an app-based employer like Instacart or Doordash,
+                    particularly in the case of a data breach. To mitigate this, we will keep all
+                    your data private unless you give us explicit consent to share it. Any shared
+                    data will be associated with an anonymous ID, not your name, phone number, or
+                    other identifier.
+                </Text>
+                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                    Your Investigators
+                </Text>
+
+                <Text style={tailwind('text-base pt-2 pb-2')}>
+                    If you have any questions or concerns about the research, or feel like the study
+                    isn’t treating you fairly, please feel free to contact Dan Calacci
+                    (dcalacci@media.mit.edu) or @dcalacci on Twitter. You can also reach him at
+                    <Text style={tailwind('font-bold')}> 908-229-8992 </Text>or through mail:
+                    <Text
+                        style={tailwind('font-bold')}
+                    >{`\nDan Calacci \nE15-384b\nMIT\nCambridge, MA, 02139`}</Text>
+                </Text>
+
+                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                    What if I have problems?
+                </Text>
+                <Text style={tailwind('text-base pt-2 pb-2')}>
+                    If you have any questions or concerns, or feel like the study isn’t treating you
+                    fairly, you can contact the Chairman of the Committee on the Use of Humans as
+                    Experimental Subjects at MIT. Their contact information is here, and will be
+                    available in the settings screen of the app.
+                </Text>
+
+                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                    Your Rights
+                </Text>
+                <Text style={tailwind('text-base pt-2 pb-2')}>
+                    You are not waiving any legal claims, rights or remedies because of your
+                    participation in this research study. If you feel you have been treated
+                    unfairly, or you have questions regarding your rights as a research subject, you
+                    may contact:
+                    <Text
+                        style={tailwind('font-bold')}
+                    >{`\n\nChairman of the Committee on the Use of Humans as Experimental Subjects\nM.I.T.\nRoom E25-143B\n77 Massachusetts Ave, Cambridge, MA 02139\nphone 1-617-253 6787.`}</Text>
+                </Text>
+
+                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                    Emergency care and compensation for injury
+                </Text>
+
+                <Text style={tailwind('text-base pt-2 pb-2')}>
+                    If you feel you have suffered an injury, which may include emotional trauma, as
+                    a result of participating in this study, please contact the person in charge of
+                    the study as soon as possible. In the event you suffer such an injury, M.I.T.
+                    may provide itself, or arrange for the provision of, emergency transport or
+                    medical treatment, including emergency treatment and follow-up care, as needed,
+                    or reimbursement for such medical services. M.I.T. does not provide any other
+                    form of compensation for injury. In any case, neither the offer to provide
+                    medical assistance, nor the actual provision of medical services shall be
+                    considered an admission of fault or acceptance of liability. Questions regarding
+                    this policy may be directed to MIT’s Insurance Office, (617) 253-2823. Your
+                    insurance carrier may be billed for the cost of emergency transport or medical
+                    treatment, if such services are determined not to be directly related to your
+                    participation in this study.
                 </Text>
             </View>
         </ScrollView>
