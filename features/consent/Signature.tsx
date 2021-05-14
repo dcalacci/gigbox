@@ -22,11 +22,13 @@ export const Signature = ({
     saveSignature,
     saveName,
     onPressContinue,
+    onPressBack,
     isLoading,
 }: {
     saveSignature: (val: string) => void;
     saveName: (val: string) => void;
     onPressContinue: () => void;
+    onPressBack: () => void;
     isLoading: boolean;
 }) => {
     const sigRef = useRef(null);
@@ -35,6 +37,17 @@ export const Signature = ({
 
     return (
         <KeyboardAwareScrollView style={tailwind('bg-gray-100')}>
+            <View style={tailwind('flex-row')}>
+                <Pressable
+                    style={tailwind('rounded-lg border border-green-500 m-2')}
+                    onPress={onPressBack}
+                >
+                    <Text style={tailwind('text-xl underline text-green-500 p-2 font-bold ')}>
+                        {'< Back'}
+                    </Text>
+                </Pressable>
+            </View>
+
             <View style={tailwind('p-2')}>
                 <Text style={[tailwind('text-3xl font-bold text-green-500 pb-2')]}>Signature</Text>
             </View>
@@ -87,6 +100,7 @@ export const Signature = ({
                     autoCapitalize={'words'}
                     autoCompleteType={'name'}
                     onSubmitEditing={({ nativeEvent: { text } }) => {
+                        saveName(text);
                         setName(text);
                     }}
                     defaultValue={name}

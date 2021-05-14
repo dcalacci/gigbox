@@ -62,7 +62,7 @@ export default function BottomTabNavigator() {
     const userInfoStatus = useQuery('userInfo', getUserInfo, {
         onSuccess: (d) => {
             console.log("user info:", d)
-            if (d.consent.consented) {
+            if (d.consent?.consented) {
                 setIsOnboarded(true)
             }
         },
