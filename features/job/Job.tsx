@@ -134,7 +134,9 @@ export const JobItem = ({ job }: { job: Job }) => {
         const setJobValue = useMutation(updateJobValue, {
             onSuccess: (data, variables) => {
                 console.log('updating job value:', data, variables);
+                queryClient.invalidateQueries('filteredJobs')
                 queryClient.invalidateQueries('shifts');
+                queryClient.invalidateQueries('trackedJobs');
                 queryClient.invalidateQueries('weeklySummary');
             },
         });
@@ -268,11 +270,11 @@ export const JobItem = ({ job }: { job: Job }) => {
             <View style={tailwind('flex-col')}>
                 <View style={tailwind('flex-row justify-between p-2 pl-5 pr-5')}>
                     <Text style={tailwind('text-xl font-bold')}>
-                        {moment(job.startTime).format('LL')}{' '}
+                        {moment.utc(job.startTime).local().format('LL')}{' '}
                     </Text>
 
                     <Text style={tailwind('text-xl font-bold')}>
-                        {moment(job.startTime).format('LT')} - {moment(job.endTime).format('LT')}{' '}
+                        {moment.utc(job.startTime).local().format('LT')} - {moment.utc(job.endTime).local().format('LT')}{' '}
                     </Text>
                 </View>
                 <View style={tailwind('flex-row p-5')}>

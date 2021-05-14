@@ -2,16 +2,43 @@ import React, { FunctionComponent } from 'react';
 import { Pressable, Text, ScrollView, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { tailwind } from 'tailwind';
+import { useQuery } from 'react-query';
 import TrackingBar from '../features/clock/TrackingBar';
 import WeeklyCard from '../features/weeklySummary/WeeklyCard';
-import { useNumJobsNeedEntryToday, useNumTrackedJobsToday } from '../features/job/api';
+import {
+    getFilteredJobs,
+    useNumJobsNeedEntryToday,
+    useNumTrackedJobsToday,
+} from '../features/job/api';
 import { useNumTrackedShifts } from '../features/clock/api';
 import { useLinkProps } from '@react-navigation/native';
+import { Job } from '../types';
 import moment from 'moment';
 
 export default function TabOneScreen({ navigation }) {
-    const numTrackedJobsStatus = useNumTrackedJobsToday();
-    const numJobsTodayNeedEntry = useNumJobsNeedEntryToday();
+    // const numTrackedJobsStatus = useNumTrackedJobsToday();
+    const numJobsTodayNeedEntry = useQuery(
+        [
+            'trackedJobs',
+            {
+                startDate: moment().startOf('day'),
+                endDate: moment().endOf('day'),
+                needsEntry: true,
+            },
+        ],
+        getFilteredJobs,
+        {
+            select: (d: { allJobs: { edges: { node: Job }[] } }) => d.allJobs.edges.length,
+        }
+    );
+
+    const numTrackedJobsStatus = useQuery(
+        ['trackedJobs', { startDate: moment().startOf('day'), endDate: moment().endOf('day') }],
+        getFilteredJobs,
+        {
+            select: (d: { allJobs: { edges: { node: Job }[] } }) => d.allJobs.edges.length,
+        }
+    );
     const numTrackedShiftsStatus = useNumTrackedShifts();
     return (
         <View style={tailwind('bg-gray-100 h-full')}>

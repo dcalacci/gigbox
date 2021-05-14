@@ -33,80 +33,6 @@ export const updateJobValue = ({
     });
 };
 
-export const useNumTrackedJobsToday = () => {
-    return useQuery(
-        ['trackedJobs'],
-        () => {
-            const client = getClient(store);
-            const todayString = moment().startOf('day').format();
-            const query = gql`query {
-            allJobs(filters: {startTimeGte: "${todayString}"}) {
-                edges {
-                    node { 
-                        id
-                    }
-                }
-            }
-        }
-        `;
-            return client.request(query);
-        },
-        {
-            select: (d) => d.allJobs.edges.length,
-        }
-    );
-};
-
-export const useNumJobsNeedEntryToday = () => {
-    return useQuery(
-        ['trackedJobs'],
-        () => {
-            const client = getClient(store);
-            const todayString = moment().startOf('day').format();
-            const query = gql`query {
-            allJobs(filters: {and: [{startTimeGte: "${todayString}"}, {or: [{totalPayIsNull: true}, {tipIsNull: true}]}]}) {
-                edges {
-                    node { 
-                        id
-                    }
-                }
-            }
-        }
-        `;
-            return client.request(query);
-        },
-        {
-            select: (d) => d.allJobs.edges.length,
-        }
-    );
-};
-
-export const useNumJobsNeedEntryThisWeek = () => {
-    return useQuery(
-        ['trackedJobs'],
-        () => {
-            const client = getClient(store);
-            const startStr = moment().startOf('week').format();
-            const query = gql`query {
-            allJobs(filters: {and: [{startTimeGte: "${startStr}"}, {or: [{totalPayIsNull: true}, {tipIsNull: true}]}]}) {
-                edges {
-                    node { 
-                        id
-                    }
-                }
-            }
-        }
-        `;
-            return client.request(query);
-        },
-        {
-            select: (d) => d.allJobs.edges.length,
-        }
-    );
-};
-
-
-
 export const getFilteredJobs = ({ queryKey }) => {
     const filters = queryKey[1];
     const client = getClient(store);
@@ -149,8 +75,10 @@ export const getFilteredJobs = ({ queryKey }) => {
                     tip
                     snappedGeometry
                     screenshots {
+                        id
                         jobId
                         onDeviceUri
+                        timestamp
                         imgFilename
                         employer
                     }
