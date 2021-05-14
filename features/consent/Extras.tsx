@@ -13,10 +13,19 @@ import { tailwind } from 'tailwind';
 import * as Haptics from 'expo-haptics';
 import BinarySurveyQuestion from './BinarySurveyQuestion';
 
-export const Extras = ({}) => {
-    const [locationConsent, setLocationConsent] = useState<boolean>();
-    const [photoConsent, setPhotoConsent] = useState<boolean>();
-
+export const Extras = ({
+    setInterviewConsent,
+    setDataSharingConsent,
+    dataSharingConsent,
+    interviewConsent,
+    onPressContinue
+}: {
+    setInterviewConsent: (yes: boolean) => void;
+    setDataSharingConsent: (yes: boolean) => void;
+    dataSharingConsent: boolean | undefined,
+    interviewConsent: boolean | undefined
+    onPressContinue: () => void
+}) => {
     return (
         <ScrollView style={tailwind('bg-gray-100')}>
             <View style={tailwind('p-2')}>
@@ -37,19 +46,27 @@ export const Extras = ({}) => {
                 </Text>
                 <BinarySurveyQuestion
                     questionText={`Do you consent to MIT sharing data with other researchers securely? Other researchers will be able to analyze your location history + accelerometer readings from the app, the screenshots you’ve taken, and your survey responses, all associated with an anonymous ID (not your phone number or name). They’ll be able to use that data without your additional informed consent.`}
-                    onPress={(yes: boolean) => console.log('pressss')}
+                    onPress={(yes: boolean) => {
+                        setDataSharingConsent(yes);
+                        console.log('pressss');
+                    }}
+                    value={dataSharingConsent}
                 />
                 <BinarySurveyQuestion
                     questionText={
                         'Do you consent to being contacted for further user interviews? If you do, we’ll ask for your contact information so we can schedule an interview. Your contact info will not be associated with the data you share through the app.'
                     }
-                    onPress={(yes: boolean) => console.log('interviews')}
+                    onPress={(yes: boolean) => {
+                        setInterviewConsent(yes);
+                    }}
+                    value={interviewConsent}
                 />
             </View>
             <Pressable
                 style={tailwind('rounded-lg bg-green-500 p-5 m-2')}
                 onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    onPressContinue()
                 }}
             >
                 <Text style={tailwind('font-bold text-white text-xl text-center')}>Continue</Text>

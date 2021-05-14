@@ -17,7 +17,15 @@ import * as Haptics from 'expo-haptics';
 import { SignatureView } from 'react-native-signature-capture-view';
 import BinarySurveyQuestion from './BinarySurveyQuestion';
 
-export const Signature = ({}) => {
+export const Signature = ({
+    saveSignature,
+    saveName,
+    onPressContinue,
+}: {
+    saveSignature: (val: string) => void;
+    saveName: (val: string) => void;
+    onPressContinue: () => void;
+}) => {
     const sigRef = useRef(null);
     const [sigText, setSigText] = useState<string>('');
     const [name, setName] = useState<string>('');
@@ -42,6 +50,7 @@ export const Signature = ({}) => {
                         //  a base64 encoded image
                         console.log('saved signature');
                         setSigText(val);
+                        saveSignature(val);
                     }}
                     onClear={() => {
                         console.log('cleared signature');
@@ -92,6 +101,7 @@ export const Signature = ({}) => {
                 disabled={sigText === undefined || name === undefined}
                 onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                    onPressContinue();
                     //TODO: send value to server, wait until we get a response back, and continue
                 }}
             >
