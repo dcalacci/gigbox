@@ -29,7 +29,7 @@ export const DataConsentSection = ({
     questionText: string;
     declineText: string;
     onConsent: (yes: boolean) => void;
-    value: boolean;
+    value: boolean | undefined;
     visible: boolean;
 }) => {
     if (visible) {
@@ -44,6 +44,7 @@ export const DataConsentSection = ({
                     questionText={questionText}
                     declineText={declineText}
                     onPress={onConsent}
+                    value={value}
                 />
             </>
         );
@@ -177,6 +178,7 @@ export const ConsentFlow = ({}) => {
                         console.log('Location consent:', yes);
                         setLocationConsent(yes);
                     }}
+                    value={locationConsent}
                     visible={true}
                 ></DataConsentSection>
 
@@ -195,6 +197,7 @@ export const ConsentFlow = ({}) => {
                         setPhotoConsent(yes);
                         console.log('photos consent:', yes);
                     }}
+                    value={photoConsent}
                     visible={locationConsent ? locationConsent : false}
                 ></DataConsentSection>
 
@@ -211,6 +214,7 @@ export const ConsentFlow = ({}) => {
                         setSurveyConsent(yes);
                         console.log('survey consent:', yes);
                     }}
+                    value={surveyConsent}
                     visible={
                         locationConsent && photoConsent ? locationConsent && photoConsent : false
                     }
