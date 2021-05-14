@@ -8,12 +8,14 @@ const BinarySurveyQuestion = ({
     onPress,
     declineText,
     questionText,
+    value
 }: {
     onPress: (yes: boolean) => void;
     declineText?: string;
     questionText?: string;
+    value?: boolean
 }) => {
-    const [pressed, setPressed] = useState<boolean>();
+    const [pressed, setPressed] = useState<boolean | undefined>(value);
     const onPressButton = (yes: boolean) => {
         setPressed(yes);
         onPress(yes);

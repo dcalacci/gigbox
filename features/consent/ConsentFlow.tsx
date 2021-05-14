@@ -10,12 +10,9 @@ import {
     StyleSheet,
 } from 'react-native';
 import { tailwind } from 'tailwind';
-import { Region, Marker, LatLng } from 'react-native-maps';
 import { useQueryClient, useMutation, useQuery } from 'react-query';
-import moment from 'moment';
-import { Job, Screenshot, Shift } from '../../types';
-import { parse } from 'wellknown';
-import TripMap from '../shiftList/TripMap';
+
+import * as Haptics from 'expo-haptics';
 import BinarySurveyQuestion from './BinarySurveyQuestion';
 
 export const DataConsentSection = ({
@@ -24,32 +21,55 @@ export const DataConsentSection = ({
     questionText,
     declineText,
     onConsent,
+    value,
+    visible,
 }: {
     sectionTitle: string;
     sectionText: string;
     questionText: string;
     declineText: string;
     onConsent: (yes: boolean) => void;
+    value: boolean;
+    visible: boolean;
 }) => {
-    return (
-        <>
-            <Text style={tailwind('text-lg font-bold text-green-500 pt-5 pb-2')}>
-                {sectionTitle}
-            </Text>
-            <Text style={tailwind('text-base pt-2 pb-2')}>{sectionText}</Text>
+    if (visible) {
+        return (
+            <>
+                <Text style={tailwind('text-lg font-bold text-green-500 pt-5 pb-2')}>
+                    {sectionTitle}
+                </Text>
+                <Text style={tailwind('text-base pt-2 pb-2')}>{sectionText}</Text>
 
-            <BinarySurveyQuestion
-                questionText={questionText}
-                declineText={declineText}
-                onPress={onConsent}
-            />
-        </>
-    );
+                <BinarySurveyQuestion
+                    questionText={questionText}
+                    declineText={declineText}
+                    onPress={onConsent}
+                />
+            </>
+        );
+    } else {
+        return null;
+    }
+};
+
+export const VisibleSection = ({
+    visible,
+    children,
+}: {
+    visible: boolean;
+    children: JSX.Element;
+}) => {
+    if (visible) {
+        return children;
+    } else {
+        return null;
+    }
 };
 
 export const ConsentFlow = ({}) => {
     const [locationConsent, setLocationConsent] = useState<boolean>();
     const [photoConsent, setPhotoConsent] = useState<boolean>();
+    const [surveyConsent, setSurveyConsent] = useState<boolean>();
 
     return (
         <ScrollView style={tailwind('bg-gray-100 ')}>
@@ -153,7 +173,11 @@ export const ConsentFlow = ({}) => {
                     declineText={
                         "You can't use gigbox without consenting to your location data being used."
                     }
-                    onConsent={(yes: boolean) => console.log('Location consent:', yes)}
+                    onConsent={(yes: boolean) => {
+                        console.log('Location consent:', yes);
+                        setLocationConsent(yes);
+                    }}
+                    visible={true}
                 ></DataConsentSection>
 
                 <DataConsentSection
@@ -167,7 +191,11 @@ export const ConsentFlow = ({}) => {
                     declineText={
                         "You can't use gigbox without granting permissions for your photos."
                     }
-                    onConsent={(yes: boolean) => console.log('photos consent:', yes)}
+                    onConsent={(yes: boolean) => {
+                        setPhotoConsent(yes);
+                        console.log('photos consent:', yes);
+                    }}
+                    visible={locationConsent ? locationConsent : false}
                 ></DataConsentSection>
 
                 <DataConsentSection
@@ -179,91 +207,125 @@ export const ConsentFlow = ({}) => {
                         'Do you consent to recieving and responding to 3 surveys while enrolled in the study?'
                     }
                     declineText={"You can't use gigbox without consenting to the surveys."}
-                    onConsent={(yes: boolean) => console.log('survey consent:', yes)}
+                    onConsent={(yes: boolean) => {
+                        setSurveyConsent(yes);
+                        console.log('survey consent:', yes);
+                    }}
+                    visible={
+                        locationConsent && photoConsent ? locationConsent && photoConsent : false
+                    }
                 ></DataConsentSection>
             </View>
-            <View style={tailwind('flex-col p-5')}>
-                <View style={tailwind('flex-row -ml-3 pb-5')}>
-                    <Text style={tailwind('text-2xl font-bold text-green-500 pr-1')}>3/5</Text>
-                    <Text style={tailwind('text-2xl font-bold')}>Study info and Risks</Text>
+            <VisibleSection
+                visible={
+                    locationConsent && photoConsent && surveyConsent
+                        ? locationConsent && photoConsent && surveyConsent
+                        : false
+                }
+            >
+                <View style={tailwind('flex-col p-5')}>
+                    <View style={tailwind('flex-row -ml-3 pb-5')}>
+                        <Text style={tailwind('text-2xl font-bold text-green-500 pr-1')}>3/5</Text>
+                        <Text style={tailwind('text-2xl font-bold')}>Study info and Risks</Text>
+                    </View>
+                    <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                        How long will I be enrolled?
+                    </Text>
+
+                    <Text style={tailwind('text-base pt-2 pb-2')}>
+                        As soon as you sign for consent below, you will be enrolled. You can leave
+                        the study at any time in the settings screen of the app.
+                    </Text>
+
+                    <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                        What are the risks?
+                    </Text>
+                    <Text style={tailwind('text-base pt-2 pb-2')}>
+                        It’s possible that using the app or participating in interviews might put
+                        you at risk of retribution from an app-based employer like Instacart or
+                        Doordash, particularly in the case of a data breach. To mitigate this, we
+                        will keep all your data private unless you give us explicit consent to share
+                        it. Any shared data will be associated with an anonymous ID, not your name,
+                        phone number, or other identifier.
+                    </Text>
+                    <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                        Your Investigators
+                    </Text>
+
+                    <Text style={tailwind('text-base pt-2 pb-2')}>
+                        If you have any questions or concerns about the research, or feel like the
+                        study isn’t treating you fairly, please feel free to contact Dan Calacci
+                        (dcalacci@media.mit.edu) or @dcalacci on Twitter. You can also reach him at
+                        <Text style={tailwind('font-bold')}> 908-229-8992 </Text>or through mail:
+                        <Text
+                            style={tailwind('font-bold')}
+                        >{`\nDan Calacci \nE15-384b\nMIT\nCambridge, MA, 02139`}</Text>
+                    </Text>
+
+                    <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                        What if I have problems?
+                    </Text>
+                    <Text style={tailwind('text-base pt-2 pb-2')}>
+                        If you have any questions or concerns, or feel like the study isn’t treating
+                        you fairly, you can contact the Chairman of the Committee on the Use of
+                        Humans as Experimental Subjects at MIT. Their contact information is here,
+                        and will be available in the settings screen of the app.
+                    </Text>
+
+                    <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                        Your Rights
+                    </Text>
+                    <Text style={tailwind('text-base pt-2 pb-2')}>
+                        You are not waiving any legal claims, rights or remedies because of your
+                        participation in this research study. If you feel you have been treated
+                        unfairly, or you have questions regarding your rights as a research subject,
+                        you may contact:
+                        <Text
+                            style={tailwind('font-bold')}
+                        >{`\n\nChairman of the Committee on the Use of Humans as Experimental Subjects\nM.I.T.\nRoom E25-143B\n77 Massachusetts Ave, Cambridge, MA 02139\nphone 1-617-253 6787.`}</Text>
+                    </Text>
+
+                    <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
+                        Emergency care and compensation for injury
+                    </Text>
+
+                    <Text style={tailwind('text-base pt-2 pb-2')}>
+                        If you feel you have suffered an injury, which may include emotional trauma,
+                        as a result of participating in this study, please contact the person in
+                        charge of the study as soon as possible. In the event you suffer such an
+                        injury, M.I.T. may provide itself, or arrange for the provision of,
+                        emergency transport or medical treatment, including emergency treatment and
+                        follow-up care, as needed, or reimbursement for such medical services.
+                        M.I.T. does not provide any other form of compensation for injury. In any
+                        case, neither the offer to provide medical assistance, nor the actual
+                        provision of medical services shall be considered an admission of fault or
+                        acceptance of liability. Questions regarding this policy may be directed to
+                        MIT’s Insurance Office, (617) 253-2823. Your insurance carrier may be billed
+                        for the cost of emergency transport or medical treatment, if such services
+                        are determined not to be directly related to your participation in this
+                        study.
+                    </Text>
                 </View>
-                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
-                    How long will I be enrolled?
-                </Text>
-
-                <Text style={tailwind('text-base pt-2 pb-2')}>
-                    As soon as you sign for consent below, you will be enrolled. You can leave the
-                    study at any time in the settings screen of the app.
-                </Text>
-
-                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
-                    What are the risks?
-                </Text>
-                <Text style={tailwind('text-base pt-2 pb-2')}>
-                    It’s possible that using the app or participating in interviews might put you at
-                    risk of retribution from an app-based employer like Instacart or Doordash,
-                    particularly in the case of a data breach. To mitigate this, we will keep all
-                    your data private unless you give us explicit consent to share it. Any shared
-                    data will be associated with an anonymous ID, not your name, phone number, or
-                    other identifier.
-                </Text>
-                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
-                    Your Investigators
-                </Text>
-
-                <Text style={tailwind('text-base pt-2 pb-2')}>
-                    If you have any questions or concerns about the research, or feel like the study
-                    isn’t treating you fairly, please feel free to contact Dan Calacci
-                    (dcalacci@media.mit.edu) or @dcalacci on Twitter. You can also reach him at
-                    <Text style={tailwind('font-bold')}> 908-229-8992 </Text>or through mail:
-                    <Text
-                        style={tailwind('font-bold')}
-                    >{`\nDan Calacci \nE15-384b\nMIT\nCambridge, MA, 02139`}</Text>
-                </Text>
-
-                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
-                    What if I have problems?
-                </Text>
-                <Text style={tailwind('text-base pt-2 pb-2')}>
-                    If you have any questions or concerns, or feel like the study isn’t treating you
-                    fairly, you can contact the Chairman of the Committee on the Use of Humans as
-                    Experimental Subjects at MIT. Their contact information is here, and will be
-                    available in the settings screen of the app.
-                </Text>
-
-                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
-                    Your Rights
-                </Text>
-                <Text style={tailwind('text-base pt-2 pb-2')}>
-                    You are not waiving any legal claims, rights or remedies because of your
-                    participation in this research study. If you feel you have been treated
-                    unfairly, or you have questions regarding your rights as a research subject, you
-                    may contact:
-                    <Text
-                        style={tailwind('font-bold')}
-                    >{`\n\nChairman of the Committee on the Use of Humans as Experimental Subjects\nM.I.T.\nRoom E25-143B\n77 Massachusetts Ave, Cambridge, MA 02139\nphone 1-617-253 6787.`}</Text>
-                </Text>
-
-                <Text style={tailwind('text-xl font-bold text-green-500 underline pt-5 pb-2')}>
-                    Emergency care and compensation for injury
-                </Text>
-
-                <Text style={tailwind('text-base pt-2 pb-2')}>
-                    If you feel you have suffered an injury, which may include emotional trauma, as
-                    a result of participating in this study, please contact the person in charge of
-                    the study as soon as possible. In the event you suffer such an injury, M.I.T.
-                    may provide itself, or arrange for the provision of, emergency transport or
-                    medical treatment, including emergency treatment and follow-up care, as needed,
-                    or reimbursement for such medical services. M.I.T. does not provide any other
-                    form of compensation for injury. In any case, neither the offer to provide
-                    medical assistance, nor the actual provision of medical services shall be
-                    considered an admission of fault or acceptance of liability. Questions regarding
-                    this policy may be directed to MIT’s Insurance Office, (617) 253-2823. Your
-                    insurance carrier may be billed for the cost of emergency transport or medical
-                    treatment, if such services are determined not to be directly related to your
-                    participation in this study.
-                </Text>
-            </View>
+                <Pressable
+                    style={[
+                        tailwind('rounded-lg p-5 m-2'),
+                        !locationConsent || !photoConsent || !surveyConsent
+                            ? tailwind('bg-gray-400')
+                            : tailwind('bg-green-500'),
+                    ]}
+                    disabled={!locationConsent || !photoConsent || !surveyConsent}
+                    onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                        //TODO: send value to server, wait until we get a response back, and continue
+                    }}
+                >
+                    <Text style={tailwind('font-bold text-white text-xl text-center')}>
+                        {!locationConsent || !photoConsent
+                            ? `You need to consent above to continue`
+                            : `Continue`}
+                    </Text>
+                </Pressable>
+            </VisibleSection>
         </ScrollView>
     );
 };
