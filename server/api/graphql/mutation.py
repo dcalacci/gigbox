@@ -521,10 +521,13 @@ class SubmitConsent(Mutation):
     class Arguments:
         interview = Boolean(required=True)
         data_sharing = Boolean(required=True)
+        phone = String(required=False)
+        email = String(required=False)
+        name = String(required=True)
         signature = String(required=True)
 
     @login_required
-    def mutate(self, info, interview, data_sharing, signature, **kwargs):
+    def mutate(self, info, interview, data_sharing, phone, email, name, signature, **kwargs):
         user_id = g.user
         print("signature:", signature)
         encoded_image = signature.split(",")[1]
@@ -546,6 +549,11 @@ class SubmitConsent(Mutation):
             signature_filename = img_filename
         )
         user = UserModel.query.filter_by(id=user_id).first()
+        if phone:
+            user.phone = phone
+        if email:
+            user.email = email
+        user.name = name
         user.consent = consent
         db.session.add(user)
         db.session.commit()
