@@ -99,7 +99,8 @@ export type Consent = {
     user_id: string;
     date_modified: Date;
     date_created: Date;
-    data_sharing: Date | null;
-    interview: Date | null;
-    consent_final_agree: Date | null;
+    data_sharing: Boolean | null;
+    interview: Boolean | null;
+    consented: Boolean | null;
+    signature_filename: string
 }

@@ -16,15 +16,18 @@ import { tailwind } from 'tailwind';
 import * as Haptics from 'expo-haptics';
 import { SignatureView } from 'react-native-signature-capture-view';
 import BinarySurveyQuestion from './BinarySurveyQuestion';
+import AnimatedEllipsis from '../../components/Ellipsis'
 
 export const Signature = ({
     saveSignature,
     saveName,
     onPressContinue,
+    isLoading,
 }: {
     saveSignature: (val: string) => void;
     saveName: (val: string) => void;
     onPressContinue: () => void;
+    isLoading: boolean;
 }) => {
     const sigRef = useRef(null);
     const [sigText, setSigText] = useState<string>('');
@@ -105,9 +108,14 @@ export const Signature = ({
                     //TODO: send value to server, wait until we get a response back, and continue
                 }}
             >
+                {isLoading ? 
+                <AnimatedEllipsis/>
+                :
                 <Text style={tailwind('font-bold text-white text-xl text-center')}>
                     I agree to participate in this study
                 </Text>
+
+                }
             </Pressable>
         </KeyboardAwareScrollView>
     );

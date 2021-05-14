@@ -23,19 +23,19 @@ import PhoneEntry from '../features/auth/PhoneEntry';
 import { ConsentFlow } from '../features/consent/ConsentFlow';
 import { Signature } from '../features/consent/Signature';
 import { Extras } from '../features/consent/Extras';
+import { getUserInfo } from '../features/consent/api'
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
 export default function BottomTabNavigator() {
+    const dispatch = useDispatch();
     const jwt = useSelector((state: RootState): boolean => state.auth.jwt);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
     const authIsLoading = useSelector((state: RootState): boolean => state.auth.isLoading);
-    const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
-    const [consent, setConsent] = useState<Consent>();
+    const [isOnboarded, setIsOnboarded] = useState<boolean>(false)
     const loggedIn = async () => {
         return logIn(jwt);
     };
-    const dispatch = useDispatch();
     const loggedInStatus = useQuery('loggedIn', loggedIn, {
         refetchInterval: 60*1000,
         onSuccess: (data: LogInResponse) => {
@@ -59,6 +59,16 @@ export default function BottomTabNavigator() {
         },
     });
 
+    const userInfoStatus = useQuery('userInfo', getUserInfo, {
+        onSuccess: (d) => {
+            console.log("user info:", d)
+            if (d.consent.consented) {
+                setIsOnboarded(true)
+            }
+        },
+        select: (d) => d.getUserInfo
+    })
+
     //TODO: check for live (authenticated) token
 
     if (loggedInStatus.isLoading || authIsLoading) {
@@ -78,7 +88,7 @@ export default function BottomTabNavigator() {
     } else if (!isOnboarded) {
         return (
             <SafeAreaView>
-                <ConsentFlow />
+                <ConsentFlow onConsentFinish={() => setConsentFinished(true)}/>
             </SafeAreaView>
         );
     } else {

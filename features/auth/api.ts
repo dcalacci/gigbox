@@ -72,4 +72,3 @@ export enum AuthResponseTypes {
     OtpResponse,
     VerifyOtpResponse,
 }
-

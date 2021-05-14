@@ -11,9 +11,9 @@ import {
 } from 'react-native';
 import { tailwind } from 'tailwind';
 import { useQueryClient, useMutation, useQuery } from 'react-query';
-
 import * as Haptics from 'expo-haptics';
 import BinarySurveyQuestion from './BinarySurveyQuestion';
+import { submitConsent } from './api';
 import { Extras } from './Extras';
 import { Signature } from './Signature';
 
@@ -70,25 +70,50 @@ export const VisibleSection = ({
     }
 };
 
-export const ConsentFlow = ({}) => {
+export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }) => {
     const [locationConsent, setLocationConsent] = useState<boolean>();
     const [photoConsent, setPhotoConsent] = useState<boolean>();
     const [surveyConsent, setSurveyConsent] = useState<boolean>();
     const [dataConsent, setDataConsent] = useState<boolean>();
     const [dataSharingConsent, setDataSharingConsent] = useState<boolean>();
     const [interviewConsent, setInterviewConsent] = useState<boolean>();
-    const [extrasConsent, setExtrasConsent] = useState<boolean>(false)
-    const [name, setName] = useState<string>("")
+    const [extrasConsent, setExtrasConsent] = useState<boolean>(false);
+    const [name, setName] = useState<string>('');
     const [sigText, setSigText] = useState<string>('');
-
-    const submitConsent = () => {
-        console.log("Submitting consent....")
-    }
+    const finishConsent = useMutation(submitConsent, {
+        onSuccess: (data) => {
+            console.log('woohoo, submitted consent:', data);
+        },
+        onError: (err) => {
+            console.log("couldn't submit consent:", err);
+        },
+    });
 
     if (dataConsent && extrasConsent) {
-        return <Signature saveName={setName} saveSignature={setSigText} onPressContinue={() => submitConsent()}/>
+        return (
+            <Signature
+                saveName={setName}
+                saveSignature={setSigText}
+                isLoading={finishConsent.isLoading}
+                onPressContinue={() => {
+                    finishConsent.mutate({
+                        interview: interviewConsent || false,
+                        dataSharing: dataSharingConsent || false,
+                        sigText,
+                    });
+                }}
+            />
+        );
     } else if (dataConsent && !extrasConsent) {
-        return <Extras onPressContinue={() => setExtrasConsent(true)} setInterviewConsent={setInterviewConsent} setDataSharingConsent={setDataSharingConsent} dataSharingConsent={dataSharingConsent} interviewConsent={interviewConsent} />;
+        return (
+            <Extras
+                onPressContinue={() => setExtrasConsent(true)}
+                setInterviewConsent={setInterviewConsent}
+                setDataSharingConsent={setDataSharingConsent}
+                dataSharingConsent={dataSharingConsent}
+                interviewConsent={interviewConsent}
+            />
+        );
     } else {
         return (
             <ScrollView style={tailwind('bg-gray-100 ')}>
