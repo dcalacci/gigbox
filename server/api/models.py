@@ -94,6 +94,11 @@ class User(db.Model):
     uid = db.Column(db.String, unique=True, index=True)
     shifts = db.relationship("Shift")
     date_created = db.Column(DateTime, server_default=func.now())
+    consent = db.relationship('Consent', uselist=False, back_populates='user')
+    phone=db.Column(String, nullable=True)
+    email=db.Column(String, nullable=True)
+    name=db.Column(String, nullable=True)
+
 
     def __init__(self, id):
         self.id = id
@@ -101,6 +106,21 @@ class User(db.Model):
 
     def __repr__(self):
         return f"{self.id}"
+
+class Consent(db.Model):
+    __tableName__ = 'consent'
+
+    id = db.Column(UUID(as_uuid=True), primary_key=True, default=uuid4)
+    user_id = db.Column(db.String, ForeignKey(User.id, ondelete='CASCADE'))
+    user = db.relationship('User', back_populates='consent')
+    date_modified=db.Column(DateTime, onupdate=func.now())
+    date_created=db.Column(DateTime, default=func.now())
+    data_sharing=db.Column(Boolean, nullable=True)
+    interview=db.Column(Boolean, nullable=True)
+    consented=db.Column(Boolean, default=False)
+    signature_filename = db.Column(db.String)
+    signature_encoded = db.Column(db.String)
+
 
 
 class Shift(db.Model):

@@ -44,6 +44,7 @@ from api.models import (
     Location as LocationModel,
     Screenshot as ScreenshotModel,
     Job as JobModel,
+    Consent as ConsentModel,
     Geometry_WKT,
     _convert_geometry,
     EmployerNames,
@@ -59,6 +60,7 @@ from api.controllers.errors import ShiftInvalidError, JobInvalidError
 # users from the server anyway.
 
 # All requests are associated with a token.
+
 
 class CreateUser(Mutation):
     """Mutation to create a user. must be given a UID"""
@@ -513,6 +515,44 @@ class SetShiftEmployers(Mutation):
         return SetShiftEmployers(shift)
 
 
+class SubmitConsent(Mutation):
+    user = Field(lambda: User, description="user that consented")
+
+    class Arguments:
+        interview = Boolean(required=True)
+        data_sharing = Boolean(required=True)
+        signature = String(required=True)
+
+    @login_required
+    def mutate(self, info, interview, data_sharing, signature, **kwargs):
+        user_id = g.user
+        print("signature:", signature)
+        encoded_image = signature.split(",")[1]
+        # decoded_image = Base64.decode64(encoded_image)
+        decoded = base64.decodebytes(bytes(encoded_image, 'utf-8'))
+        f_array = np.asarray(bytearray(decoded))
+        image = cv2.imdecode(f_array, 0)
+
+        img_filename = os.path.join('/opt/signatures',
+                                    generate_filename(user_id))
+        cv2.imwrite(img_filename, image)
+        print("wrote signature to file...")
+        consent = ConsentModel(
+            user_id = user_id,
+            data_sharing = data_sharing,
+            interview = interview,
+            consented = True,
+            signature_encoded = signature,
+            signature_filename = img_filename
+        )
+        user = UserModel.query.filter_by(id=user_id).first()
+        user.consent = consent
+        db.session.add(user)
+        db.session.commit()
+        return SubmitConsent(user)
+
+
+
 class Mutation(ObjectType):
     """Mutations which can be performed by this API."""
 
@@ -528,3 +568,4 @@ class Mutation(ObjectType):
     setShiftEmployers = SetShiftEmployers.Field()
     addLocationsToShift = AddLocationsToShift.Field()
     addScreenshotToShift = AddScreenshotToShift.Field()
+    submitConsent = SubmitConsent.Field()

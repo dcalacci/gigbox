@@ -103,17 +103,20 @@ class VerifyOtp(Resource):
 class LoggedIn(Resource):
     @login_required
     def post(self):
+        #TODO: change 'onboarded' to use logic around user's consent process
         print("Logging in...")
         print("g.user:", g.user)
         if g.user == 'None':
             print("User not logged in.")
             return {
                     'status': 400,
+                    'onboarded': False,
                     'authenticated': False
                     }
         else:
             print("User logged in:", g.user)
             return {'status': 200,
                     'user_id': g.user,
+                    'onboarded': False,
                     'authenticated': True,
                     'message': 'Success'}
