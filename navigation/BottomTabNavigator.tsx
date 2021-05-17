@@ -8,12 +8,12 @@ import Colors from '../constants/Colors';
 import TabOneScreen from '../screens/TabOneScreen';
 import ShiftsScreen from '../screens/ShiftsScreen';
 import JobsScreen from '../screens/JobsScreen';
-import Onboarding from '../screens/Onboarding';
+import SettingsScreen from '../screens/SettingsScreen';
 import { RootState } from '../store/index';
 import { Consent, BottomTabParamList, TabOneParamList, TabTwoParamList } from '../types';
 import tailwind from 'tailwind-rn';
 import { StackActions } from '@react-navigation/routers';
-import { SafeAreaView, View, Text } from 'react-native';
+import { SafeAreaView, View, Text, Settings } from 'react-native';
 
 import { useQuery } from 'react-query';
 import { logIn, LogInResponse } from '../features/auth/api';
@@ -23,21 +23,21 @@ import PhoneEntry from '../features/auth/PhoneEntry';
 import { ConsentFlow } from '../features/consent/ConsentFlow';
 import { Signature } from '../features/consent/Signature';
 import { Extras } from '../features/consent/Extras';
-import { getUserInfo } from '../features/consent/api'
+import { getUserInfo } from '../features/consent/api';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
-export default function BottomTabNavigator() {
+export default function BottomTabNavigator({navigation}) {
     const dispatch = useDispatch();
     const jwt = useSelector((state: RootState): boolean => state.auth.jwt);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
     const authIsLoading = useSelector((state: RootState): boolean => state.auth.isLoading);
-    const [isOnboarded, setIsOnboarded] = useState<boolean>(false)
+    const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
     const loggedIn = async () => {
         return logIn(jwt);
     };
     const loggedInStatus = useQuery('loggedIn', loggedIn, {
-        refetchInterval: 60*1000,
+        refetchInterval: 60 * 1000,
         onSuccess: (data: LogInResponse) => {
             if (isAuthenticated && data.authenticated) {
                 // do nothing
@@ -61,18 +61,18 @@ export default function BottomTabNavigator() {
 
     const userInfoStatus = useQuery('userInfo', getUserInfo, {
         onSuccess: (d) => {
-            console.log("user info:", d)
-            if (d.consent.consented) {
-                setIsOnboarded(true)
+            console.log('user info:', d);
+            if (d.consent?.consented) {
+                setIsOnboarded(true);
             }
         },
-        select: (d) => d.getUserInfo
-    })
+        select: (d) => d.getUserInfo,
+    });
 
     //TODO: check for live (authenticated) token
 
     if (loggedInStatus.isLoading || authIsLoading) {
-        console.log('fucken logging in');
+        console.log('logging in');
         return (
             <View>
                 <Text>Loading....</Text>
@@ -88,7 +88,7 @@ export default function BottomTabNavigator() {
     } else if (!isOnboarded) {
         return (
             <SafeAreaView>
-                <ConsentFlow onConsentFinish={() => setConsentFinished(true)}/>
+                <ConsentFlow onConsentFinish={() => console.log('Finished consent')} />
             </SafeAreaView>
         );
     } else {
@@ -96,21 +96,27 @@ export default function BottomTabNavigator() {
         return (
             <BottomTab.Navigator
                 initialRouteName="Home"
-                tabBarOptions={{ activeTintColor: Colors.light.tint }}
+                tabBarOptions={{
+                    activeTintColor: Colors.light.tint,
+                }}
             >
                 <>
                     <BottomTab.Screen
                         name="Home"
                         component={TabOneNavigator}
                         options={{
-                            tabBarIcon: ({ color }) => <TabBarIcon name="ios-home" color={color} />,
+                            tabBarIcon: ({ color }) => (
+                                <TabBarIcon name="caret-forward-circle-outline" color={color} />
+                            ),
                         }}
                     />
                     <BottomTab.Screen
                         name="Shifts"
                         component={ShiftsScreen}
                         options={{
-                            tabBarIcon: ({ color }) => <TabBarIcon name="ios-code" color={color} />,
+                            tabBarIcon: ({ color }) => (
+                                <TabBarIcon name="receipt-outline" color={color} />
+                            ),
                         }}
                     />
                     <BottomTab.Screen
@@ -118,7 +124,16 @@ export default function BottomTabNavigator() {
                         component={JobsScreen}
                         options={{
                             tabBarIcon: ({ color }) => (
-                                <TabBarIcon name="ios-plane" color={color} />
+                                <TabBarIcon name="list-outline" color={color} />
+                            ),
+                        }}
+                    />
+                    <BottomTab.Screen
+                        name="Settings"
+                        component={SettingsScreen}
+                        options={{
+                            tabBarIcon: ({ color }) => (
+                                <TabBarIcon name="settings-outline" color={color} />
                             ),
                         }}
                     />

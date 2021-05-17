@@ -79,10 +79,14 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
     const [interviewConsent, setInterviewConsent] = useState<boolean>();
     const [extrasConsent, setExtrasConsent] = useState<boolean>(false);
     const [name, setName] = useState<string>('');
+    const [phone, setPhone] = useState<string>('')
+    const [email, setEmail] = useState<string>('')
     const [sigText, setSigText] = useState<string>('');
+    const queryClient = useQueryClient()
     const finishConsent = useMutation(submitConsent, {
         onSuccess: (data) => {
             console.log('woohoo, submitted consent:', data);
+            queryClient.invalidateQueries('userInfo')
         },
         onError: (err) => {
             console.log("couldn't submit consent:", err);
@@ -95,10 +99,14 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
                 saveName={setName}
                 saveSignature={setSigText}
                 isLoading={finishConsent.isLoading}
+                onPressBack={() => setExtrasConsent(false)}
                 onPressContinue={() => {
                     finishConsent.mutate({
                         interview: interviewConsent || false,
                         dataSharing: dataSharingConsent || false,
+                        phone: phone,
+                        email: email,
+                        name: name,
                         sigText,
                     });
                 }}
@@ -108,10 +116,13 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
         return (
             <Extras
                 onPressContinue={() => setExtrasConsent(true)}
+                onPressBack={() => setDataConsent(false)}
                 setInterviewConsent={setInterviewConsent}
                 setDataSharingConsent={setDataSharingConsent}
                 dataSharingConsent={dataSharingConsent}
                 interviewConsent={interviewConsent}
+                setContactEmail={setEmail}
+                setContactPhone={setPhone}
             />
         );
     } else {

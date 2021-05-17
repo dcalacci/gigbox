@@ -8,12 +8,16 @@ const BinarySurveyQuestion = ({
     onPress,
     declineText,
     questionText,
-    value
+    value,
+    yesButtonText='Yes',
+    noButtonText='No'
 }: {
     onPress: (yes: boolean) => void;
     declineText?: string;
     questionText?: string;
     value: boolean | undefined
+    yesButtonText?: string
+    noButtonText?: string
 }) => {
     const [pressed, setPressed] = useState<boolean | undefined>(value);
     const onPressButton = (yes: boolean) => {
@@ -46,7 +50,7 @@ const BinarySurveyQuestion = ({
                             name={'close-circle-outline'}
                             color={pressed === false ? 'white' : 'gray'}
                         />
-                        No
+                        {noButtonText}
                     </Text>
                 </Pressable>
                 <Pressable
@@ -67,7 +71,7 @@ const BinarySurveyQuestion = ({
                             name={'checkmark-circle-outline'}
                             color={pressed ? 'white' : 'green'}
                         />
-                        Yes
+                        {yesButtonText}
                     </Text>
                 </Pressable>
             </View>

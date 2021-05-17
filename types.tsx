@@ -96,11 +96,19 @@ export type Screenshot = {
 };
 
 export type Consent = {
-    user_id: string;
-    date_modified: Date;
-    date_created: Date;
-    data_sharing: Boolean | null;
+    userId: string;
+    dateModified: Date;
+    dateCreated: Date;
+    dataSharing: Boolean | null;
     interview: Boolean | null;
     consented: Boolean | null;
-    signature_filename: string
+    signatureFilename: string
+}
+
+export type User = {
+    consent: Consent;
+    dateCreated: Date;
+    email?: string
+    phone?: string
+    name?: string
 }
