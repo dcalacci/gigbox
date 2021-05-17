@@ -189,7 +189,7 @@ const NumericFilterPill = ({
     </Pressable>
 );
 
-const BinaryFilterPill = ({
+export const BinaryFilterPill = ({
     displayText,
     onPress,
     value,

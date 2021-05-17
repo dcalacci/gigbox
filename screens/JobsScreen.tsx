@@ -2,8 +2,8 @@ import * as React from 'react';
 import { StyleSheet, View, Text } from 'react-native';
 
 import moment from 'moment';
-import JobsList from '../components/JobsList';
 
+import { StatusBar } from 'expo-status-bar';
 import { JobFilterList, JobFilter } from '../features/job/JobList';
 import tailwind from 'tailwind-rn';
 
@@ -20,6 +20,7 @@ export default function JobsScreen({ route }) {
         : undefined;
     return (
         <View style={tailwind('bg-gray-100 items-center justify-start flex-col')}>
+            <StatusBar style="dark" />
             {/* <Text style={styles.title}>Jobs</Text> */}
             <JobFilterList inputFilters={filter} />
         </View>

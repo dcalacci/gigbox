@@ -17,35 +17,47 @@ import { SafeAreaView, View, Text, Settings } from 'react-native';
 
 import { useQuery } from 'react-query';
 import { logIn, LogInResponse } from '../features/auth/api';
-import { setLoggedIn } from '../features/auth/authSlice';
+import { setLoggedIn, setUser } from '../features/auth/authSlice';
 import { useDispatch } from 'react-redux';
 import PhoneEntry from '../features/auth/PhoneEntry';
 import { ConsentFlow } from '../features/consent/ConsentFlow';
 import { Signature } from '../features/consent/Signature';
 import { Extras } from '../features/consent/Extras';
 import { getUserInfo } from '../features/consent/api';
+import { InitialSurvey } from '../features/consent/InitialSurvey';
+import { StatusBar } from 'expo-status-bar';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
 export default function BottomTabNavigator({ navigation }) {
     const dispatch = useDispatch();
-    const jwt = useSelector((state: RootState): boolean => state.auth.jwt);
+    const jwt = useSelector((state: RootState): string | null => state.auth.jwt);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
     const authIsLoading = useSelector((state: RootState): boolean => state.auth.isLoading);
     const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
+    const [initialSurveyDone, setInitialSurveyDone] = useState<boolean>(false);
     const loggedIn = async () => {
         return logIn(jwt);
     };
     const loggedInStatus = useQuery('loggedIn', loggedIn, {
         refetchInterval: 60 * 1000,
         onSuccess: (data: LogInResponse) => {
-            console.log("logged in response:", data)
-            if (isAuthenticated && data.authenticated) {
+            // set log in response using our our REST login endpoint.
+            // do this every minute, just to ensure our token is up to date.
+            console.log('logged in response:', data);
+            if (data.status != 200) {
+                console.log('not authenticated');
+                dispatch(
+                    setLoggedIn({
+                        authenticated: false,
+                    })
+                );
+            } else if (isAuthenticated && data.authenticated) {
                 // do nothing
                 return;
             } else {
                 // otherwise, set our state appropriately
-                setIsOnboarded(data.onboarded)
+                setIsOnboarded(data.onboarded);
                 dispatch(
                     setLoggedIn({
                         authenticated: data.authenticated,
@@ -62,10 +74,15 @@ export default function BottomTabNavigator({ navigation }) {
     });
 
     const userInfoStatus = useQuery('userInfo', getUserInfo, {
+        // Also change onboarding status whenever the 'userInfo' query is refetched.
         onSuccess: (d) => {
             console.log('user info:', d);
+            dispatch(setUser(d));
             if (d.consent?.consented) {
                 setIsOnboarded(true);
+            }
+            if (d.employers.length != 0) {
+                setInitialSurveyDone(true);
             }
         },
         onError: (err) => {
@@ -76,6 +93,8 @@ export default function BottomTabNavigator({ navigation }) {
     });
 
     //TODO: check for live (authenticated) token
+
+    console.log('authenticated?', isAuthenticated);
 
     if (loggedInStatus.isLoading || authIsLoading) {
         console.log('logging in');
@@ -94,7 +113,18 @@ export default function BottomTabNavigator({ navigation }) {
     } else if (!isOnboarded) {
         return (
             <SafeAreaView>
-                <ConsentFlow onConsentFinish={() => console.log('Finished consent')} />
+                <ConsentFlow
+                    onConsentFinish={() => {
+                        console.log('Finished consent');
+                        setIsOnboarded(true);
+                    }}
+                />
+            </SafeAreaView>
+        );
+    } else if (!initialSurveyDone) {
+        return (
+            <SafeAreaView>
+                <InitialSurvey onSurveyFinish={() => setInitialSurveyDone(true)} />
             </SafeAreaView>
         );
     } else {

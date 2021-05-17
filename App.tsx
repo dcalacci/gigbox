@@ -10,10 +10,10 @@ import { PersistGate } from 'redux-persist/integration/react';
 import Navigation from './navigation';
 import { store, persistor } from './store/store';
 import { QueryClientProvider, QueryClient } from 'react-query';
-import * as TaskManager from 'expo-task-manager'
-import { LocationObject } from 'expo-location'
-import { hasActiveShift, addLocationsToShift, } from './tasks';
-import { log } from './utils'
+import * as TaskManager from 'expo-task-manager';
+import { LocationObject } from 'expo-location';
+import { hasActiveShift, addLocationsToShift } from './tasks';
+import { log } from './utils';
 
 const queryClient = new QueryClient();
 
@@ -37,7 +37,7 @@ TaskManager.defineTask('gigbox.mileageTracker', async ({ data, error }) => {
             };
             return obj;
         }) as Location[];
-        return addLocationsToShift(shiftResponse.id, locs)
+        return addLocationsToShift(shiftResponse.id, locs);
         //TODO: collect errors in adding locations, or save them to a cache
     }
 });
@@ -49,18 +49,21 @@ export default function App() {
         return null;
     } else {
         return (
-            <Provider store={store}>
-                <QueryClientProvider client={queryClient}>
-                    <ToastProvider placement="top" offset={50}>
-                        <SafeAreaProvider>
-                            <PersistGate loading={null} persistor={persistor}>
-                                <Navigation />
-                                <StatusBar />
-                            </PersistGate>
-                        </SafeAreaProvider>
-                    </ToastProvider>
-                </QueryClientProvider>
-            </Provider>
+            <>
+                <StatusBar style="dark" />
+                <Provider store={store}>
+                    <QueryClientProvider client={queryClient}>
+                        <ToastProvider placement="top" offset={50}>
+                            <SafeAreaProvider>
+                                <PersistGate loading={null} persistor={persistor}>
+                                    <Navigation />
+                                    <StatusBar />
+                                </PersistGate>
+                            </SafeAreaProvider>
+                        </ToastProvider>
+                    </QueryClientProvider>
+                </Provider>
+            </>
         );
     }
 }

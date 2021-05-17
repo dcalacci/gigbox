@@ -1,4 +1,5 @@
 import { fetchWithQueryParams, uri } from '../../utils';
+import { User } from '../../types'
 
 export interface OtpResponse {
     status: number;
@@ -53,6 +54,7 @@ export interface LogInResponse {
     message: string;
     onboarded: boolean;
     user_id: string;
+    user: User;
     authenticated: boolean;
 }
 

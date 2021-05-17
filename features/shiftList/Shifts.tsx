@@ -17,24 +17,17 @@ export default function ShiftList({ navigation }) {
     const fetchShifts = ({ pageParam = null }) => {
         return getShifts(n, pageParam);
     };
-    const {
-        data,
-        error,
-        fetchNextPage,
-        hasNextPage,
-        isFetching,
-        isFetchingNextPage,
-        status,
-    } = useInfiniteQuery('shifts', fetchShifts, {
-        onSettled: () => {
-            setRefreshing(false);
-            log.info('Done refreshing shift list.');
-        },
-        getNextPageParam: (lastPage, pages) => {
-            return lastPage.allShifts.pageInfo.endCursor;
-        },
-        refetchInterval: 10000,
-    });
+    const { data, error, fetchNextPage, hasNextPage, isFetching, isFetchingNextPage, status } =
+        useInfiniteQuery('shifts', fetchShifts, {
+            onSettled: () => {
+                setRefreshing(false);
+                log.info('Done refreshing shift list.');
+            },
+            getNextPageParam: (lastPage, pages) => {
+                return lastPage.allShifts.pageInfo.endCursor;
+            },
+            refetchInterval: 10000,
+        });
     const [refreshing, setRefreshing] = useState(false);
     const onRefresh = () => {
         setRefreshing(true);
@@ -53,6 +46,14 @@ export default function ShiftList({ navigation }) {
         return <Text> Loading...</Text>;
     } else if (status === 'error') {
         return <Text>Error: {error.message}</Text>;
+    } else if (!flattened_data || flattened_data?.length == 0) {
+        return (
+            <View style={tailwind('flex-col flex-grow justify-center items-center')}>
+                <Text style={tailwind('text-xl font-bold text-black pt-20')}>
+                    Shifts you track will appear here!
+                </Text>
+            </View>
+        );
     } else {
         return (
             <View style={styles.container}>
