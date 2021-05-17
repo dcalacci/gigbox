@@ -116,7 +116,6 @@ class LoggedIn(Resource):
         else:
             print("User logged in:", g.user)
             user = User.query.filter_by(id=g.user).first()
-            print("user", user.consent.consented)
             return {'status': 200,
                     'user_id': g.user,
                     'onboarded': user.consent.consented if user.consent else False, 
