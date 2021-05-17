@@ -9,11 +9,17 @@ import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import Navigation from './navigation';
 import { store, persistor } from './store/store';
-import { QueryClientProvider, QueryClient } from 'react-query';
+import { useQuery, QueryClientProvider, QueryClient } from 'react-query';
 import * as TaskManager from 'expo-task-manager';
 import { LocationObject } from 'expo-location';
-import { hasActiveShift, addLocationsToShift } from './tasks';
+import { useDispatch, useSelector } from 'react-redux';
 import { log } from './utils';
+import { hasActiveShift, addLocationsToShift } from './tasks';
+import { logIn, LogInResponse } from './features/auth/api';
+import { setLoggedIn, setUser } from './features/auth/authSlice';
+import { RootState } from 'store/index';
+import * as SplashScreen from 'expo-splash-screen';
+import { EnsureLoggedIn } from './features/EnsureLoggedIn';
 
 const queryClient = new QueryClient();
 
@@ -43,27 +49,23 @@ TaskManager.defineTask('gigbox.mileageTracker', async ({ data, error }) => {
 });
 
 export default function App() {
-    const isLoadingComplete = useCachedResources();
-
-    if (!isLoadingComplete) {
-        return null;
-    } else {
-        return (
-            <>
-                <StatusBar style="dark" />
-                <Provider store={store}>
-                    <QueryClientProvider client={queryClient}>
-                        <ToastProvider placement="top" offset={50}>
-                            <SafeAreaProvider>
+    return (
+        <>
+            <StatusBar style="dark" />
+            <Provider store={store}>
+                <QueryClientProvider client={queryClient}>
+                    <ToastProvider placement="top" offset={50}>
+                        <SafeAreaProvider>
+                            <EnsureLoggedIn>
                                 <PersistGate loading={null} persistor={persistor}>
                                     <Navigation />
                                     <StatusBar />
                                 </PersistGate>
-                            </SafeAreaProvider>
-                        </ToastProvider>
-                    </QueryClientProvider>
-                </Provider>
-            </>
-        );
-    }
+                            </EnsureLoggedIn>
+                        </SafeAreaProvider>
+                    </ToastProvider>
+                </QueryClientProvider>
+            </Provider>
+        </>
+    );
 }

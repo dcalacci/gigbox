@@ -2,7 +2,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
-import React, { useState } from 'react';
+import React, { useCallback, useEffect } from 'react';
 
 import Colors from '../constants/Colors';
 import TabOneScreen from '../screens/TabOneScreen';
@@ -26,112 +26,60 @@ import { Extras } from '../features/consent/Extras';
 import { getUserInfo } from '../features/consent/api';
 import { InitialSurvey } from '../features/consent/InitialSurvey';
 import { StatusBar } from 'expo-status-bar';
+import { User } from '../types';
+import * as SplashScreen from 'expo-splash-screen';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
 export default function BottomTabNavigator({ navigation }) {
     const dispatch = useDispatch();
-    const jwt = useSelector((state: RootState): string | null => state.auth.jwt);
+    const user = useSelector((state: RootState): User | null => state.auth.user);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
-    const authIsLoading = useSelector((state: RootState): boolean => state.auth.isLoading);
-    const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
-    const [initialSurveyDone, setInitialSurveyDone] = useState<boolean>(false);
-    const loggedIn = async () => {
-        return logIn(jwt);
-    };
-    const loggedInStatus = useQuery('loggedIn', loggedIn, {
-        refetchInterval: 60 * 1000,
-        onSuccess: (data: LogInResponse) => {
-            // set log in response using our our REST login endpoint.
-            // do this every minute, just to ensure our token is up to date.
-            console.log('logged in response:', data);
-            if (data.status != 200) {
-                console.log('not authenticated');
-                dispatch(
-                    setLoggedIn({
-                        authenticated: false,
-                    })
-                );
-            } else if (isAuthenticated && data.authenticated) {
-                // do nothing
-                return;
+
+    useEffect(() => {
+        async function maybeShowSplash() {
+            if (!user) {
+                console.log('preventing splash screen hide...');
+                await SplashScreen.preventAutoHideAsync();
             } else {
-                // otherwise, set our state appropriately
-                setIsOnboarded(data.onboarded);
-                dispatch(
-                    setLoggedIn({
-                        authenticated: data.authenticated,
-                        user_id: data.user_id,
-                        isLoading: false,
-                    })
-                );
+                console.log('hiding splash screen...');
+                await SplashScreen.hideAsync();
             }
-        },
-        onError: (data: LogInResponse) => {
-            console.log('Login error:', data);
-            dispatch(setLoggedIn({ authenticated: false, user_id: null, isLoading: false }));
-        },
-    });
+        }
 
-    const userInfoStatus = useQuery('userInfo', getUserInfo, {
-        // Also change onboarding status whenever the 'userInfo' query is refetched.
-        onSuccess: (d) => {
-            console.log('user info:', d);
-            dispatch(setUser(d));
-            if (d.consent?.consented) {
-                setIsOnboarded(true);
-            }
-            if (d.employers.length != 0) {
-                setInitialSurveyDone(true);
-            }
-        },
-        onError: (err) => {
-            console.log('had an issue getting user info:');
-            console.log(err);
-        },
-        select: (d) => d.getUserInfo,
-    });
+        maybeShowSplash();
+    }, [user]);
 
-    //TODO: check for live (authenticated) token
-
-    console.log('authenticated?', isAuthenticated);
-
-    if (loggedInStatus.isLoading || authIsLoading) {
-        console.log('logging in');
-        return (
-            <View>
-                <Text>Loading....</Text>
-            </View>
-        );
-    } else if (!isAuthenticated) {
-        console.log('is authenticated:', isAuthenticated);
+    // if not authenticated, show phone entry screen. isAuthenticated should be True at the end of the flow.
+    if (!isAuthenticated) {
         return (
             <View>
                 <PhoneEntry />
             </View>
         );
-    } else if (!isOnboarded) {
+    } else if (!user) {
+        // otherwise, return null. If we're here, we should be showing the splash screen (see above)
+        return null;
+    } else if (!user.consent.consented) {
         return (
             <SafeAreaView>
                 <ConsentFlow
                     onConsentFinish={() => {
                         console.log('Finished consent');
-                        setIsOnboarded(true);
                     }}
                 />
             </SafeAreaView>
         );
-    } else if (!initialSurveyDone) {
+    } else if (user.employers.length == 0) {
         return (
             <SafeAreaView>
-                <InitialSurvey onSurveyFinish={() => setInitialSurveyDone(true)} />
+                <InitialSurvey onSurveyFinish={() => console.log('finished survey')} />
             </SafeAreaView>
         );
     } else {
         // if we're authenticated, and we have all onboarding done, show them the money
         return (
             <BottomTab.Navigator
-                initialRouteName="Home"
                 tabBarOptions={{
                     activeTintColor: Colors.light.tint,
                 }}

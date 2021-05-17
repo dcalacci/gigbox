@@ -15,13 +15,18 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "infoPlist": {
         "NSPhotoLibraryUsageDescription": "Gigbox needs access to your photos to automatically recognize screenshots of gig apps to help track your jobs.",
-        "UIBackgroundModes": ["location"]
-      }
+        "UIBackgroundModes": [
+          "location"
+        ]
+      },
+      "bundleIdentifier": "mit.media.hd.gigbox"
     },
     "android": {
       "adaptiveIcon": {

@@ -51,14 +51,23 @@ export const verifyOtp = async (
 
 export interface LogInResponse {
     status: number;
-    message: string;
-    onboarded: boolean;
-    user_id: string;
-    user: User;
+    message?: string;
+    onboarded?: boolean;
+    user_id?: string;
+    user?: User;
     authenticated: boolean;
 }
 
-export const logIn = async (jwt: string): Promise<LogInResponse> => {
+export const logIn = async (jwt: string | null): Promise<LogInResponse> => {
+    if (!jwt) {
+        console.log("No token found. Not authenticated.")
+        return {
+            status: 401,
+            onboarded: false,
+            authenticated: false
+        }
+
+    }
     const response = await fetchWithQueryParams(
         `${uri}/api/v1/auth/login`,
         {},
