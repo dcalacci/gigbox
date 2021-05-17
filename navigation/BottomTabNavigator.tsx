@@ -27,7 +27,7 @@ import { getUserInfo } from '../features/consent/api';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
-export default function BottomTabNavigator() {
+export default function BottomTabNavigator({navigation}) {
     const dispatch = useDispatch();
     const jwt = useSelector((state: RootState): boolean => state.auth.jwt);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);

@@ -2,6 +2,38 @@ import { request, gql } from 'graphql-request';
 import { log, getClient } from '../../utils';
 import { store } from '../../store/store';
 
+export const updateInterview = async ({ interview }: { interview: boolean }) => {
+    const client = getClient(store);
+    const query = gql`
+        mutation mutation($interview: Boolean!) {
+            updateInterviewConsent(interview: $interview) {
+                user {
+                    consent {
+                        interview
+                    }
+                }
+            }
+        }
+    `;
+    return client.request(query, { interview: interview });
+};
+
+export const updateDataSharing = async ({ dataSharing }: { dataSharing: boolean }) => {
+    const client = getClient(store);
+    const query = gql`
+        mutation mutation($dataSharing: Boolean!) {
+            updateDataSharingConsent(dataSharing: $dataSharing) {
+                user {
+                    consent {
+                        dataSharing
+                    }
+                }
+            }
+        }
+    `;
+    return client.request(query, { dataSharing: dataSharing });
+};
+
 export const submitConsent = async ({
     interview,
     dataSharing,
@@ -20,7 +52,7 @@ export const submitConsent = async ({
     const client = getClient(store);
 
     console.log('submitting sig:', sigText);
-    console.log(interview, dataSharing, phone, email, name, sigText)
+    console.log(interview, dataSharing, phone, email, name, sigText);
 
     const query = gql`
         mutation mutation(
@@ -76,6 +108,18 @@ export const getUserInfo = () => {
                     interview
                     dataSharing
                 }
+            }
+        }
+    `;
+    return client.request(query);
+};
+
+export const unenrollAndDeleteMutation = async () => {
+    const client = getClient(store);
+    const query = gql`
+        mutation {
+            unenrollAndDelete {
+                ok
             }
         }
     `;
