@@ -14,6 +14,7 @@ from api.models import (
     Location as LocationModel,
     Screenshot as ScreenshotModel,
     Job as JobModel,
+    Consent as ConsentModel,
     Geometry_WKT,
     EmployerNames,
 )
@@ -132,6 +133,10 @@ class ShiftConnection(Connection):
 class Screenshot(SQLAlchemyObjectType):
     class Meta:
         model = ScreenshotModel
+
+class Consent(SQLAlchemyObjectType):
+    class Meta:
+        model = ConsentModel
 
 
 class Location(SQLAlchemyObjectType):

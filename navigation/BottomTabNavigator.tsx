@@ -2,108 +2,148 @@ import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
-import * as React from 'react';
+import React, { useState } from 'react';
 
 import Colors from '../constants/Colors';
 import TabOneScreen from '../screens/TabOneScreen';
 import ShiftsScreen from '../screens/ShiftsScreen';
 import JobsScreen from '../screens/JobsScreen';
-import Onboarding from '../screens/Onboarding';
+import SettingsScreen from '../screens/SettingsScreen';
 import { RootState } from '../store/index';
-import { BottomTabParamList, TabOneParamList, TabTwoParamList } from '../types';
+import { Consent, BottomTabParamList, TabOneParamList, TabTwoParamList } from '../types';
 import tailwind from 'tailwind-rn';
 import { StackActions } from '@react-navigation/routers';
-import { SafeAreaView, View, Text } from 'react-native';
+import { SafeAreaView, View, Text, Settings } from 'react-native';
 
 import { useQuery } from 'react-query';
 import { logIn, LogInResponse } from '../features/auth/api';
 import { setLoggedIn } from '../features/auth/authSlice';
 import { useDispatch } from 'react-redux';
+import PhoneEntry from '../features/auth/PhoneEntry';
+import { ConsentFlow } from '../features/consent/ConsentFlow';
+import { Signature } from '../features/consent/Signature';
+import { Extras } from '../features/consent/Extras';
+import { getUserInfo } from '../features/consent/api';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
-export default function BottomTabNavigator() {
+export default function BottomTabNavigator({ navigation }) {
+    const dispatch = useDispatch();
     const jwt = useSelector((state: RootState): boolean => state.auth.jwt);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
     const authIsLoading = useSelector((state: RootState): boolean => state.auth.isLoading);
-    const loggedIn = () => {
+    const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
+    const loggedIn = async () => {
         return logIn(jwt);
     };
-    const dispatch = useDispatch();
     const loggedInStatus = useQuery('loggedIn', loggedIn, {
-        refetchInterval: 5000,
+        refetchInterval: 60 * 1000,
         onSuccess: (data: LogInResponse) => {
+            console.log("logged in response:", data)
             if (isAuthenticated && data.authenticated) {
-                // do nothing 
+                // do nothing
                 return;
+            } else {
+                // otherwise, set our state appropriately
+                setIsOnboarded(data.onboarded)
+                dispatch(
+                    setLoggedIn({
+                        authenticated: data.authenticated,
+                        user_id: data.user_id,
+                        isLoading: false,
+                    })
+                );
             }
-            // otherwise, set our state appropriately
-            dispatch(setLoggedIn({ authenticated: data.authenticated, user_id: data.user_id }));
         },
         onError: (data: LogInResponse) => {
-            dispatch(setLoggedIn({ authenticated: false, user_id: null }));
+            console.log('Login error:', data);
+            dispatch(setLoggedIn({ authenticated: false, user_id: null, isLoading: false }));
         },
+    });
+
+    const userInfoStatus = useQuery('userInfo', getUserInfo, {
+        onSuccess: (d) => {
+            console.log('user info:', d);
+            if (d.consent?.consented) {
+                setIsOnboarded(true);
+            }
+        },
+        onError: (err) => {
+            console.log('had an issue getting user info:');
+            console.log(err);
+        },
+        select: (d) => d.getUserInfo,
     });
 
     //TODO: check for live (authenticated) token
 
-    if (authIsLoading) {
+    if (loggedInStatus.isLoading || authIsLoading) {
+        console.log('logging in');
         return (
             <View>
                 <Text>Loading....</Text>
             </View>
         );
-    } else if (loggedInStatus.isLoading) {
+    } else if (!isAuthenticated) {
+        console.log('is authenticated:', isAuthenticated);
         return (
             <View>
-                <Text>Loading....</Text>
+                <PhoneEntry />
             </View>
+        );
+    } else if (!isOnboarded) {
+        return (
+            <SafeAreaView>
+                <ConsentFlow onConsentFinish={() => console.log('Finished consent')} />
+            </SafeAreaView>
         );
     } else {
-        // if we're not authenticated, show the login screen
+        // if we're authenticated, and we have all onboarding done, show them the money
         return (
             <BottomTab.Navigator
                 initialRouteName="Home"
-                tabBarOptions={{ activeTintColor: Colors.light.tint }}
+                tabBarOptions={{
+                    activeTintColor: Colors.light.tint,
+                }}
             >
-                {isAuthenticated ? (
-                    <>
-                        <BottomTab.Screen
-                            name="Home"
-                            component={TabOneNavigator}
-                            options={{
-                                tabBarIcon: ({ color }) => (
-                                    <TabBarIcon name="ios-home" color={color} />
-                                ),
-                            }}
-                        />
-                        <BottomTab.Screen
-                            name="Shifts"
-                            component={ShiftsScreen}
-                            options={{
-                                tabBarIcon: ({ color }) => (
-                                    <TabBarIcon name="ios-code" color={color} />
-                                ),
-                            }}
-                        />
-                        <BottomTab.Screen
-                            name="Jobs List"
-                            component={JobsScreen}
-                            options={{
-                                tabBarIcon: ({ color }) => (
-                                    <TabBarIcon name="ios-plane" color={color} />
-                                ),
-                            }}
-                        />
-                    </>
-                ) : (
-                    <>
-                        <BottomTab.Screen
-                            name="Onboarding"
-                            component={Onboarding}
-                        ></BottomTab.Screen>
-                    </>
-                )}
+                <>
+                    <BottomTab.Screen
+                        name="Home"
+                        component={TabOneNavigator}
+                        options={{
+                            tabBarIcon: ({ color }) => (
+                                <TabBarIcon name="caret-forward-circle-outline" color={color} />
+                            ),
+                        }}
+                    />
+                    <BottomTab.Screen
+                        name="Shifts"
+                        component={ShiftsScreen}
+                        options={{
+                            tabBarIcon: ({ color }) => (
+                                <TabBarIcon name="receipt-outline" color={color} />
+                            ),
+                        }}
+                    />
+                    <BottomTab.Screen
+                        name="Jobs List"
+                        component={JobsScreen}
+                        options={{
+                            tabBarIcon: ({ color }) => (
+                                <TabBarIcon name="list-outline" color={color} />
+                            ),
+                        }}
+                    />
+                    <BottomTab.Screen
+                        name="Settings"
+                        component={SettingsScreen}
+                        options={{
+                            tabBarIcon: ({ color }) => (
+                                <TabBarIcon name="settings-outline" color={color} />
+                            ),
+                        }}
+                    />
+                </>
             </BottomTab.Navigator>
         );
     }

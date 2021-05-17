@@ -51,6 +51,7 @@ export const verifyOtp = async (
 export interface LogInResponse {
     status: number;
     message: string;
+    onboarded: boolean;
     user_id: string;
     authenticated: boolean;
 }
@@ -72,4 +73,3 @@ export enum AuthResponseTypes {
     OtpResponse,
     VerifyOtpResponse,
 }
-

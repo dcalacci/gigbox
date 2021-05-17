@@ -53,6 +53,7 @@ class Query(graphene.ObjectType):
     getTrips = graphene.Field(Trips)
     getActiveShift = graphene.Field(ShiftNode)
     getWeeklySummary = graphene.Field(WeeklySummary)
+    getUserInfo = graphene.Field(User)
     getShiftScreenshots = graphene.Field(
         graphene.List(Screenshot), shiftId=graphene.ID())
     allShifts = FilterableAuthConnectionField(ShiftNode.connection)
@@ -77,6 +78,11 @@ class Query(graphene.ObjectType):
         return qs
         # return {"shifts": qs,
         #         "nextCursor": cursor + n}
+
+    @login_required
+    def resolve_getUserInfo(self, info):
+        userId = str(g.user)
+        return UserModel.query.filter_by(id=userId).first()
 
     @login_required
     def resolve_getShiftScreenshots(self, info, shiftId):

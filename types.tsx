@@ -1,3 +1,4 @@
+import { StringValueNode } from 'graphql/language/ast';
 import { LatLng } from 'react-native-maps';
 
 export type RootStackParamList = {
@@ -93,3 +94,21 @@ export type Screenshot = {
     userId: string;
     employer: string;
 };
+
+export type Consent = {
+    userId: string;
+    dateModified: Date;
+    dateCreated: Date;
+    dataSharing: Boolean | null;
+    interview: Boolean | null;
+    consented: Boolean | null;
+    signatureFilename: string
+}
+
+export type User = {
+    consent: Consent;
+    dateCreated: Date;
+    email?: string
+    phone?: string
+    name?: string
+}
