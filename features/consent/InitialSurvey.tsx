@@ -23,9 +23,12 @@ import { BinaryFilterPill } from '../job/JobList';
 
 export const InitialSurvey = ({ onSurveyFinish }: { onSurveyFinish: () => void }) => {
     const [selectedServices, setSelectedServices] = useState<Employers[]>([]);
+    const queryClient = useQueryClient()
     const submitSurvey = useMutation(submitIntroSurvey, {
         onSuccess: (data) => {
             console.log("data:", data)
+            queryClient.invalidateQueries('userInfo');
+            queryClient.invalidateQueries('loggedIn');
             onSurveyFinish();
         },
     });

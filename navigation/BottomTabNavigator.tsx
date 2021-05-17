@@ -28,6 +28,7 @@ import { InitialSurvey } from '../features/consent/InitialSurvey';
 import { StatusBar } from 'expo-status-bar';
 import { User } from '../types';
 import * as SplashScreen from 'expo-splash-screen';
+import { useScrollToTop } from '@react-navigation/native';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
@@ -38,7 +39,7 @@ export default function BottomTabNavigator({ navigation }) {
 
     useEffect(() => {
         async function maybeShowSplash() {
-            if (!user) {
+            if (!user || !user) {
                 console.log('preventing splash screen hide...');
                 await SplashScreen.preventAutoHideAsync();
             } else {
@@ -60,7 +61,7 @@ export default function BottomTabNavigator({ navigation }) {
     } else if (!user) {
         // otherwise, return null. If we're here, we should be showing the splash screen (see above)
         return null;
-    } else if (!user.consent.consented) {
+    } else if (!user.consent) {
         return (
             <SafeAreaView>
                 <ConsentFlow
@@ -70,7 +71,7 @@ export default function BottomTabNavigator({ navigation }) {
                 />
             </SafeAreaView>
         );
-    } else if (user.employers.length == 0) {
+    } else if (!user.employers || user.employers.length == 0) {
         return (
             <SafeAreaView>
                 <InitialSurvey onSurveyFinish={() => console.log('finished survey')} />
