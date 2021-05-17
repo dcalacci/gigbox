@@ -1,6 +1,7 @@
 import { request, gql } from 'graphql-request';
 import { log, getClient } from '../../utils';
 import { store } from '../../store/store';
+import { Employers } from '../../types';
 
 export const updateInterview = async ({ interview }: { interview: boolean }) => {
     const client = getClient(store);
@@ -125,4 +126,18 @@ export const unenrollAndDeleteMutation = async () => {
         }
     `;
     return client.request(query);
+};
+
+export const submitIntroSurvey = ({ employers }: { employers: Employers[] }) => {
+    const client = getClient(store);
+    const query = gql`
+        mutation mutation($employers: [EmployerNames]!) {
+            submitIntroSurvey(employers: $employers) {
+                user {
+                    employers
+                }
+            }
+        }
+    `;
+    return client.request(query, { employers });
 };

@@ -24,28 +24,32 @@ import { ConsentFlow } from '../features/consent/ConsentFlow';
 import { Signature } from '../features/consent/Signature';
 import { Extras } from '../features/consent/Extras';
 import { getUserInfo } from '../features/consent/api';
+import { InitialSurvey } from '../features/consent/InitialSurvey'
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
 export default function BottomTabNavigator({ navigation }) {
     const dispatch = useDispatch();
-    const jwt = useSelector((state: RootState): boolean => state.auth.jwt);
+    const jwt = useSelector((state: RootState): string | null => state.auth.jwt);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
     const authIsLoading = useSelector((state: RootState): boolean => state.auth.isLoading);
     const [isOnboarded, setIsOnboarded] = useState<boolean>(false);
+    const [initialSurveyDone, setInitialSurveyDone] = useState<boolean>(false);
     const loggedIn = async () => {
         return logIn(jwt);
     };
     const loggedInStatus = useQuery('loggedIn', loggedIn, {
         refetchInterval: 60 * 1000,
         onSuccess: (data: LogInResponse) => {
-            console.log("logged in response:", data)
+            // set log in response using our our REST login endpoint.
+            // do this every minute, just to ensure our token is up to date.
+            console.log('logged in response:', data);
             if (isAuthenticated && data.authenticated) {
                 // do nothing
                 return;
             } else {
                 // otherwise, set our state appropriately
-                setIsOnboarded(data.onboarded)
+                setIsOnboarded(data.onboarded);
                 dispatch(
                     setLoggedIn({
                         authenticated: data.authenticated,
@@ -62,6 +66,7 @@ export default function BottomTabNavigator({ navigation }) {
     });
 
     const userInfoStatus = useQuery('userInfo', getUserInfo, {
+        // Also change onboarding status whenever the 'userInfo' query is refetched.
         onSuccess: (d) => {
             console.log('user info:', d);
             if (d.consent?.consented) {
@@ -95,6 +100,12 @@ export default function BottomTabNavigator({ navigation }) {
         return (
             <SafeAreaView>
                 <ConsentFlow onConsentFinish={() => console.log('Finished consent')} />
+            </SafeAreaView>
+        );
+    } else if (!initialSurveyDone) {
+        return (
+            <SafeAreaView>
+                <InitialSurvey onSurveyFinish = {() => setInitialSurveyDone(true)}/>
             </SafeAreaView>
         );
     } else {
