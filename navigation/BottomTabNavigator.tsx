@@ -25,6 +25,7 @@ import { Signature } from '../features/consent/Signature';
 import { Extras } from '../features/consent/Extras';
 import { getUserInfo } from '../features/consent/api';
 import { InitialSurvey } from '../features/consent/InitialSurvey';
+import { StatusBar } from 'expo-status-bar';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
@@ -44,7 +45,14 @@ export default function BottomTabNavigator({ navigation }) {
             // set log in response using our our REST login endpoint.
             // do this every minute, just to ensure our token is up to date.
             console.log('logged in response:', data);
-            if (isAuthenticated && data.authenticated) {
+            if (data.status != 200) {
+                console.log('not authenticated');
+                dispatch(
+                    setLoggedIn({
+                        authenticated: false,
+                    })
+                );
+            } else if (isAuthenticated && data.authenticated) {
                 // do nothing
                 return;
             } else {
@@ -86,6 +94,8 @@ export default function BottomTabNavigator({ navigation }) {
 
     //TODO: check for live (authenticated) token
 
+    console.log('authenticated?', isAuthenticated);
+
     if (loggedInStatus.isLoading || authIsLoading) {
         console.log('logging in');
         return (
@@ -103,7 +113,12 @@ export default function BottomTabNavigator({ navigation }) {
     } else if (!isOnboarded) {
         return (
             <SafeAreaView>
-                <ConsentFlow onConsentFinish={() => console.log('Finished consent')} />
+                <ConsentFlow
+                    onConsentFinish={() => {
+                        console.log('Finished consent');
+                        setIsOnboarded(true);
+                    }}
+                />
             </SafeAreaView>
         );
     } else if (!initialSurveyDone) {

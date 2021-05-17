@@ -9,6 +9,7 @@ import {
 } from '../features/consent/api';
 import tailwind from 'tailwind-rn';
 
+import { StatusBar } from 'expo-status-bar';
 import * as Loc from 'expo-location';
 
 import AnimatedEllipsis from '../components/Ellipsis';
@@ -54,6 +55,7 @@ export default function SettingsScreen({ route }) {
         <LoadingScreen />
     ) : (
         <SafeAreaView style={tailwind('bg-gray-100 justify-start flex-col')}>
+            <StatusBar style="dark" />
             <ScrollView>
                 {/* <Text style={styles.title}>Jobs</Text> */}
                 <View style={tailwind('flex-row p-5 content-start')}>

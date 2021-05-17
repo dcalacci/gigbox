@@ -43,6 +43,7 @@ const authSlice = createSlice({
             state.permissions.location = false;
         },
         setLoggedIn(state, action) {
+            state.authenticated = action.payload.authenticated
             state.userId = action.payload.user_id ? action.payload.user_id : state.userId
         }
     },
