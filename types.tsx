@@ -108,6 +108,7 @@ export type Consent = {
 export type User = {
     consent: Consent;
     dateCreated: Date;
+    employers: Employers[];
     email?: string
     phone?: string
     name?: string

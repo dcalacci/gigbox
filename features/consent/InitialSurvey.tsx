@@ -26,7 +26,7 @@ export const InitialSurvey = ({ onSurveyFinish }: { onSurveyFinish: () => void }
     const submitSurvey = useMutation(submitIntroSurvey, {
         onSuccess: (data) => {
             console.log("data:", data)
-            // onSurveyFinish();
+            onSurveyFinish();
         },
     });
 

@@ -1,5 +1,6 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { loginWithOtp } from './otpSlice';
+import { User } from '../../types'
 
 export interface AuthState {
     lastLoggedIn: number | null;
@@ -11,6 +12,7 @@ export interface AuthState {
         location: boolean;
         notification: boolean;
     };
+    user: User | null
 }
 
 const initialState: AuthState = {
@@ -23,6 +25,7 @@ const initialState: AuthState = {
         location: false,
         notification: false,
     },
+    user: null
 };
 
 const authSlice = createSlice({
@@ -30,6 +33,9 @@ const authSlice = createSlice({
     initialState: initialState,
     reducers: {
         reset: (state) => initialState,
+        setUser: (state, action) =>  {
+            state.user = action.payload
+        },
         grantLocationPermissions(state) {
             state.permissions.location = true;
         },
@@ -61,5 +67,5 @@ const authSlice = createSlice({
     },
 });
 
-export const { reset, grantLocationPermissions, denyLocationPermissions, setLoggedIn} = authSlice.actions;
+export const { reset, setUser, grantLocationPermissions, denyLocationPermissions, setLoggedIn} = authSlice.actions;
 export default authSlice.reducer;

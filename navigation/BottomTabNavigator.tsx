@@ -17,14 +17,14 @@ import { SafeAreaView, View, Text, Settings } from 'react-native';
 
 import { useQuery } from 'react-query';
 import { logIn, LogInResponse } from '../features/auth/api';
-import { setLoggedIn } from '../features/auth/authSlice';
+import { setLoggedIn, setUser } from '../features/auth/authSlice';
 import { useDispatch } from 'react-redux';
 import PhoneEntry from '../features/auth/PhoneEntry';
 import { ConsentFlow } from '../features/consent/ConsentFlow';
 import { Signature } from '../features/consent/Signature';
 import { Extras } from '../features/consent/Extras';
 import { getUserInfo } from '../features/consent/api';
-import { InitialSurvey } from '../features/consent/InitialSurvey'
+import { InitialSurvey } from '../features/consent/InitialSurvey';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
@@ -69,8 +69,12 @@ export default function BottomTabNavigator({ navigation }) {
         // Also change onboarding status whenever the 'userInfo' query is refetched.
         onSuccess: (d) => {
             console.log('user info:', d);
+            dispatch(setUser(d));
             if (d.consent?.consented) {
                 setIsOnboarded(true);
+            }
+            if (d.employers.length != 0) {
+                setInitialSurveyDone(true);
             }
         },
         onError: (err) => {
@@ -105,7 +109,7 @@ export default function BottomTabNavigator({ navigation }) {
     } else if (!initialSurveyDone) {
         return (
             <SafeAreaView>
-                <InitialSurvey onSurveyFinish = {() => setInitialSurveyDone(true)}/>
+                <InitialSurvey onSurveyFinish={() => setInitialSurveyDone(true)} />
             </SafeAreaView>
         );
     } else {

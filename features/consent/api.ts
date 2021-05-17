@@ -105,6 +105,7 @@ export const getUserInfo = () => {
                 email
                 name
                 phone
+                employers
                 consent {
                     consented
                     interview
