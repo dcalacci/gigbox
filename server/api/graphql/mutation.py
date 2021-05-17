@@ -514,6 +514,21 @@ class SetShiftEmployers(Mutation):
         db.session.commit()
         return SetShiftEmployers(shift)
 
+class SubmitIntroSurvey(Mutation):
+    user = Field(lambda: User, description="user who submitted survey")
+
+    class Arguments:
+        employers = List(graphene.Enum.from_enum(EmployerNames))
+
+    @login_required
+    def mutate(self, info, employers):
+        user_id = g.user
+        user = UserModel.query.filter_by(id=user_id).first()
+        user.employers = employers
+        db.session.add(user)
+        db.session.commit()
+        return SubmitIntroSurvey(user)
+
 
 class SubmitConsent(Mutation):
     user = Field(lambda: User, description="user that consented")
@@ -618,6 +633,7 @@ class Mutation(ObjectType):
     addLocationsToShift = AddLocationsToShift.Field()
     addScreenshotToShift = AddScreenshotToShift.Field()
     submitConsent = SubmitConsent.Field()
+    submitIntroSurvey = SubmitIntroSurvey.Field()
     updateDataSharingConsent = UpdateDataSharingConsent.Field()
     updateInterviewConsent = UpdateInterviewConsent.Field()
     unenrollAndDelete = UnenrollAndDelete.Field()

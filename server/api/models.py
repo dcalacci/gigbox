@@ -98,6 +98,10 @@ class User(db.Model):
     phone=db.Column(String, nullable=True)
     email=db.Column(String, nullable=True)
     name=db.Column(String, nullable=True)
+    employers = Column(ARRAY(db.Enum(EmployerNames,
+                                     create_constraint=False, native_enum=False)))
+
+
 
 
     def __init__(self, id):
