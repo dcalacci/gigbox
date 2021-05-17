@@ -195,12 +195,14 @@ export const addScreenshotToShift = async ({
 export const createJob = async ({ shiftId, employer }: { shiftId: string; employer: string }) => {
     const client = getClient(store);
 
-    const location: LocationObject | null = await Location.getLastKnownPositionAsync({
+    let location: LocationObject | null = await Location.getLastKnownPositionAsync({
         maxAge: 5000,
     });
 
     if (location == null) {
-        throw new Error("Couldn't retrieve location!");
+        log.error("Couldn't retrieve last known location. getting current location..")
+        // throw new Error("Couldn't retrieve location!");
+        location = await Location.getCurrentPositionAsync()
     }
 
     const startLocation: LocationInput = {
