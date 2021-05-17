@@ -71,7 +71,7 @@ export const registerMileageTask = () => {
     });
 };
 
-const askPermissions = async () => {
+export const askPermissions = async () => {
     const state = store.getState();
     const { status, granted } = await Permissions.askAsync(Permissions.LOCATION);
     if (status === 'granted') {

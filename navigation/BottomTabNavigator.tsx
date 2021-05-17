@@ -27,7 +27,7 @@ import { getUserInfo } from '../features/consent/api';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
-export default function BottomTabNavigator({navigation}) {
+export default function BottomTabNavigator({ navigation }) {
     const dispatch = useDispatch();
     const jwt = useSelector((state: RootState): boolean => state.auth.jwt);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
@@ -39,11 +39,13 @@ export default function BottomTabNavigator({navigation}) {
     const loggedInStatus = useQuery('loggedIn', loggedIn, {
         refetchInterval: 60 * 1000,
         onSuccess: (data: LogInResponse) => {
+            console.log("logged in response:", data)
             if (isAuthenticated && data.authenticated) {
                 // do nothing
                 return;
             } else {
                 // otherwise, set our state appropriately
+                setIsOnboarded(data.onboarded)
                 dispatch(
                     setLoggedIn({
                         authenticated: data.authenticated,
@@ -65,6 +67,10 @@ export default function BottomTabNavigator({navigation}) {
             if (d.consent?.consented) {
                 setIsOnboarded(true);
             }
+        },
+        onError: (err) => {
+            console.log('had an issue getting user info:');
+            console.log(err);
         },
         select: (d) => d.getUserInfo,
     });

@@ -11,7 +11,9 @@ import {
 } from 'react-native';
 import { tailwind } from 'tailwind';
 import { useQueryClient, useMutation, useQuery } from 'react-query';
+import * as Permissions from 'expo-permissions';
 import * as Haptics from 'expo-haptics';
+import { askPermissions } from '../../tasks';
 import BinarySurveyQuestion from './BinarySurveyQuestion';
 import { submitConsent } from './api';
 import { Extras } from './Extras';
@@ -79,14 +81,15 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
     const [interviewConsent, setInterviewConsent] = useState<boolean>();
     const [extrasConsent, setExtrasConsent] = useState<boolean>(false);
     const [name, setName] = useState<string>('');
-    const [phone, setPhone] = useState<string>('')
-    const [email, setEmail] = useState<string>('')
+    const [phone, setPhone] = useState<string>('');
+    const [email, setEmail] = useState<string>('');
     const [sigText, setSigText] = useState<string>('');
-    const queryClient = useQueryClient()
+    const queryClient = useQueryClient();
     const finishConsent = useMutation(submitConsent, {
         onSuccess: (data) => {
             console.log('woohoo, submitted consent:', data);
-            queryClient.invalidateQueries('userInfo')
+            queryClient.invalidateQueries('userInfo');
+            queryClient.invalidateQueries('loggedIn');
         },
         onError: (err) => {
             console.log("couldn't submit consent:", err);
@@ -231,6 +234,7 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
                         }
                         onConsent={(yes: boolean) => {
                             console.log('Location consent:', yes);
+                            askPermissions();
                             setLocationConsent(yes);
                         }}
                         value={locationConsent}
@@ -248,7 +252,11 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
                         declineText={
                             "You can't use gigbox without granting permissions for your photos."
                         }
-                        onConsent={(yes: boolean) => {
+                        onConsent={async (yes: boolean) => {
+                            const { status, permissions } = await Permissions.askAsync(
+                                Permissions.MEDIA_LIBRARY
+                            );
+                            console.log(status, permissions)
                             setPhotoConsent(yes);
                             console.log('photos consent:', yes);
                         }}

@@ -76,6 +76,7 @@ export const submitConsent = async ({
                     consent {
                         interview
                         dataSharing
+                        consented
                         signatureFilename
                         signatureEncoded
                     }
