@@ -6,6 +6,10 @@ import { useToast } from 'react-native-fast-toast';
 
 import * as MediaLibrary from 'expo-media-library';
 import { Asset } from 'expo-media-library';
+import { useQuery, useMutation, useQueryClient } from 'react-query';
+
+import * as Device from 'expo-device';
+import Tooltip from 'react-native-walkthrough-tooltip';
 
 import { RootState } from '../../store/index';
 import Toggle from '../../components/Toggle';
@@ -13,7 +17,6 @@ import Toggle from '../../components/Toggle';
 import { AuthState } from '../auth/authSlice';
 import { formatElapsedTime } from '../../utils';
 import { startGettingBackgroundLocation, stopGettingBackgroundLocation } from '../../tasks';
-import { useQuery, useMutation, useQueryClient } from 'react-query';
 import {
     setShiftEmployers,
     fetchActiveShift,
@@ -25,7 +28,7 @@ import { log } from '../../utils';
 import JobTracker from './JobTracker';
 import EmployerSelector from './EmployerSelector';
 import { Employers } from '../../types';
-import * as Device from 'expo-device';
+import { fetchWeeklySummary } from '../weeklySummary/api';
 
 export default function TrackingBar() {
     const toast = useToast();
@@ -73,7 +76,7 @@ export default function TrackingBar() {
             queryClient.invalidateQueries('activeShift');
             log.error(`Problem ending shift: ${err}`);
             // toast?.show(err)
-            err.response.errors.map((e) => toast?.show(e.message))
+            err.response.errors.map((e) => toast?.show(e.message));
         },
     });
 
@@ -181,7 +184,7 @@ export default function TrackingBar() {
                                 screenshotLocalUri: info.localUri,
                                 modificationTime: info.modificationTime,
                                 shiftId: shift_id,
-                                jobId: undefined
+                                jobId: undefined,
                             })
                         );
                     }
@@ -195,15 +198,17 @@ export default function TrackingBar() {
                             // you'd think it would be creationTime, but screenshots have a
                             // creationTime of 0 on android it seems
                             sortBy: [[MediaLibrary.SortBy.modificationTime, false]],
-                        }).then( async (screenshots) => {
+                        }).then(async (screenshots) => {
                             console.log('screenshots:', screenshots.assets);
                             const shift_id = activeShift.data.id;
-                            const info = await MediaLibrary.getAssetInfoAsync(screenshots.assets[0]);
+                            const info = await MediaLibrary.getAssetInfoAsync(
+                                screenshots.assets[0]
+                            );
                             uploadScreenshot.mutate({
                                 screenshotLocalUri: info.localUri,
                                 modificationTime: info.modificationTime,
                                 shiftId: shift_id,
-                                jobId: undefined
+                                jobId: undefined,
                             });
                         });
                         // const scrAlbum = await MediaLibrary.getAlbumAsync('Screenshots')
@@ -263,38 +268,76 @@ export default function TrackingBar() {
                 employers: selectedEmployers,
             });
         };
+
+        const [toolTipVisible, setToolTipVisible] = useState<boolean>(false);
+        const [employerTtVisible, setEmployerTtVisible] = useState<boolean>(false);
+
+        const weeklySummary = useQuery(['nJobs'], fetchWeeklySummary, {
+            onSuccess: (data) => {
+                console.log("successful. setting tooltips:", data)
+                if (data.numShifts == 0) {
+                    setToolTipVisible(true);
+                    setEmployerTtVisible(true);
+                }
+            },
+            select: (d) => d.getWeeklySummary
+        });
         return (
-            <View style={[tailwind('flex flex-col')]}>
-                <View
-                    style={[
-                        { zIndex: 100 },
-                        tailwind(
-                            'flex-shrink flex-row justify-around items-center p-3 border-green-600 h-16 bg-white'
-                        ),
-                        shift.active ? tailwind('bg-green-500') : null,
-                    ]}
-                >
-                    <Toggle
-                        title={shift.active ? 'Tracking Shift' : 'Clock In'}
-                        activeText="On"
-                        inactiveText="Off"
-                        value={shift.active}
-                        onToggle={onTogglePress}
-                    />
-                    <View style={tailwind('flex-grow-0')}>
-                        <Text style={[textStyle, { alignSelf: 'flex-end' }]}>{nMiles}mi</Text>
-                        <Text style={textStyle}>{elapsedTime}</Text>
+            <Tooltip
+                isVisible={toolTipVisible}
+                content={
+                    <Text>
+                        When you start a shift, clock in here. Your mileage and time will
+                        automatically be tracked while you work.
+                    </Text>
+                }
+                placement="bottom"
+                onClose={() => setToolTipVisible(false)}
+            >
+                <View style={[tailwind('flex flex-col')]}>
+                    <View
+                        style={[
+                            { zIndex: 100 },
+                            tailwind(
+                                'flex-shrink flex-row justify-around items-center p-3 border-green-600 h-16 bg-white'
+                            ),
+                            shift.active ? tailwind('bg-green-500') : null,
+                        ]}
+                    >
+                        <Toggle
+                            title={shift.active ? 'Tracking Shift' : 'Clock In'}
+                            activeText="On"
+                            inactiveText="Off"
+                            value={shift.active}
+                            onToggle={onTogglePress}
+                        />
+                        <View style={tailwind('flex-grow-0')}>
+                            <Text style={[textStyle, { alignSelf: 'flex-end' }]}>{nMiles}mi</Text>
+                            <Text style={textStyle}>{elapsedTime}</Text>
+                        </View>
                     </View>
+                    {shift.active && !shift.employers ? (
+                        <Tooltip
+                            isVisible={employerTtVisible}
+                            content={
+                                <Text>
+                                    Select any apps you're working for (looking for jobs on) during
+                                    this shift.
+                                </Text>
+                            }
+                            placement="bottom"
+                            onClose={() => setEmployerTtVisible(false)}
+                        >
+                            <EmployerSelector
+                                onEmployersSubmitted={onEmployersSubmitted}
+                                potentialEmployers={auth.user?.employers}
+                                submissionStatus={setEmployers.status}
+                            />
+                        </Tooltip>
+                    ) : null}
+                    {shift.active && shift.employers ? <JobTracker shift={shift} /> : null}
                 </View>
-                {shift.active && !shift.employers ? (
-                    <EmployerSelector
-                        onEmployersSubmitted={onEmployersSubmitted}
-                        potentialEmployers={auth.user?.employers}
-                        submissionStatus={setEmployers.status}
-                    />
-                ) : null}
-                {shift.active && shift.employers ? <JobTracker shift={shift} /> : null}
-            </View>
+            </Tooltip>
         );
     } else {
         return (

@@ -17,7 +17,7 @@ import { SafeAreaView, View, Text, Settings } from 'react-native';
 
 import { useQuery } from 'react-query';
 import { logIn, LogInResponse } from '../features/auth/api';
-import { setLoggedIn, setUser } from '../features/auth/authSlice';
+import { setOnboarded, setLoggedIn, setUser } from '../features/auth/authSlice';
 import { useDispatch } from 'react-redux';
 import PhoneEntry from '../features/auth/PhoneEntry';
 import { ConsentFlow } from '../features/consent/ConsentFlow';
@@ -25,6 +25,7 @@ import { Signature } from '../features/consent/Signature';
 import { Extras } from '../features/consent/Extras';
 import { getUserInfo } from '../features/consent/api';
 import { InitialSurvey } from '../features/consent/InitialSurvey';
+import { Onboarding } from '../features/onboarding/Onboarding';
 import { StatusBar } from 'expo-status-bar';
 import { User } from '../types';
 import * as SplashScreen from 'expo-splash-screen';
@@ -36,6 +37,7 @@ export default function BottomTabNavigator({ navigation }) {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState): User | null => state.auth.user);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
+    const isOnboarded = useSelector((state: RootState): boolean => state.auth.onboarded);
 
     useEffect(() => {
         async function maybeShowSplash() {
@@ -51,8 +53,10 @@ export default function BottomTabNavigator({ navigation }) {
         maybeShowSplash();
     }, [user]);
 
-    // if not authenticated, show phone entry screen. isAuthenticated should be True at the end of the flow.
-    if (!isAuthenticated) {
+    if (!isOnboarded) {
+        return <Onboarding onOnboardingFinish={() => dispatch(setOnboarded(true))} />;
+    } else if (!isAuthenticated) {
+        // if not authenticated, show phone entry screen. isAuthenticated should be True at the end of the flow.
         return (
             <View>
                 <PhoneEntry />

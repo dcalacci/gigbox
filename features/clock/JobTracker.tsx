@@ -5,15 +5,18 @@ import { tailwind } from 'tailwind';
 import { formatElapsedTime, log } from '../../utils';
 import { Shift, Job, Employers } from '@/types';
 import { LatLng, Marker, Region } from 'react-native-maps';
-import { useQueryClient, useMutation } from 'react-query';
+import { useQueryClient, useMutation, useQuery } from 'react-query';
 import { useToast } from 'react-native-fast-toast';
 import moment from 'moment';
 
 import { createJob, endJob } from './api';
 import TripMap from '../shiftList/TripMap';
-import EmployerSelector, {EmployerBox} from './EmployerSelector';
+import EmployerSelector, { EmployerBox } from './EmployerSelector';
 import Ellipsis from '../../components/Ellipsis';
 import parse from 'wellknown';
+
+import Tooltip from 'react-native-walkthrough-tooltip';
+import { fetchWeeklySummary } from '../weeklySummary/api';
 
 export interface JobTrackerProps {
     shift: Shift;
@@ -27,6 +30,17 @@ export default function JobTracker({ shift }: { shift: Shift }) {
     const [activeJob, setActiveJob] = useState<Job>();
     const queryClient = useQueryClient();
     const toast = useToast();
+
+    const [ttVisible, setTtVisible] = useState<boolean>(true);
+
+    const weeklySummary = useQuery(['nJobs'], fetchWeeklySummary, {
+        onSuccess: (data) => {
+            if (data.numJobs == 0) {
+                setTtVisible(true);
+            }
+        },
+        select: (d) => d.getWeeklySummary,
+    });
 
     useEffect(() => {
         const activeJobs: { node: Job }[] = shift.jobs.edges.filter((j) => !j.node.endTime);
@@ -130,103 +144,123 @@ export default function JobTracker({ shift }: { shift: Shift }) {
         }
     };
     return (
-        <View
-            style={[tailwind('flex-auto flex-col bg-white ml-2 mb-1 mr-2'), styles.roundedBottom]}
+        <Tooltip
+            isVisible={ttVisible}
+            content={
+                <Text>
+                    Tap here when you accept a job (delivery) to track it, and come back to this
+                    screen once you've finished. You can enter your pay or edit jobs from the shifts
+                    screen or the job list screen.
+                </Text>
+            }
+            placement="bottom"
+            onClose={() => setTtVisible(false)}
         >
-            <View style={[tailwind('flex-auto w-full flex-col')]}>
-                {activeJob ? (
-                    <View style={tailwind('h-36 border-b-2 border-green-500')}>
-                        <View style={styles.mapTitle}>
-                            <Text style={tailwind('text-xl text-gray-800 font-bold underline')}>
-                                Current Job
-                            </Text>
+            <View
+                style={[
+                    tailwind('flex-auto flex-col bg-white ml-2 mb-1 mr-2'),
+                    styles.roundedBottom,
+                ]}
+            >
+                <View style={[tailwind('flex-auto w-full flex-col')]}>
+                    {activeJob ? (
+                        <View style={tailwind('h-36 border-b-2 border-green-500')}>
+                            <View style={styles.mapTitle}>
+                                <Text style={tailwind('text-xl text-gray-800 font-bold underline')}>
+                                    Current Job
+                                </Text>
+                            </View>
+                            <TripMap
+                                interactive={false}
+                                showUserLocation={true}
+                                isActive={false}
+                                tripLocations={locations}
+                                region={region}
+                            >
+                                <Marker
+                                    pinColor={'green'}
+                                    coordinate={{
+                                        longitude: parse(activeJob.startLocation).coordinates[0],
+                                        latitude: parse(activeJob.startLocation).coordinates[1],
+                                    }}
+                                ></Marker>
+                            </TripMap>
                         </View>
-                        <TripMap
-                            interactive={false}
-                            showUserLocation={true}
-                            isActive={false}
-                            tripLocations={locations}
-                            region={region}
-                        >
-                            <Marker
-                                pinColor={'green'}
-                                coordinate={{
-                                    longitude: parse(activeJob.startLocation).coordinates[0],
-                                    latitude: parse(activeJob.startLocation).coordinates[1],
-                                }}
-                            ></Marker>
-                        </TripMap>
-                    </View>
-                ) : null}
-                {activeJob ? (
-                    <ScrollView horizontal={true} style={tailwind('w-full p-2 flex-row')}>
-                        <EmployerBox employer={activeJob.employer} size={8} style={tailwind("self-center m-0")}/>
-                        <View
-                            style={tailwind(
-                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around justify-center'
-                            )}
-                        >
-                            <Text style={tailwind('text-sm font-bold text-white flex-initial')}>
-                                Started @ {moment.utc(activeJob.startTime).local().format('h:mm a')}
-                            </Text>
-                        </View>
-                        <View
-                            style={tailwind(
-                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around justify-center'
-                            )}
-                        >
-                            <Text style={tailwind('text-sm font-bold text-white flex-initial')}>
-                                {formatElapsedTime(moment.utc(activeJob.startTime).local())}
-                            </Text>
-                        </View>
-                        <View
-                            style={tailwind(
-                                'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around justify-center'
-                            )}
-                        >
-                            <Text style={tailwind('text-sm font-bold text-white flex-initial')}>
-                                {activeJob.mileage?.toFixed(1)} mi
-                            </Text>
-                        </View>
-
-                    </ScrollView>
-                ) : null}
-
-                {jobStarted && !employer ? (
-                    <View style={tailwind('w-full p-2')}>
-                        <EmployerSelector
-                            onEmployersSubmitted={submitEmployer}
-                            potentialEmployers={shift.employers}
-                            submissionStatus={employer ? 'success' : ''}
-                            singleSelect={true}
-                        />
-                    </View>
-                ) : null}
-
-                {shift.active ? (
-                    <Pressable
-                        onPress={pressStartOrEndJob}
-                        style={[
-                            tailwind('mb-0 p-2'),
-                            activeJob ? tailwind('bg-red-400') : tailwind('bg-gray-600'),
-                            styles.roundedBottom,
-                        ]}
-                    >
-                        {startJob.status == 'loading' || finishJob.status == 'loading' ? (
-                            <Ellipsis style={tailwind('text-lg self-center')} />
-                        ) : (
-                            <Text
+                    ) : null}
+                    {activeJob ? (
+                        <ScrollView horizontal={true} style={tailwind('w-full p-2 flex-row')}>
+                            <EmployerBox
+                                employer={activeJob.employer}
+                                size={8}
+                                style={tailwind('self-center m-0')}
+                            />
+                            <View
                                 style={tailwind(
-                                    'underline font-bold text-white text-lg self-center'
+                                    'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around justify-center'
                                 )}
                             >
-                                {getButtonText()}
-                            </Text>
-                        )}
-                    </Pressable>
-                ) : null}
+                                <Text style={tailwind('text-sm font-bold text-white flex-initial')}>
+                                    Started @{' '}
+                                    {moment.utc(activeJob.startTime).local().format('h:mm a')}
+                                </Text>
+                            </View>
+                            <View
+                                style={tailwind(
+                                    'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around justify-center'
+                                )}
+                            >
+                                <Text style={tailwind('text-sm font-bold text-white flex-initial')}>
+                                    {formatElapsedTime(moment.utc(activeJob.startTime).local())}
+                                </Text>
+                            </View>
+                            <View
+                                style={tailwind(
+                                    'flex-initial bg-green-500 rounded-2xl p-1 pl-2 pr-2 ml-2 mr-2 content-around justify-center'
+                                )}
+                            >
+                                <Text style={tailwind('text-sm font-bold text-white flex-initial')}>
+                                    {activeJob.mileage?.toFixed(1)} mi
+                                </Text>
+                            </View>
+                        </ScrollView>
+                    ) : null}
+
+                    {jobStarted && !employer ? (
+                        <View style={tailwind('w-full p-2')}>
+                            <EmployerSelector
+                                onEmployersSubmitted={submitEmployer}
+                                potentialEmployers={shift.employers}
+                                submissionStatus={employer ? 'success' : ''}
+                                singleSelect={true}
+                            />
+                        </View>
+                    ) : null}
+
+                    {shift.active ? (
+                        <Pressable
+                            onPress={pressStartOrEndJob}
+                            style={[
+                                tailwind('mb-0 p-2'),
+                                activeJob ? tailwind('bg-red-400') : tailwind('bg-gray-600'),
+                                styles.roundedBottom,
+                            ]}
+                        >
+                            {startJob.status == 'loading' || finishJob.status == 'loading' ? (
+                                <Ellipsis style={tailwind('text-lg self-center')} />
+                            ) : (
+                                <Text
+                                    style={tailwind(
+                                        'underline font-bold text-white text-lg self-center'
+                                    )}
+                                >
+                                    {getButtonText()}
+                                </Text>
+                            )}
+                        </Pressable>
+                    ) : null}
+                </View>
             </View>
-        </View>
+        </Tooltip>
     );
 }
 
