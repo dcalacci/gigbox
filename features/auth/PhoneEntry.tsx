@@ -103,7 +103,14 @@ const PhoneEntry: React.FC = (props) => {
                 </SafeAreaView>
             ) : (
                 <SafeAreaView>
-                    <Text style={tailwind('text-black text-xl font-semibold')}>
+                    <Text style={tailwind('text-green-500 text-3xl font-bold')}>
+                        Login to Gigbox
+                    </Text>
+                    <Text style={tailwind('text-green-500 text-lg font-bold')}>
+                        Your phone number is never saved and is only used to log you in
+                    </Text>
+
+                    <Text style={tailwind('text-black text-xl font-semibold pt-20')}>
                         Get your One-Time Passcode
                     </Text>
                     <Text style={tailwind('text-gray-400 text-sm font-semibold pb-2')}>
