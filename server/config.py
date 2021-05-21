@@ -14,24 +14,25 @@ class Config(object):
     TWILIO_SID = "ACf94ed41badca81cd1f75d453b785e41f"
     TOKEN_LIFETIME = 31
     IMAGE_DIR = '/opt/images'
-
-
-class DevelopmentConfig(Config):
-    DEBUG = True
     SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["DB_USERNAME"] + ":"  \
                               + os.environ["DB_PASSWORD"] + "@" \
                               + os.environ["DB_HOST"] + ":" \
                               + os.environ["DB_PORT"] + "/" \
                               + os.environ["DB_DATABASE"]
-    click.echo(SQLALCHEMY_DATABASE_URI)
+
+
+class DevelopmentConfig(Config):
+    DEBUG = True
 
 
 class TestingConfig(Config):
     DATABASE_NAME = "gigbox-testing"
     TESTING_TO_NUMBER = "+19082298992"
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["DB_USERNAME"] + ":" \
-                              + os.environ["DB_PASSWORD"] + "@" \
-                              + os.environ["DB_HOST"] + ":" \
-                              + os.environ["DB_PORT"] + "/" \
-                              + os.environ["DB_DATABASE"]
+
+class ProductionConfig(Config):
+    ENV = "PRODUCTION"
+    SECRET_KEY = os.environ["SECRET_KEY"]
+    TWILIO_NUMBER = os.environ["TWILIO_NUMBER"]
+    TWILIO_SID = os.environ["TWILIO_SID"]
+    TWILIO_TOKEN = os.environ["TWILIO_TOKEN"]

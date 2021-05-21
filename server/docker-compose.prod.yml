@@ -2,19 +2,16 @@ version: '3.3' # Specify docker-compose version
 services:
     gigbox-server:
         container_name: gigbox-server
-        image: gigbox/server
+        image: gigbox/gigbox-server-prod
         build:
             context: .
-            dockerfile: Dockerfile
-        # restart: always
+            dockerfile: Dockerfile.prod
         env_file:
-            - .env
+            - .env.prod
         ports:
-            - '5000:5000'
-        command: 'python main.py runserver'
+            - '80:80'
         restart: always
         volumes:
-            - .:/usr/src/app
             - screenshots:/opt/images
         networks:
             - backend
@@ -32,12 +29,14 @@ services:
         container_name: gigbox-osrm
         image: osrm/osrm-backend 
         restart: always
-        volumes:
-            - osrm-data:/opt
+        ports:
+            - '5001:5000'
         command:
             "osrm-routed --max-matching-size 100000 --algorithm mld us-latest.osrm"
         networks:
             - backend
+        volumes:
+            - osrm-data:/opt
 volumes:
     database-data:
     screenshots:

@@ -80,3 +80,5 @@ def get_environment_config():
         return "config.TestingConfig"
     elif Config.ENV == "DEVELOPMENT":
         return "config.DevelopmentConfig"
+    elif Config.ENV == "PRODUCTION":
+        return "config.ProductionConfig"
