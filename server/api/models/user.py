@@ -3,6 +3,8 @@ from sqlalchemy import Column, DateTime, String
 from sqlalchemy.dialects.postgresql import ARRAY
 from sqlalchemy.sql import func  # for datetimes
 
+
+
 class User(db.Model):
 
     __tablename__ = "users"
@@ -12,7 +14,7 @@ class User(db.Model):
     shifts = db.relationship("Shift")
     date_created = db.Column(DateTime, server_default=func.now())
     consent = db.relationship('Consent', uselist=False, back_populates='user')
-    # survey_answers = relationship(Answer, backref="user")
+    survey_answers = db.relationship("Answer", back_populates="user")
     phone=db.Column(String, nullable=True)
     email=db.Column(String, nullable=True)
     name=db.Column(String, nullable=True)

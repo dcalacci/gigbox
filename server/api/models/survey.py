@@ -46,6 +46,7 @@ class Survey(db.Model):
     start_date = db.Column(DateTime, nullable=False)
     end_date = db.Column(DateTime, nullable=True)
     title = db.Column(String, nullable=False)
+    questions = relationship("Question", back_populates="survey")
 
 
 
@@ -61,7 +62,8 @@ class Question(db.Model):
     range_options_id = db.Column(Integer, ForeignKey('survey_range_options.id'), nullable=True)
     range_options = db.relationship(RangeOptions)
     survey_id = db.Column(Integer, ForeignKey(Survey.id))
-    survey = db.relationship("Survey", backref="questions")
+    survey = db.relationship("Survey", back_populates="questions")
+    answers = db.relationship("Answer", back_populates="question")
     # backref to 'surveys' here
 
 
@@ -70,13 +72,11 @@ class Answer(db.Model):
     __tablename__ = "survey_answer"
     id = Column(Integer, primary_key=True)
     user_id = db.Column(String, ForeignKey(User.id))
-    user = db.relationship('User', backref='survey_answers')
+    user = db.relationship('User', back_populates='survey_answers')
     question_id = db.Column(Integer, ForeignKey(Question.id))
-    question = db.relationship(Question, backref='questions')
+    question = db.relationship(Question, back_populates='answers')
     date = db.Column(DateTime)
     answer_text = db.Column(db.String, nullable=True)
     answer_numeric = db.Column(db.Float, nullable=True)
     answer_options = db.Column(db.ARRAY(db.String), nullable=True)
     answer_yn = db.Column(Boolean, nullable=True)
-
-

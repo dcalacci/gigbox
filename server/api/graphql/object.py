@@ -14,6 +14,9 @@ from api.models import (
     Location as LocationModel,
     Screenshot as ScreenshotModel,
     Job as JobModel,
+    Survey as SurveyModel,
+    Answer as AnswerModel,
+    Question as QuestionModel,
     Consent as ConsentModel,
     Geometry_WKT,
     EmployerNames,
@@ -42,9 +45,10 @@ class JobFilter(FilterSet):
             'tip': ['is_null', 'gt', 'gte', 'lte', 'eq', 'range'],
         }
 
+
 class ShiftFilter(FilterSet):
     class Meta:
-        model = ShiftModel 
+        model = ShiftModel
         fields = {
             'start_time': ['gt', 'gte', 'lt', 'lte', 'range'],
             'end_time': ['is_null', 'gt', 'gte', 'lt', 'lte', 'range'],
@@ -55,12 +59,30 @@ class ShiftFilter(FilterSet):
         }
 
 
+class SurveyFilter(FilterSet):
+    class Meta:
+        model = SurveyModel
+        fields = {
+            'start_date': ['gt', 'gte', 'lt', 'lte', 'range'],
+            'end_date': ['gt', 'gte', 'lt', 'lte', 'range', 'is_null'],
+            'title': ['eq', 'is_null'],
+        }
+
+
+class AnswerFilter(FilterSet):
+    class Meta:
+        model = AnswerModel
+        fields = {
+        }
+
+
 class FilterableAuthConnectionField(FilterableConnectionField):
     RELAY_ARGS = ['first', 'last', 'before', 'after']
 
     filters = {
         JobModel: JobFilter(),
-        ShiftModel: ShiftFilter()
+        ShiftModel: ShiftFilter(),
+        AnswerModel: AnswerFilter()
     }
 
     @classmethod
@@ -69,8 +91,20 @@ class FilterableAuthConnectionField(FilterableConnectionField):
 
         query = super(FilterableAuthConnectionField, cls).get_query(
             model, info, sort=sort, **args)
-        query = query.filter_by(user_id=str(g.user))
+        if (hasattr(model, 'user_id')):
+            print("filtering", model, "by userid...")
+            query = query.filter_by(user_id=str(g.user))
         return query
+
+
+class FilterableConnField(FilterableConnectionField):
+    RELAY_ARGS = ['first', 'last', 'before', 'after']
+
+    filters = {
+        SurveyModel: SurveyFilter(),
+    }
+
+    ############################
 
 
 def resolve_geom(geom):
@@ -120,6 +154,44 @@ class JobNode(SQLAlchemyObjectType):
     #     return resolve_geom(self.start_location)
 
 
+class SurveyNode(SQLAlchemyObjectType):
+    class Meta:
+        model = SurveyModel
+        interfaces = (graphene.Node,)
+
+
+class AnswerNode (SQLAlchemyObjectType):
+    class Meta:
+        model = AnswerModel
+        interfaces = (graphene.Node,)
+
+
+class QuestionNode (SQLAlchemyObjectType):
+    class Meta:
+        model = QuestionModel
+        interfaces = (graphene.Node,)
+
+    def resolve_answers(self, info):
+        """Custom resolver for question answers
+
+        Resolves any answers query including questions to only include answers from the 
+        requesting user for that question. Basically, it implements 
+        authorization for question answers.
+
+        Args:
+            info (graphene info): Graphene info object for query 
+
+        Returns:
+            query: A query, filtered to include answers only with the user_id from 
+            this request's context, and the Id of this question node.
+
+        """
+        query = AnswerNode.get_query(info=info)
+        query = query.filter(AnswerModel.user_id == g.user,
+                             AnswerModel.question_id == self.id)
+        return query
+
+
 class JobConnection(Connection):
     class Meta:
         node = JobNode
@@ -133,6 +205,7 @@ class ShiftConnection(Connection):
 class Screenshot(SQLAlchemyObjectType):
     class Meta:
         model = ScreenshotModel
+
 
 class Consent(SQLAlchemyObjectType):
     class Meta:
