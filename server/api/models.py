@@ -16,8 +16,12 @@ from geoalchemy2 import Geometry
 from geoalchemy2.shape import from_shape
 from shapely import geometry
 from uuid import uuid4
+from config import get_environment_config
 import enum
 import os
+
+
+config = get_environment_config()
 
 db = SQLAlchemy()
 
@@ -34,20 +38,7 @@ db = SQLAlchemy()
 # and for types generally, see:
 # https://github.com/graphql-python/graphene-sqlalchemy/issues/53
 # I found that I had to add it here for our database migrations to work properly.
-db_uri = (
-    "postgresql://"
-    + os.environ["DB_USERNAME"]
-    + ":"
-    + os.environ["DB_PASSWORD"]
-    + "@"
-    + os.environ["DB_HOST"]
-    + ":"
-    + os.environ["DB_PORT"]
-    + "/"
-    + os.environ["DB_DATABASE"]
-)
-engine = create_engine(db_uri)
-
+engine = create_engine(config.SQLALCHEMY_DATABASE_URI + "/" + config.DATABASE_NAME)
 # have to import scalar from engine, not db....
 
 

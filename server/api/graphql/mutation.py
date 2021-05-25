@@ -280,7 +280,6 @@ class AddScreenshotToShift(Mutation):
         text = parse_image(image)
         app = predict_app(text)
 
-        # IMAGE_DIR = current_app.config.IMAGE_DIR
         # TODO: if they give us a job, add the screenshot to the job, and parse it.
         if app:
             img_filename = os.path.join('/opt/images',

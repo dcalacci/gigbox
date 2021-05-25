@@ -1,0 +1,67 @@
+version: '3' # Specify docker-compose version
+services:
+    gigbox-server:
+        container_name: gigbox-server
+        image: gigbox/gigbox-server-prod
+        env_file:
+            - .env.prod
+        ports:
+            - '80:80'
+        links:
+            - osrm
+            - db
+        restart: always
+        volumes:
+            - server-data:/opt/images
+        networks:
+            - backend
+            - frontend
+        logging:
+            driver: awslogs 
+            options:
+                awslogs-group: gigbox 
+                awslogs-region: us-east-1
+                awslogs-stream-prefix: gigbox-server
+    db:
+        image: postgis/postgis
+        env_file: database.env
+        ports:
+            - '5432:5432'
+        volumes:
+            - database-data:/var/lib/postgresql/data
+        networks:
+            - backend
+        logging:
+            driver: awslogs 
+            options:
+                awslogs-group: gigbox 
+                awslogs-region: us-east-1
+                awslogs-stream-prefix: gigbox-db
+    osrm:
+        container_name: gigbox-osrm
+        ## We use 5.24.0 because that's the version we used to extract the OSRM files that we store on 
+        ## S3 to reduce deploy times
+        image: osrm/osrm-backend:v5.24.0
+        restart: always
+        ports:
+            - '5001:5000'
+        command:
+            "osrm-routed --max-matching-size 100000 --algorithm mld us-latest.osrm"
+        networks:
+            - backend
+        volumes:
+            - osrm-data:/opt
+        logging:
+            driver: awslogs 
+            options:
+                awslogs-group: gigbox 
+                awslogs-region: us-east-1
+                awslogs-stream-prefix: gigbox-osrm
+volumes:
+    database-data:
+    server-data:
+    osrm-data:
+
+networks:
+    backend:
+    frontend:
