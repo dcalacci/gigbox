@@ -9,8 +9,7 @@ from functools import wraps
 
 from api.controllers.auth.utils import decode_jwt
 from api.controllers.errors import InvalidTokenError
-from api.models import User
-from api import db
+from api.models import User, db
 
 
 def login_required(f):

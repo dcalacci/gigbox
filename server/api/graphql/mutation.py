@@ -27,7 +27,6 @@ from flask import g, current_app
 from PIL import Image
 from graphene_file_upload.scalars import Upload
 from geoalchemy2.shape import from_shape
-from api import db
 from api.controllers.auth.decorators import login_required
 from api.graphql.object import (
     User,
@@ -46,8 +45,8 @@ from api.models import (
     Job as JobModel,
     Consent as ConsentModel,
     Geometry_WKT,
-    _convert_geometry,
     EmployerNames,
+    db
 )
 from api.utils import generate_filename
 from api.routing.mapmatch import get_route_distance_and_geometry
