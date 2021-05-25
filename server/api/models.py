@@ -38,7 +38,7 @@ db = SQLAlchemy()
 # and for types generally, see:
 # https://github.com/graphql-python/graphene-sqlalchemy/issues/53
 # I found that I had to add it here for our database migrations to work properly.
-engine = create_engine(config.SQLALCHEMY_DATABASE_URI + "/" + config.DATABASE_NAME)
+engine = create_engine(config.SQLALCHEMY_DATABASE_URI)
 # have to import scalar from engine, not db....
 
 
