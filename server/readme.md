@@ -38,3 +38,40 @@ available in a docker volume. There are two ways to create this:
 
 2. Don't want the hassle? Use a pre-extracted version of the `us-latest` road network, available in this S3 bucket:
    `s3://osrm-us-latest`. Download that or use it as a docker volume in development.
+
+## Running & environment
+
+You need these environment variables saved in a `/deploy/.env` file to deploy to AWS. To develop,
+you need all variables up to `AWS_ACCESS_KEY`, and you should change `ENV` to `ENV=DEVELOPMENT`.
+
+```
+ENV=PRODUCTION
+SECRET_KEY={your big secret}
+
+TWILIO_NUMBER={twilio-from-number}
+TWILIO_SID={twilio-sid}
+TWILIO_TOKEN={twilio-token}
+
+DB_HOST=db
+DB_PORT=5432
+POSTGRES_USER=gigbox
+POSTGRES_PASSWORD={secret-password-here}
+POSTGRES_DB=gigbox
+
+AWS_ACCESS_KEY_ID={aws access key id}
+AWS_SECRET_ACCESS_KEY={aws secret}
+PROJECT_NAME=gigbox-test-end2end
+PROFILE_NAME=gigbox-end2end-profile
+CLUSTER_NAME=gigbox-test-end2end-cluster
+REGION=us-east-1
+LAUNCH_TYPE=EC2
+INSTANCE_TYPE=m5.4xlarge
+KEYPAIR=gigbox-dev-aws
+
+FS_ID=fs-7c0db8c8
+FS_ID={EFS id that has osrm-data in /osrm }
+FS_NAME=gigbox-data
+OSRM_DATASYNC_SOURCE=arn:aws:s3:::osrm-us-latest
+IAM_POLICY_NAME=gigbox-osrm-policy
+IAM_ROLE_NAME=gigbox-osrm-access
+```
