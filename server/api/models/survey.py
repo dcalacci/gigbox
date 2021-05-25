@@ -57,8 +57,7 @@ class Question(db.Model):
     question_type = db.Column(db.Enum(QuestionTypeEnum,
                                       create_constraint=False, native_enum=False, create_type=False))
     # options for question display. These should be created when a question is made
-    select_options = db.Column(db.ARRAY(db.String), nullable=True)
-    multiselect_options = db.Column(db.ARRAY(db.String), nullable=True)
+    select_options = db.Column(ARRAY(db.String, as_tuple=False, dimensions=None), nullable=True)
     range_options_id = db.Column(Integer, ForeignKey('survey_range_options.id'), nullable=True)
     range_options = db.relationship(RangeOptions)
     survey_id = db.Column(Integer, ForeignKey(Survey.id))

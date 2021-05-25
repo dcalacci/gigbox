@@ -13,7 +13,7 @@ from config import Config, get_environment_config_str
 from graphene_file_upload.flask import FileUploadGraphQLView
 from api.controllers.auth.decorators import login_required
 
-from api.data.surveys import initialize_survey_data
+from api.data.surveys import initialize_survey_from_json
 
 from api.models import db
 
@@ -66,7 +66,7 @@ def create_app():
         db.session.commit()
         print("Session Committed. All tables created.")
 
-        initialize_survey_data(db)
+        initialize_survey_from_json(db)
 
 
     @ app.teardown_appcontext
