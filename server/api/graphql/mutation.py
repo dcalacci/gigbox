@@ -1,3 +1,4 @@
+from api.models.survey import QuestionTypeEnum
 import os
 import random
 import cv2
@@ -31,11 +32,14 @@ from api.controllers.auth.decorators import login_required
 from api.graphql.object import (
     User,
     ShiftNode,
-    Location,
+    Location, 
     LocationInput,
+    AnswerInput,
     EmployerInput,
     Screenshot,
-    JobNode
+    JobNode,
+    SurveyNode,
+    AnswerNode
 )
 from api.models import (
     User as UserModel,
@@ -44,6 +48,8 @@ from api.models import (
     Screenshot as ScreenshotModel,
     Job as JobModel,
     Consent as ConsentModel,
+    Answer as AnswerModel,
+    Question as QuestionModel,
     Geometry_WKT,
     EmployerNames,
     db
@@ -614,6 +620,43 @@ class UnenrollAndDelete(Mutation):
         db.session.commit()
         return UnenrollAndDelete(True)
 
+class SubmitSurvey(Mutation):
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        survey_id = ID(required=True)
+        survey_responses = List(AnswerInput, required=True)
+
+    @login_required
+    def mutate(self, info, survey_id, survey_responses):
+        user_id = g.user
+        user = UserModel.query.filter_by(id=user_id).first()
+        answers = []
+        for resp in survey_responses:
+            question_id = from_global_id(resp['question_id'])[1]
+            question = QuestionModel.query.filter_by(id=question_id).first()
+            a = AnswerModel()
+            a.question = question
+            a.date = datetime.now()
+            if question.question_type == QuestionTypeEnum.MULTISELECT:
+                a.answer_options = resp.selectValue
+            elif question.question_type == QuestionTypeEnum.SELECT:
+                a.answer_options = resp.selectValue
+            elif question.question_type == QuestionTypeEnum.TEXT:
+                a.answer_text = resp.textValue
+            elif question.question_type == QuestionTypeEnum.CHECKBOX:
+                a.answer_yn = resp.ynValue
+            elif question.question_type == QuestionTypeEnum.RANGE:
+                a.answer_numeric = resp.numericValue
+            answers.append(a)
+        user.survey_answers = answers
+        db.session.add(user)
+        db.session.commit()
+        return(SubmitSurvey(ok=True))
+
+
+
+
 
 class Mutation(ObjectType):
     """Mutations which can be performed by this API."""
@@ -635,3 +678,4 @@ class Mutation(ObjectType):
     updateDataSharingConsent = UpdateDataSharingConsent.Field()
     updateInterviewConsent = UpdateInterviewConsent.Field()
     unenrollAndDelete = UnenrollAndDelete.Field()
+    submitSurvey = SubmitSurvey.Field()

@@ -15,7 +15,7 @@ from flask import g
 
 # import numpy as np
 from api.controllers.auth.decorators import login_required
-from api.graphql.object import QuestionNode, AnswerNode, SurveyNode, User, Location, WeeklySummary, ShiftNode, JobNode, Trips, Route, BoundingBox, Screenshot, FilterableAuthConnectionField, FilterableConnField, JobConnection, ShiftConnection
+from api.graphql.object import RangeOptionsNode, QuestionNode, AnswerNode, SurveyNode, User, Location, WeeklySummary, ShiftNode, JobNode, Trips, Route, BoundingBox, Screenshot, FilterableAuthConnectionField, FilterableConnField, JobConnection, ShiftConnection
 from api.models import User as UserModel, Shift as ShiftModel, Job as JobModel, Location as LocationModel, Screenshot as ScreenshotModel, Geometry_WKT
 
 from api.routing.mapmatch import get_shift_distance, get_shift_geometry
@@ -61,6 +61,7 @@ class Query(graphene.ObjectType):
     allSurveys = FilterableAuthConnectionField(SurveyNode.connection)
     allAnswers = FilterableAuthConnectionField(AnswerNode.connection)
     allQuestions = FilterableAuthConnectionField(QuestionNode.connection)
+    allRangeOptions = FilterableAuthConnectionField(RangeOptionsNode.connection)
 
    # doing pagination as in https://www.howtographql.com/graphql-python/8-pagination/
     @login_required

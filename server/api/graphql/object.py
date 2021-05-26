@@ -17,6 +17,7 @@ from api.models import (
     Survey as SurveyModel,
     Answer as AnswerModel,
     Question as QuestionModel,
+    RangeOptions as RangeOptionsModel,
     Consent as ConsentModel,
     Geometry_WKT,
     EmployerNames,
@@ -171,6 +172,11 @@ class QuestionNode (SQLAlchemyObjectType):
         model = QuestionModel
         interfaces = (graphene.Node,)
 
+    def resolve_select_options(self, info):
+        print("resolving select options")
+        print(self.select_options)
+        return self.select_options
+
     def resolve_answers(self, info):
         """Custom resolver for question answers
 
@@ -191,6 +197,10 @@ class QuestionNode (SQLAlchemyObjectType):
                              AnswerModel.question_id == self.id)
         return query
 
+class RangeOptionsNode (SQLAlchemyObjectType):
+    class Meta:
+        model = RangeOptionsModel
+        interfaces = (graphene.Node,)
 
 class JobConnection(Connection):
     class Meta:
@@ -266,3 +276,15 @@ class LocationInput(graphene.InputObjectType):
     lng = graphene.Float()
     timestamp = graphene.Float()
     accuracy = graphene.Float()
+
+class AnswerValue(graphene.Union):
+    class Meta:
+        types = (AnswerTextValue, AnswerSelectValue, AnswerMultiSelectValue, AnswerYnValue)
+
+
+class AnswerInput(graphene.InputObjectType):
+    question_id = graphene.ID(required=True)
+    textValue = graphene.String(required=False)
+    numericValue = graphene.String(required=False)
+    selectValue = graphene.List(String, required=False)
+    ynValue = graphene.Boolean(required=False)

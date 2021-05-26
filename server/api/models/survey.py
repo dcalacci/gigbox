@@ -58,12 +58,15 @@ class Question(db.Model):
     question_type = db.Column(db.Enum(QuestionTypeEnum,
                                       create_constraint=False, native_enum=False, create_type=False))
     # options for question display. These should be created when a question is made
-    select_options = db.Column(ARRAY(db.String, as_tuple=False, dimensions=None), nullable=True)
+    select_options = db.Column(ARRAY(String), nullable=True)
     range_options_id = db.Column(Integer, ForeignKey('survey_range_options.id'), nullable=True)
     range_options = db.relationship(RangeOptions)
     survey_id = db.Column(Integer, ForeignKey(Survey.id))
     survey = db.relationship("Survey", back_populates="questions")
     answers = db.relationship("Answer", back_populates="question")
+
+    def __init__(self, select_opts=None):
+        self.select_options = select_opts
     # backref to 'surveys' here
 
 
