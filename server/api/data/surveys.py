@@ -21,12 +21,13 @@ def initialize_survey_from_json(db, fpath="surveys.json"):
             s.start_date = parser.parse(survey['start_date'])
             s.title = survey['title']
             s.days_after_install = survey['days_after_install']
+            s.description = survey['description']
 
             qs = []
             for question in survey['questions']:
                 q = Question()
                 q.question_text = question["question_text"]
-                q.question_type = question["question_type"]
+                q.question_type = question["question_type"] 
                 if "select_options" in question:
                     q.select_options = question['select_options']
                 if "range_options" in question:
@@ -34,7 +35,8 @@ def initialize_survey_from_json(db, fpath="surveys.json"):
                     ro = question['range_options']
                     r.start_val = ro['start_val']
                     r.end_val = ro['end_val']
-                    r.incremenet = r['increment']
+                    r.increment = ro['increment']
+                    r.unit = ro['unit'] 
                     q.range_options = r
                 qs.append(q)
             s.questions = qs

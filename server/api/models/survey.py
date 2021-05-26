@@ -26,6 +26,7 @@ Base = declarative_base()
 
 class QuestionTypeEnum(enum.Enum):
     TEXT = "TEXT"
+    NUMBER = "NUMBER"
     CHECKBOX = "CHECKBOX"
     MULTISELECT = "MULTISELECT"
     RANGE = "RANGE"
@@ -38,6 +39,7 @@ class RangeOptions(db.Model):
     start_val = db.Column(db.Float)
     end_val = db.Column(db.Float)
     increment = db.Column(db.Float)
+    unit = db.Column(db.String)
 
 
 class Survey(db.Model):
