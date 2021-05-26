@@ -43,9 +43,16 @@ class RangeOptions(db.Model):
 class Survey(db.Model):
     __tablename__ = "survey_survey"
     id = db.Column(Integer, primary_key=True)
+    # don't deliver this survey until at least this date
     start_date = db.Column(DateTime, nullable=False)
+    # if it's after this date, don't make this survey available
     end_date = db.Column(DateTime, nullable=True)
+    # minimum number of days to wait until survey is delivered to a user
+    days_after_install = db.Column(Integer, nullable=True)
+    # title of survey
     title = db.Column(String, nullable=False)
+    description = db.Column(String, nullable=True)
+    # list of questions in this survey
     questions = relationship("Question", back_populates="survey")
 
 
@@ -57,12 +64,13 @@ class Question(db.Model):
     question_text = db.Column(String, nullable=False)
     question_type = db.Column(db.Enum(QuestionTypeEnum,
                                       create_constraint=False, native_enum=False, create_type=False))
-    # options for question display. These should be created when a question is made
     select_options = db.Column(ARRAY(String), nullable=True)
     range_options_id = db.Column(Integer, ForeignKey('survey_range_options.id'), nullable=True)
     range_options = db.relationship(RangeOptions)
     survey_id = db.Column(Integer, ForeignKey(Survey.id))
     survey = db.relationship("Survey", back_populates="questions")
+    # List of answers. We enforce authorization -- users can only access answer's theyve authored --
+    # in our graphql API
     answers = db.relationship("Answer", back_populates="question")
 
     def __init__(self, select_opts=None):

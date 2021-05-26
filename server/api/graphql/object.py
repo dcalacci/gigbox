@@ -277,11 +277,6 @@ class LocationInput(graphene.InputObjectType):
     timestamp = graphene.Float()
     accuracy = graphene.Float()
 
-class AnswerValue(graphene.Union):
-    class Meta:
-        types = (AnswerTextValue, AnswerSelectValue, AnswerMultiSelectValue, AnswerYnValue)
-
-
 class AnswerInput(graphene.InputObjectType):
     question_id = graphene.ID(required=True)
     textValue = graphene.String(required=False)
