@@ -26,7 +26,7 @@ const SelectQuestion = ({
     const msRef = useRef();
     const items = q.selectOptions?.map((s) => ({ name: s, id: s }));
     return (
-        <View style={tailwind('flex-col rounded-xl')}>
+        <View style={[tailwind('flex-col rounded-xl'), {overflow: 'hidden'}]}>
             <Text style={tailwind('text-xl font-bold p-2')}>{q.questionText}</Text>
             <MultiSelect
                 items={items}

@@ -152,5 +152,6 @@ export type Survey = {
     id: string;
     endDate: Date | undefined;
     title: string;
+    daysAfterInstall: number;
     questions: {edges: {node: Question}[]}
 }

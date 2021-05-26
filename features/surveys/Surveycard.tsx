@@ -1,16 +1,19 @@
-import React, { FunctionComponent, useState } from 'react';
-import { Pressable, StyleSheet, Text, View, SafeAreaView } from 'react-native';
+import React, { useState } from 'react';
+import { Pressable, StyleSheet, Text, View } from 'react-native';
 import moment from 'moment';
 import { tailwind } from 'tailwind';
+import { useSelector } from 'react-redux';
 import { useQuery } from 'react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchAvailableSurveys } from './api';
 import { log } from '../../utils';
-import { Job } from '../../types';
-import { getFilteredJobs } from '../job/api';
+import { RootState } from '../../store/index';
 
 const SurveyCard = ({ navigation }) => {
-    const [numUnansweredSurveys, setNumUnansweredSurveys] = useState<number>(0)
+    const [numUnansweredSurveys, setNumUnansweredSurveys] = useState<number>(0);
+    const userAge = useSelector((state: RootState): User | null => {
+        return moment(state.auth.user?.dateCreated).diff(moment(), 'days');
+    });
     const availableSurveys = useQuery(['surveys'], fetchAvailableSurveys, {
         select: (d) => {
             const unansweredSurveys = d.allSurveys.edges.filter(({ node }) => {
@@ -20,16 +23,16 @@ const SurveyCard = ({ navigation }) => {
                 const answeredQs = node.questions.edges.filter(
                     ({ node }) => node.answers?.edges.length > 0
                 );
-                return unansweredQs.length > 0
+                return unansweredQs.length > 0 && userAge >= node.daysAfterInstall;
             });
             return unansweredSurveys;
         },
         onSettled: (d) => {
-            setNumUnansweredSurveys(d.length)
+            setNumUnansweredSurveys(d.length);
         },
         onError: (err) => {
-            log.error("Could not retrieve available surveys:", err)
-        }
+            log.error('Could not retrieve available surveys:', err);
+        },
     });
     // if there are no unanswered surveys, don't show anything.
     if (numUnansweredSurveys == 0) {
@@ -47,7 +50,10 @@ const SurveyCard = ({ navigation }) => {
             <View style={[tailwind('flex-1 flex-col m-2 p-2 rounded-xl bg-white flex-col')]}>
                 <Pressable
                     onPress={() =>
-                        navigation.navigate('Survey Form', { surveys: availableSurveys.data, navigation})
+                        navigation.navigate('Survey Form', {
+                            surveys: availableSurveys.data,
+                            navigation,
+                        })
                     }
                     style={[
                         tailwind('flex-row items-center p-2'),
