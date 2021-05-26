@@ -20,6 +20,7 @@ def initialize_survey_from_json(db, fpath="surveys.json"):
             s = Survey()
             s.start_date = parser.parse(survey['start_date'])
             s.title = survey['title']
+            s.days_after_install = survey['days_after_install']
 
             qs = []
             for question in survey['questions']:
