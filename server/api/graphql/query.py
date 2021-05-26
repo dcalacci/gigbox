@@ -15,7 +15,7 @@ from flask import g
 
 # import numpy as np
 from api.controllers.auth.decorators import login_required
-from api.graphql.object import RangeOptionsNode, QuestionNode, AnswerNode, SurveyNode, User, Location, WeeklySummary, ShiftNode, JobNode, Trips, Route, BoundingBox, Screenshot, FilterableAuthConnectionField, FilterableConnField, JobConnection, ShiftConnection
+from api.graphql.object import RangeOptionsNode, QuestionNode, AnswerNode, SurveyNode, User, Location, WeeklySummary, ShiftNode, JobNode, Trips, Route, BoundingBox, Screenshot, FilterableAuthConnectionField, JobConnection, ShiftConnection
 from api.models import User as UserModel, Shift as ShiftModel, Job as JobModel, Location as LocationModel, Screenshot as ScreenshotModel, Geometry_WKT
 
 from api.routing.mapmatch import get_shift_distance, get_shift_geometry

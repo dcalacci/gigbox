@@ -94,13 +94,13 @@ def create_app():
     api.add_resource(auth.LoggedIn, '/auth/login')
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
-    admin.add_view(ModelView(User, db.session))
-    admin.add_view(ModelView(Survey, db.session))
-    admin.add_view(ModelView(Question, db.session))
-    admin.add_view(ModelView(Answer, db.session))
-    admin.add_view(ModelView(RangeOptions, db.session))
+    if (app.config['ENV'] == "DEVELOPMENT"):
+        admin.add_view(ModelView(User, db.session))
+        admin.add_view(ModelView(Survey, db.session))
+        admin.add_view(ModelView(Question, db.session))
+        admin.add_view(ModelView(Answer, db.session))
+        admin.add_view(ModelView(RangeOptions, db.session))
     # admin.add_view(ModelView(Survey, db.session))
-
 
 
     @ app.route("/")

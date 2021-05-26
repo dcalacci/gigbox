@@ -66,6 +66,7 @@ class SurveyFilter(FilterSet):
         fields = {
             'start_date': ['gt', 'gte', 'lt', 'lte', 'range'],
             'end_date': ['gt', 'gte', 'lt', 'lte', 'range', 'is_null'],
+            'days_after_install': ['gt', 'gte', 'lt', 'lte', 'range'],
             'title': ['eq', 'is_null'],
         }
 
@@ -83,7 +84,8 @@ class FilterableAuthConnectionField(FilterableConnectionField):
     filters = {
         JobModel: JobFilter(),
         ShiftModel: ShiftFilter(),
-        AnswerModel: AnswerFilter()
+        AnswerModel: AnswerFilter(),
+        SurveyModel: SurveyFilter()
     }
 
     @classmethod
@@ -96,15 +98,6 @@ class FilterableAuthConnectionField(FilterableConnectionField):
             print("filtering", model, "by userid...")
             query = query.filter_by(user_id=str(g.user))
         return query
-
-
-class FilterableConnField(FilterableConnectionField):
-    RELAY_ARGS = ['first', 'last', 'before', 'after']
-
-    filters = {
-        SurveyModel: SurveyFilter(),
-    }
-
     ############################
 
 
