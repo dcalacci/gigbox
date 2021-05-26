@@ -4,11 +4,10 @@ import { Ionicons } from '@expo/vector-icons';
 import { tailwind } from 'tailwind';
 import { useQuery } from 'react-query';
 import TrackingBar from '../features/clock/TrackingBar';
+import SurveyCard from '../features/surveys/Surveycard'
 import WeeklyCard from '../features/weeklySummary/WeeklyCard';
 import {
     getFilteredJobs,
-    useNumJobsNeedEntryToday,
-    useNumTrackedJobsToday,
 } from '../features/job/api';
 import { useNumTrackedShifts } from '../features/clock/api';
 import { useLinkProps } from '@react-navigation/native';
@@ -44,6 +43,7 @@ export default function TabOneScreen({ navigation }) {
         <View style={tailwind('bg-gray-100 h-full')}>
             <TrackingBar />
             <ScrollView style={tailwind('bg-gray-100 h-full')}>
+                <SurveyCard navigation={navigation}/>
                 <Pressable style={[tailwind('bg-white m-2 p-5 rounded-2xl flex-col')]}>
                     <Text style={tailwind('text-green-500 text-3xl font-bold underline')}>
                         Today

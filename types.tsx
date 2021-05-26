@@ -113,3 +113,44 @@ export type User = {
     phone?: string
     name?: string
 }
+
+export enum QuestionType {
+    TEXT = "TEXT",
+    CHECKBOX = "CHECKBOX",
+    MULTISELECT = "MULTISELECT",
+    RANGE = "RANGE",
+    SELECT = "SELECT"
+}
+export type RangeOptions = {
+    startVal: Number
+    endVal: Number
+    interval: Number
+}
+
+export type Answer = {
+    user: User,
+    question: Question
+    date: Date
+    answerText: string | undefined
+    answerNumeric: Number | undefined
+    answerOptions: string[] | undefined
+    answerYn: Boolean | undefined
+}
+
+export type Question = {
+    questionText: String
+    questionType: QuestionType
+    selectOptions: string[] | undefined
+    rangeOptions: RangeOptions | undefined
+    survey: Survey
+    answers: Answer[]
+    id: string
+}
+
+export type Survey = {
+    startDate: Date;
+    id: string;
+    endDate: Date | undefined;
+    title: string;
+    questions: {edges: {node: Question}[]}
+}

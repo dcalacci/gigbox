@@ -3,19 +3,12 @@
         {
             "title": "Demographic Survey",
             "start_date": "05/21/21",
+            "days_after_install": 0,
             "questions": [
                 {
                     "question_text": "What is your age?",
                     "question_type": "SELECT",
-                    "select_options": [
-                        "18-24",
-                        "25-34",
-                        "35-44",
-                        "45-54",
-                        "55-64",
-                        "65-74",
-                        "75+"
-                    ]
+                    "select_options": ["18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+"]
                 },
                 {
                     "question_text": "What gender(s) do you identify as? Mark any that apply.",
@@ -59,14 +52,7 @@
                 {
                     "question_text": "How many hours a week do you do app-based work on average?",
                     "question_type": "SELECT",
-                    "select_options": [
-                        "Under 10",
-                        "10-20",
-                        "20-30",
-                        "30-40",
-                        "40-50",
-                        "50+"
-                    ]
+                    "select_options": ["Under 10", "10-20", "20-30", "30-40", "40-50", "50+"]
                 },
                 {
                     "question_text": "is this your main occupation, or a side job?",
@@ -81,3 +67,4 @@
         }
     ]
 }
+

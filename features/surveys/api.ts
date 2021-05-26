@@ -67,6 +67,7 @@ export const fetchAvailableSurveys = () => {
                         id
                         startDate
                         endDate
+                        daysAfterInstall
                         questions {
                             edges {
                                 node {

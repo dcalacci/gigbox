@@ -7,9 +7,8 @@ import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchAvailableSurveys, submitSurveyAnswers } from './api';
 import { Survey, Question } from '../../types';
-
 import Ellipsis from '../../components/Ellipsis'
-
+import { log } from '../../utils';
 import * as Haptics from 'expo-haptics';
 import { Picker } from '@react-native-picker/picker';
 import MultiSelect from 'react-native-multiple-select';
@@ -53,7 +52,7 @@ const SelectQuestion = ({
     );
 };
 
-const SurveyItem = ({ survey, navigation }: { survey: Survey }) => {
+const SurveyItem = ({ survey, navigation }: { survey: Survey, navigation: any}) => {
     const [questionAnswers, setQuestionAnswers] = useState(Object);
     const [surveyDone, setSurveyDone] = useState<boolean>(false);
     const queryClient = useQueryClient();
@@ -70,6 +69,7 @@ const SurveyItem = ({ survey, navigation }: { survey: Survey }) => {
         const nQuestionsAnswered = questionIds.filter((id) => answeredKeys.includes(id)).length;
         setSurveyDone(nQuestionsAnswered === questionIds.length);
     }, [questionAnswers]);
+
     return (
         <View style={tailwind('flex-1 flex-col m-2 p-5 rounded-xl bg-white')}>
             <Text style={tailwind('text-2xl font-bold')}>{survey.title}</Text>
@@ -94,7 +94,10 @@ const SurveyItem = ({ survey, navigation }: { survey: Survey }) => {
             <Pressable
                 style={[
                     tailwind('rounded-lg p-5 m-2'),
-                    !surveyDone ? tailwind('bg-gray-400') : tailwind('bg-green-500'),
+
+                    !surveyDone
+                        ? tailwind('bg-gray-400')
+                        : tailwind('bg-green-500'),
                 ]}
                 disabled={!surveyDone}
                 onPress={() => {
@@ -136,5 +139,6 @@ export const SurveyForm = ({ route }) => {
                 <SurveyItem survey={s.node} navigation={route.params?.navigation} key={s.node.title} />
             ))}
         </KeyboardAwareScrollView>
+
     );
 };
