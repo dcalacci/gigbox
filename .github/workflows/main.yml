@@ -61,6 +61,7 @@ jobs:
        POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
        POSTGRES_DB: ${{secrets.POSTGRES_DB}}
        AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+       AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
        PROJECT_NAME: ${{secrets.PROJECT_NAME}}
        PROFILE_NAME: ${{secrets.PROFILE_NAME}}
        CLUSTER_NAME: ${{secrets.CLUSTER_NAME}}
@@ -97,6 +98,8 @@ jobs:
         run: echo "$HOME/.local/bin" >> $GITHUB_PATH
       - name: Make ecs-cli executable
         run: chmod +x $HOME/.local/bin/ecs-cli
+      - name: Configure ecs-cli profile
+        run: ecs-cli configure profile --profile ${{PROFILE_NAME}}
         
       - # creates an ECS configuration
         name: Create aws cluster configuration
