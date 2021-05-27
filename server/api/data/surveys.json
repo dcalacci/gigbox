@@ -70,7 +70,7 @@
         {
             "title": "Your work & pay",
             "start_date": "05/21/21",
-            "days_after_install": 5,
+            "days_after_install": 0,
             "description": "These questions will help me (MIT PhD student) and other researchers understand the actual pay of workers like you. Your information will remain private unless you tell us explicitly that we may share it.",
             "questions": [
                 {
@@ -79,7 +79,7 @@
                 },
                 {
                     "question_text": "How much do you think you earn approximately per week (before expenses and taxes)?",
-                    "question_type": "TEXT"
+                    "question_type": "NUMBER"
                 },
                 {
                     "question_text": "How much of what you earn per week consists of tips?",
@@ -147,7 +147,7 @@
         {
             "title": "Problems at work",
             "start_date": "05/21/21",
-            "days_after_install": 7,
+            "days_after_install": 1,
             "description": "These questions will help me (MIT PhD student) and other researchers understand the issues workers like you face. Your information will remain private unless you tell us explicitly that we may share it.",
             "questions": [
                 {

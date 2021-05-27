@@ -636,6 +636,8 @@ class SubmitSurvey(Mutation):
             question_id = from_global_id(resp['question_id'])[1]
             question = QuestionModel.query.filter_by(id=question_id).first()
             a = AnswerModel()
+            a.user_id = user_id
+            a.user = user
             a.question = question
             a.date = datetime.now()
             if question.question_type == QuestionTypeEnum.MULTISELECT:
@@ -644,13 +646,17 @@ class SubmitSurvey(Mutation):
                 a.answer_options = resp.selectValue
             elif question.question_type == QuestionTypeEnum.TEXT:
                 a.answer_text = resp.textValue
+            elif question.question_type == QuestionTypeEnum.TEXT:
+                a.answer_text = resp.numericValue
             elif question.question_type == QuestionTypeEnum.CHECKBOX:
                 a.answer_yn = resp.ynValue
             elif question.question_type == QuestionTypeEnum.RANGE:
                 a.answer_numeric = resp.numericValue
             answers.append(a)
-        user.survey_answers = answers
-        db.session.add(user)
+        ## add answers, not user to session.
+        ## when user is added, answer.user is not populated for some reason.
+        for answer in answers:
+            db.session.add(answer)
         db.session.commit()
         return(SubmitSurvey(ok=True))
 
