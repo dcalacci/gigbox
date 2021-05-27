@@ -47,7 +47,7 @@ jobs:
         run: echo ${{ steps.docker_build.outputs.digest }}
   aws-deploy:
     # needs latest server to deploy
-    needs: docker
+    #needs: docker
     runs-on: ubuntu-latest
     env:
        ENV: ${{secrets.ENV}}
@@ -84,6 +84,17 @@ jobs:
         with:
           version: 2 # default
           verbose: false # default
+
+      # Download and configure ecs-cli. 
+      - name: Download ECS binary
+        run: wget https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest -P /opt/
+      - name: Rename ECS binary
+        run: mv /opt/ecs-cli-linux-amd64-latest /opt/ecs-cli
+      - name: Add ecs-cli to path
+        run: echo "/opt/ecs-cli" >> $GITHUB_PATH
+      - name: Make ecs-cli executable
+        run: chmod +x /opt/ecs-cli
+        
       - # creates an ECS configuration
         name: Create aws cluster configuration
         run: cd server/deploy && ./0-cluster-configure.sh
