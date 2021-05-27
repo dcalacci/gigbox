@@ -1,5 +1,5 @@
 import os
-from flask import Flask, Blueprint, request, jsonify, send_from_directory
+from flask import Flask, Blueprint, request, jsonify, send_from_directory, safe_join
 from flask import g
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
@@ -82,8 +82,15 @@ def create_app():
     # Serves static files
     @app.route('/exports/<string:fname>')
     def export_file(fname):
+        import shutil
         print("EXPORT FILE ENDPOINT")
-        return send_from_directory('/opt/exports', fname)
+        def delete_file():
+            print("downloaded. deleting file...")
+            os.remove(safe_join('/opt/exports', fname))
+        resp = send_from_directory('/opt/exports', fname)
+        # delete file after response object is made
+        delete_file()
+        return resp
 
     app.add_url_rule(
         '/graphql',

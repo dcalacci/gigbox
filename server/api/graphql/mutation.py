@@ -703,6 +703,8 @@ class ExportJobs(Mutation):
         # create zip file
         zip_path = f"{export_dir}"
         shutil.make_archive(zip_path, 'zip', export_dir)
+        # delete original dir, leaving only zip file
+        shutil.rmtree(export_dir)
         zip_fname = os.path.basename(f"{zip_path}.zip")
         url = url_for('export_file', fname=zip_fname)
         return ExportJobs(ok=True,
