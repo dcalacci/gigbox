@@ -8,6 +8,7 @@ import json
 import base64
 import binascii
 import graphene
+from sqlalchemy import inspect
 from graphene import (
     Mutation,
     Float,
@@ -255,7 +256,8 @@ class DeleteImage(Mutation):
 
     @login_required
     def mutate(self, info, id):
-        screenshot = ScreenshotModel.query.filter_by(id=id, user_id=g.user).first()
+        screenshot = ScreenshotModel.query.filter_by(
+            id=id, user_id=g.user).first()
         if not screenshot:
             return DeleteImage(ok=False, message="Image does not exist or user does not have access.")
         else:
@@ -641,6 +643,45 @@ class UnenrollAndDelete(Mutation):
         return UnenrollAndDelete(True)
 
 
+class ExportJobs(Mutation):
+    file_url = Field(lambda: String)
+    message = Field(lambda: String)
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        ids = List(ID, required=True)
+        # TODO: maybe select columns?
+
+    @login_required
+    def mutate(self, info, ids):
+        import csv
+        user_id = g.user
+
+        parsed_ids = [from_global_id(id)[1] for id in ids]
+        records = (JobModel.query
+                   .filter_by(user_id=user_id)
+                   .filter(JobModel.id.in_(parsed_ids)))
+
+        columns = [column for column in inspect(JobModel).columns 
+                if column.name not in ['id', 'snapped_geometry', 'user_id']]
+        print("columns:", columns)
+
+        outfile = open('mydump.csv', 'w')
+        outcsv = csv.writer(outfile)
+        # header row
+        outcsv.writerow([c.name for c in columns])
+        #TODO: convert locations (start and end) to lat/lng -- they are encoded currently
+        #TODO: create temporary download file
+        [outcsv.writerow([getattr(curr, column.name)
+                          for column in columns])#JobModel.__mapper__.columns])
+            for curr in records]
+
+
+        outfile.close()
+        print("Created CSV:, outfile")
+        return ExportJobs(ok=True, message="Export Successful", file_url="mybigdump.csv")
+
+
 class SubmitSurvey(Mutation):
     ok = Field(lambda: Boolean)
 
@@ -704,3 +745,4 @@ class Mutation(ObjectType):
     updateInterviewConsent = UpdateInterviewConsent.Field()
     unenrollAndDelete = UnenrollAndDelete.Field()
     submitSurvey = SubmitSurvey.Field()
+    exportJobs = ExportJobs.Field()
