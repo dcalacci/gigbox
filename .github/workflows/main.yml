@@ -50,30 +50,30 @@ jobs:
     #needs: docker
     runs-on: ubuntu-latest
     env:
-       ENV: ${{secrets.ENV}}
-       SECRET_KEY: ${{secrets.SECRET_KEY}}
-       TWILIO_NUMBER: ${{secrets.TWILIO_NUMBER}}
-       TWILIO_SID: ${{secrets.TWILIO_SID}}
-       TWILIO_TOKEN: ${{secrets.TWILIO_TOKEN}}
-       DB_HOST: ${{secrets.DB_HOST}}
-       DB_PORT: ${{secrets.DB_PORT}}
-       POSTGRES_USER: ${{secrets.secrets.POSTGRES_USER}}
-       POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
-       POSTGRES_DB: ${{secrets.POSTGRES_DB}}
-       AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
-       AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
-       PROJECT_NAME: ${{secrets.PROJECT_NAME}}
-       PROFILE_NAME: ${{secrets.PROFILE_NAME}}
-       CLUSTER_NAME: ${{secrets.CLUSTER_NAME}}
-       REGION: ${{secrets.REGION}}
-       LAUNCH_TYPE: ${{secrets.LAUNCH_TYPE}}
-       INSTANCE_TYPE: ${{secrets.INSTANCE_TYPE}}
-       KEYPAIR: ${{secrets.KEYPAIR}}
-       FS_ID: ${{secrets.FS_ID}}
-       FS_NAME: ${{secrets.FS_NAME}}
-       OSRM_DATASYNC_SOURCE: ${{secrets.OSRM_DATASYNC_SOURCE}}
-       IAM_POLICY_NAME: ${{secrets.IAM_POLICY_NAME}}
-       IAM_ROLE_NAME: ${{secrets.IAM_ROLE_NAME}}
+      ENV: "${{secrets.ENV}}"
+      SECRET_KEY: "${{secrets.SECRET_KEY}}"
+      TWILIO_NUMBER: "${{secrets.TWILIO_NUMBER}}"
+      TWILIO_SID: "${{secrets.TWILIO_SID}}"
+      TWILIO_TOKEN: "${{secrets.TWILIO_TOKEN}}"
+      DB_HOST: "${{secrets.DB_HOST}}"
+      DB_PORT: "${{secrets.DB_PORT}}"
+      POSTGRES_USER: "${{secrets.secrets.POSTGRES_USER}}"
+      POSTGRES_PASSWORD: "${{secrets.POSTGRES_PASSWORD}}"
+      POSTGRES_DB: "${{secrets.POSTGRES_DB}}"
+      AWS_SECRET_ACCESS_KEY: "${{secrets.AWS_SECRET_ACCESS_KEY}}"
+      AWS_ACCESS_KEY_ID: "${{secrets.AWS_ACCESS_KEY_ID}}"
+      PROJECT_NAME: "${{secrets.PROJECT_NAME}}"
+      PROFILE_NAME: "${{secrets.PROFILE_NAME}}"
+      CLUSTER_NAME: "${{secrets.CLUSTER_NAME}}"
+      REGION: "${{secrets.REGION}}"
+      LAUNCH_TYPE: "${{secrets.LAUNCH_TYPE}}"
+      INSTANCE_TYPE: "${{secrets.INSTANCE_TYPE}}"
+      KEYPAIR: "${{secrets.KEYPAIR}}"
+      FS_ID: "${{secrets.FS_ID}}"
+      FS_NAME: "${{secrets.FS_NAME}}"
+      OSRM_DATASYNC_SOURCE: "${{secrets.OSRM_DATASYNC_SOURCE}}"
+      IAM_POLICY_NAME: "${{secrets.IAM_POLICY_NAME}}"
+      IAM_ROLE_NAME: ${{secrets.IAM_ROLE_NAME}}
 
     steps:
       - 
