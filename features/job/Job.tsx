@@ -265,16 +265,20 @@ export const JobItem = ({ job }: { job: Job }) => {
                         isFocused ? tailwind('border-2') : null,
                         displayValue == undefined
                             ? tailwind('bg-gray-100')
-                            : tailwind('bg-green-500 bg-opacity-50'),
+                            : tailwind('bg-green-500'),
                     ]}
                 >
-                    <Text style={tailwind('ml-2 text-xl text-black flex-auto')}>{prefix}</Text>
+                        <Text style={[tailwind('ml-2 text-xl flex-auto'),
+                            displayValue == undefined
+                                ? tailwind('text-black')
+                                : tailwind('text-white font-bold'),
+                        ]}>{prefix}</Text>
                     <TextInput
                         style={[
                             tailwind('text-xl mb-2 text-black w-full flex-auto'),
                             displayValue == undefined
                                 ? tailwind('border-b-2')
-                                : tailwind('text-black font-bold underline'),
+                                : tailwind('text-white font-bold underline'),
                         ]}
                         key={`${value}`}
                         onChangeText={setFormattedValue}
@@ -287,7 +291,11 @@ export const JobItem = ({ job }: { job: Job }) => {
                     >
                         {displayValue}
                     </TextInput>
-                    <Text style={tailwind('text-xl text-black flex-grow font-bold mr-4')}>
+                        <Text style={[tailwind('text-xl flex-grow font-bold mr-4'),
+                            displayValue == undefined
+                                ? tailwind('text-black')
+                                : tailwind('text-white font-bold'),
+                        ]}>
                         {suffix}
                     </Text>
                 </View>
