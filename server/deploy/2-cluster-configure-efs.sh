@@ -1,7 +1,5 @@
 #!/bin/bash
 
-## TODO: create two filesystems - one for database and one for screenshots
-#aws efs create-file-system --performance-mode generalPurpose --throughput-mode bursting --encrypted --tags Key=Name,Value=osrm-data
 # Given an existing filesystem, make sure that our VPC allows nfs connections to the EFS (filesystem) with the correct ports
 # this filesystem ID will be used in our ecs-params.yml so ECS knows to mount it from our docker-compose.yml
 # NOTES:
@@ -40,7 +38,7 @@ aws efs create-access-point \
 ## and https://github.com/docker-library/postgres/commit/8f8c0bbc5236e0deedd35595c504e5fd380b1233
 fi
 
-if ! [[ $(aws efs describe-access-points --file-system-id $FS_ID --region $REGION | jq '.AccessPoints | map(.RootDirectory.Path)') =~ '/screenshots' ]];
+if ! [[ $(aws efs describe-access-points --file-system-id $FS_ID --region $REGION | jq '.AccessPoints | map(.RootDirectory.Path)') =~ '/server_data' ]];
 then
 echo -e "\nCreating server access point on filesystem..."
 ## Access point for gigbox-server
@@ -48,9 +46,10 @@ echo -e "\nCreating server access point on filesystem..."
 aws efs create-access-point \
 --region $REGION \
 --file-system-id $FS_ID \
---root-directory '{"Path": "/screenshots", "CreationInfo": {"Permissions": "755", "OwnerUid": 0, "OwnerGid": 0}}' \
+--root-directory '{"Path": "/server_data", "CreationInfo": {"Permissions": "755", "OwnerUid": 0, "OwnerGid": 0}}' \
 --posix-user '{"Uid": 0, "Gid": 0}'
 fi
+
 
 echo -e "\n> Creating mount points for each subnet on filesystem..."
 echo -e "\n> This script does not check for existing mount targets or security group rules. If they already exist,\
@@ -100,7 +99,7 @@ else
 fi
 
 
-screenshot_arn_id=$(aws efs describe-access-points --region $REGION --file-system-id $FS_ID | jq -r '.AccessPoints | map(select(.RootDirectory.Path | contains("screenshots"))) | .[] | .AccessPointId')
+server_data_arn_id=$(aws efs describe-access-points --region $REGION --file-system-id $FS_ID | jq -r '.AccessPoints | map(select(.RootDirectory.Path | contains("server_data"))) | .[] | .AccessPointId')
 db_arn_id=$(aws efs describe-access-points --region $REGION --file-system-id $FS_ID | jq -r '.AccessPoints | map(select(.RootDirectory.Path | contains("db"))) | .[] | .AccessPointId')
 
 
@@ -131,7 +130,7 @@ task_definition:
       root_directory: /osrm
     - name: server-data
       filesystem_id: $FS_ID
-      access_point: $screenshot_arn_id
+      access_point: $server_data__arn_id
       transit_encryption: ENABLED
     - name: database-data
       filesystem_id: $FS_ID

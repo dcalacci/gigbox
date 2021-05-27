@@ -14,6 +14,7 @@ services:
             - POSTGRES_DB
             - ENV
             - SECRET_KEY
+            - DATA_DIR=/opt/data
         ports:
             - '80:80'
         links:
@@ -21,7 +22,7 @@ services:
             - db
         restart: always
         volumes:
-            - server-data:/opt/images
+            - server-data:/opt/data
         networks:
             - backend
             - frontend

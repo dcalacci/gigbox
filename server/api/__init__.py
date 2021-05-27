@@ -86,8 +86,8 @@ def create_app():
         print("EXPORT FILE ENDPOINT")
         def delete_file():
             print("downloaded. deleting file...")
-            os.remove(safe_join('/opt/exports', fname))
-        resp = send_from_directory('/opt/exports', fname)
+            os.remove(safe_join('/opt/data/exports', fname))
+        resp = send_from_directory('/opt/data/exports', fname)
         # delete file after response object is made
         delete_file()
         return resp

@@ -310,7 +310,8 @@ class AddScreenshotToShift(Mutation):
 
         # TODO: if they give us a job, add the screenshot to the job, and parse it.
         if app:
-            img_filename = os.path.join('/opt/images',
+            os.makedirs('/opt/data/images', exist_ok=True)
+            img_filename = os.path.join('/opt/data/images',
                                         generate_filename(obj_id))
             print("IMAGE FILENAME:", img_filename)
             cv2.imwrite(img_filename, image)
@@ -578,7 +579,7 @@ class SubmitConsent(Mutation):
         f_array = np.asarray(bytearray(decoded))
         image = cv2.imdecode(f_array, 0)
 
-        img_filename = os.path.join('/opt/signatures',
+        img_filename = os.path.join('/opt/data/signatures',
                                     generate_filename(user_id))
         cv2.imwrite(img_filename, image)
         print("wrote signature to file...")
@@ -677,7 +678,7 @@ class ExportJobs(Mutation):
 
         # copy screenshots to export dir, one subdirectory for each job
         nowstr = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-        export_dir = f'/opt/exports/{user_id}_{nowstr}'
+        export_dir = f'/opt/data/exports/{user_id}_{nowstr}'
         os.makedirs(export_dir, exist_ok=True)
         for s in screenshots:
             print(str(s.job_id))
