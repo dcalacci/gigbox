@@ -1,3 +1,4 @@
+from api.models.survey import QuestionTypeEnum
 import os
 import random
 import cv2
@@ -27,16 +28,18 @@ from flask import g, current_app
 from PIL import Image
 from graphene_file_upload.scalars import Upload
 from geoalchemy2.shape import from_shape
-from api import db
 from api.controllers.auth.decorators import login_required
 from api.graphql.object import (
     User,
     ShiftNode,
-    Location,
+    Location, 
     LocationInput,
+    AnswerInput,
     EmployerInput,
     Screenshot,
-    JobNode
+    JobNode,
+    SurveyNode,
+    AnswerNode
 )
 from api.models import (
     User as UserModel,
@@ -45,9 +48,11 @@ from api.models import (
     Screenshot as ScreenshotModel,
     Job as JobModel,
     Consent as ConsentModel,
+    Answer as AnswerModel,
+    Question as QuestionModel,
     Geometry_WKT,
-    _convert_geometry,
     EmployerNames,
+    db
 )
 from api.utils import generate_filename
 from api.routing.mapmatch import get_route_distance_and_geometry
@@ -280,7 +285,6 @@ class AddScreenshotToShift(Mutation):
         text = parse_image(image)
         app = predict_app(text)
 
-        # IMAGE_DIR = current_app.config.IMAGE_DIR
         # TODO: if they give us a job, add the screenshot to the job, and parse it.
         if app:
             img_filename = os.path.join('/opt/images',
@@ -616,6 +620,49 @@ class UnenrollAndDelete(Mutation):
         db.session.commit()
         return UnenrollAndDelete(True)
 
+class SubmitSurvey(Mutation):
+    ok = Field(lambda: Boolean)
+
+    class Arguments:
+        survey_id = ID(required=True)
+        survey_responses = List(AnswerInput, required=True)
+
+    @login_required
+    def mutate(self, info, survey_id, survey_responses):
+        user_id = g.user
+        user = UserModel.query.filter_by(id=user_id).first()
+        answers = []
+        for resp in survey_responses:
+            question_id = from_global_id(resp['question_id'])[1]
+            question = QuestionModel.query.filter_by(id=question_id).first()
+            a = AnswerModel()
+            a.user_id = user_id
+            a.user = user
+            a.question = question
+            a.date = datetime.now()
+            if question.question_type == QuestionTypeEnum.MULTISELECT:
+                a.answer_options = resp.selectValue
+            elif question.question_type == QuestionTypeEnum.SELECT:
+                a.answer_options = resp.selectValue
+            elif question.question_type == QuestionTypeEnum.TEXT:
+                a.answer_text = resp.textValue
+            elif question.question_type == QuestionTypeEnum.TEXT:
+                a.answer_text = resp.numericValue
+            elif question.question_type == QuestionTypeEnum.CHECKBOX:
+                a.answer_yn = resp.ynValue
+            elif question.question_type == QuestionTypeEnum.RANGE:
+                a.answer_numeric = resp.numericValue
+            answers.append(a)
+        ## add answers, not user to session.
+        ## when user is added, answer.user is not populated for some reason.
+        for answer in answers:
+            db.session.add(answer)
+        db.session.commit()
+        return(SubmitSurvey(ok=True))
+
+
+
+
 
 class Mutation(ObjectType):
     """Mutations which can be performed by this API."""
@@ -637,3 +684,4 @@ class Mutation(ObjectType):
     updateDataSharingConsent = UpdateDataSharingConsent.Field()
     updateInterviewConsent = UpdateInterviewConsent.Field()
     unenrollAndDelete = UnenrollAndDelete.Field()
+    submitSurvey = SubmitSurvey.Field()

@@ -20,7 +20,7 @@ def send_text(message, to_phone, from_phone):
                 to=to_phone,
             )
         except TwilioRestException as e:
-            raise TextMessageSendError("Could not send message with texting service")
+            raise TextMessageSendError(f"Could not send message with texting service: {e}")
         return sent_message
 
 

@@ -49,9 +49,12 @@ const authSlice = createSlice({
             state.permissions.location = false;
         },
         setLoggedIn(state, action) {
-            state.authenticated = action.payload.authenticated
-                ? action.payload.authenticated
-                : state.authenticated;
+            console.log('Setting authenticated:', action.payload);
+            state.authenticated =
+                action.payload.authenticated != null
+                    ? action.payload.authenticated
+                    : state.authenticated;
+
             state.user = action.payload.user ? action.payload.user : state.user;
             state.userId = action.payload.user_id ? action.payload.user_id : state.userId;
         },

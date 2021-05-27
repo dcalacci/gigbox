@@ -1,10 +1,12 @@
 from flask_migrate import Migrate, MigrateCommand
 from flask_script import Manager
 from flask_script import Server, Manager
-from api import create_app, db
+from flask_sqlalchemy import SQLAlchemy
+from api import create_app
+from api.models import db
 from termcolor import cprint
 
-app = create_app('development')
+app = create_app()
 manager = Manager(app)
 
 

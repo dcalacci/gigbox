@@ -21,7 +21,7 @@ services:
             - frontend
     db:
         image: postgis/postgis
-        env_file: database.env
+        env_file: .env
         ports:
             - '5432:5432'
         volumes:
@@ -30,40 +30,19 @@ services:
             - backend
     osrm:
         container_name: gigbox-osrm
-        image: gigbox/osrm
-        build:
-            context: ./osrm
-            dockerfile: Dockerfile
+        image: osrm/osrm-backend 
         restart: always
-        ports:
-            - '5001:5000'
+        volumes:
+            - osrm-data:/opt
         command:
-            "osrm-routed --max-matching-size 10000 --algorithm mld us-latest.osrm"
+            "osrm-routed --max-matching-size 100000 --algorithm mld us-latest.osrm"
         networks:
             - backend
 volumes:
     database-data:
     screenshots:
+    osrm-data:
 
 networks:
     backend:
     frontend:
-
-# using networks like described here: https://docs.docker.com/compose/compose-file/compose-file-v2/#networks
-    # valhalla:
-    #     image: gisops/valhalla:latest
-    #     ports:
-    #         - '8002:8002'
-    #     volumes:
-    #         - ./custom_files/:/custom_files
-    #     environment:
-    #         # The tile_file must be located in the `custom_files` folder.
-    #         # The tile_file has priority and is used when valid.
-    #         # If the tile_file doesn't exist, the url is used instead.
-    #         # Don't blank out tile_url when you use tile_file and vice versa.
-    #         - tile_urls=http://download.geofabrik.de/north-america/us-northeast-latest.osm.pbf
-    #         # Get correct bounding box from e.g. https://boundingbox.klokantech.com/
-    #         - use_tiles_ignore_pbf=True
-    #         - force_rebuild=False
-    #         - build_admins=True
-    #         - build_time_zones=True

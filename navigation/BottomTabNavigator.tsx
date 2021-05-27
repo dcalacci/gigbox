@@ -30,6 +30,7 @@ import { StatusBar } from 'expo-status-bar';
 import { User } from '../types';
 import * as SplashScreen from 'expo-splash-screen';
 import { useScrollToTop } from '@react-navigation/native';
+import { SurveyForm } from '../features/surveys/Survey'
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
@@ -51,11 +52,12 @@ export default function BottomTabNavigator({ navigation }) {
         }
 
         maybeShowSplash();
-    }, [user]);
+    }, []);
 
     if (!isOnboarded) {
         return <Onboarding onOnboardingFinish={() => dispatch(setOnboarded(true))} />;
     } else if (!isAuthenticated) {
+        console.log('not authenticated, redirecting to phoneEntry...');
         // if not authenticated, show phone entry screen. isAuthenticated should be True at the end of the flow.
         return (
             <View>
@@ -92,7 +94,7 @@ export default function BottomTabNavigator({ navigation }) {
                 <>
                     <BottomTab.Screen
                         name="Home"
-                        component={TabOneNavigator}
+                        component={HomeScreen}
                         options={{
                             tabBarIcon: ({ color }) => (
                                 <TabBarIcon name="caret-forward-circle-outline" color={color} />
@@ -140,12 +142,12 @@ function TabBarIcon(props: { name: string; color: string }) {
 
 // Each tab has its own navigation stack, you can read more about this pattern here:
 // https://reactnavigation.org/docs/tab-based-navigation#a-stack-navigator-for-each-tab
-const TabOneStack = createStackNavigator<TabOneParamList>();
+const HomeStack = createStackNavigator<TabOneParamList>();
 
-function TabOneNavigator() {
+function HomeScreen() {
     return (
-        <TabOneStack.Navigator>
-            <TabOneStack.Screen
+        <HomeStack.Navigator>
+            <HomeStack.Screen
                 name="TabOneScreen"
                 component={TabOneScreen}
                 options={{
@@ -153,6 +155,12 @@ function TabOneNavigator() {
                     headerStyle: tailwind('bg-white'),
                 }}
             />
-        </TabOneStack.Navigator>
+            <HomeStack.Screen 
+            name="Survey Form" 
+            component={SurveyForm} 
+            options={{
+                headerBackTitle: 'Home'
+            }}/>
+        </HomeStack.Navigator>
     );
 }
