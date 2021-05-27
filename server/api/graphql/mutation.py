@@ -8,6 +8,7 @@ import json
 import base64
 import binascii
 import graphene
+from shutil import copy
 from sqlalchemy import inspect
 from graphene import (
     Mutation,
@@ -25,13 +26,14 @@ from shapely import geometry
 from geoalchemy2.shape import to_shape
 from datetime import datetime
 from dateutil import parser
-from flask import g, current_app
+from flask import g, current_app, url_for
 from PIL import Image
 from graphene_file_upload.scalars import Upload
 from geoalchemy2.shape import from_shape
 from api.controllers.auth.decorators import login_required
 from api.graphql.object import (
     User,
+    JobNode,
     ShiftNode,
     Location,
     LocationInput,
@@ -40,7 +42,8 @@ from api.graphql.object import (
     Screenshot,
     JobNode,
     SurveyNode,
-    AnswerNode
+    AnswerNode,
+    resolve_geom
 )
 from api.models import (
     User as UserModel,
@@ -655,31 +658,56 @@ class ExportJobs(Mutation):
     @login_required
     def mutate(self, info, ids):
         import csv
+        import zipfile
+        import shutil
         user_id = g.user
 
         parsed_ids = [from_global_id(id)[1] for id in ids]
+        # job in Ids we're given, with user_id matching for authorization
         records = (JobModel.query
                    .filter_by(user_id=user_id)
                    .filter(JobModel.id.in_(parsed_ids)))
 
-        columns = [column for column in inspect(JobModel).columns 
-                if column.name not in ['id', 'snapped_geometry', 'user_id']]
-        print("columns:", columns)
+        columns = [column for column in inspect(JobModel).columns
+                   if column.name not in ['snapped_geometry', 'user_id']]
 
-        outfile = open('mydump.csv', 'w')
+        # collect screenshots
+        screenshots = ScreenshotModel.query.filter(
+            ScreenshotModel.job_id.in_(parsed_ids))
+
+        # copy screenshots to export dir, one subdirectory for each job
+        nowstr = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
+        export_dir = f'/opt/exports/{user_id}_{nowstr}'
+        os.makedirs(export_dir, exist_ok=True)
+        for s in screenshots:
+            print(str(s.job_id))
+            screenshot_export_dir = os.path.join(export_dir, str(s.job_id))
+            os.makedirs(screenshot_export_dir, exist_ok=True)
+            copy(s.img_filename, screenshot_export_dir)
+        outpath = os.path.join(export_dir, 'jobs.csv')
+        outfile = open(outpath, 'w')
         outcsv = csv.writer(outfile)
         # header row
         outcsv.writerow([c.name for c in columns])
-        #TODO: convert locations (start and end) to lat/lng -- they are encoded currently
-        #TODO: create temporary download file
-        [outcsv.writerow([getattr(curr, column.name)
-                          for column in columns])#JobModel.__mapper__.columns])
-            for curr in records]
-
-
+        for curr in records:
+            row = []
+            for column in columns:
+                a = getattr(curr, column.name)
+                if 'location' in column.name:
+                    print("a:", a)
+                    row.append(resolve_geom(a))
+                else:
+                    row.append(str(a))
+            outcsv.writerow(row)
         outfile.close()
-        print("Created CSV:, outfile")
-        return ExportJobs(ok=True, message="Export Successful", file_url="mybigdump.csv")
+        # create zip file
+        zip_path = f"{export_dir}"
+        shutil.make_archive(zip_path, 'zip', export_dir)
+        zip_fname = os.path.basename(f"{zip_path}.zip")
+        url = url_for('export_file', fname=zip_fname)
+        return ExportJobs(ok=True,
+                          message="Export Successful",
+                          file_url=url)
 
 
 class SubmitSurvey(Mutation):
