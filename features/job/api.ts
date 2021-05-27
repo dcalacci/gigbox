@@ -6,6 +6,20 @@ import { JobFilterList, JobFilter, SortArgs } from './JobList';
 import { Job } from '@/types';
 import moment from 'moment';
 
+export const exportJobs = ({ ids }: { ids: string[] }) => {
+    const client = getClient(store);
+    const query = gql`
+        mutation mutation($ids: [ID]!) {
+            exportJobs(ids: $ids) {
+                ok
+                message
+                fileUrl
+            }
+        }
+    `;
+    return client.request(query, { ids });
+};
+
 export const deleteImage = ({ id }: { id: string }) => {
     const client = getClient(store);
     const query = gql`

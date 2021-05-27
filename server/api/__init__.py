@@ -1,4 +1,6 @@
-from flask import Flask, Blueprint, request, jsonify
+import os
+from flask import Flask, Blueprint, request, jsonify, send_from_directory, safe_join
+from flask import g
 from flask_restful import Api
 from flask_sqlalchemy import SQLAlchemy
 from flask_graphql import GraphQLView
@@ -49,9 +51,6 @@ def create_app():
     # app.config['SQLALCHEMY_DATABASE_URI'] = app.config['SQLALCHEMY_DATABASE_URI'] + "/" + app.config['DATABASE_NAME']
     db.init_app(app)
 
-    
-
-    admin = Admin(app, name='microblog', template_mode='bootstrap3')
     @ app.before_first_request
     def initialize_database():
         """ Create db tables"""
@@ -73,13 +72,25 @@ def create_app():
     def shutdown_session(exception=None):
         db.session.remove()
 
+    ## Actual API
     def graphql_endpoint():
-
         from api.schema import schema
-
         view = FileUploadGraphQLView.as_view(
             "graphql", schema=schema, graphiql=True)
         return view
+
+    # Serves static files
+    @app.route('/exports/<string:fname>')
+    def export_file(fname):
+        import shutil
+        print("EXPORT FILE ENDPOINT")
+        def delete_file():
+            print("downloaded. deleting file...")
+            os.remove(safe_join('/opt/exports', fname))
+        resp = send_from_directory('/opt/exports', fname)
+        # delete file after response object is made
+        delete_file()
+        return resp
 
     app.add_url_rule(
         '/graphql',
@@ -95,6 +106,7 @@ def create_app():
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
     if (app.config['ENV'] == "DEVELOPMENT"):
+        admin = Admin(app, name='microblog', template_mode='bootstrap3')
         admin.add_view(ModelView(User, db.session))
         admin.add_view(ModelView(Survey, db.session))
         admin.add_view(ModelView(Question, db.session))
