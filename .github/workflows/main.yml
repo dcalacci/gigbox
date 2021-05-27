@@ -40,7 +40,7 @@ jobs:
         with:
           push: true
           context: ./server
-          file: Dockerfile.prod
+          file: ./server/Dockerfile.prod
           tags: gigbox/gigbox-server:latest
       -
         name: Image digest
