@@ -113,8 +113,8 @@ version: 1
 task_definition:
   services:
     osrm:
-      mem_limit: 55g
-      mem_reservation: 50g
+      mem_limit: 45g
+      mem_reservation: 30g
       essential: true
     db:
       mem_reservation: 4g
