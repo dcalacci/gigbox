@@ -46,6 +46,8 @@ jobs:
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
   aws-deploy:
+    # needs latest server to deploy
+    needs: docker
     runs-on: ubuntu-latest
     env:
        ENV: ${{secrets.ENV}}
@@ -73,17 +75,21 @@ jobs:
        IAM_ROLE_NAME: ${{secrets.IAM_ROLE_NAME}}
 
     steps:
-      - id: install-aws-cli
+      - 
+        name: Checkout
+        uses: actions/checkout@v2
+      - # enable our aws credentials
+        id: install-aws-cli
         uses: unfor19/install-aws-cli-action@v1
         with:
           version: 2 # default
           verbose: false # default
-      - 
+      - # creates an ECS configuration
         name: Create aws cluster configuration
         run: cd server/deploy && ./0-cluster-configure.sh
-      -
+      - # brings raw resources up
         name: Bring up cluster
         run: cd server/deploy && ./1-cluster-create.sh
-      - 
+      - # ensures our EFS with persistent data can connect to instances, and bring 'em up
         name: Configure EFS with cluster VPC & deploy!
         run: cd server/deploy && ./2-cluster-configure-efs.sh
