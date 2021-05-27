@@ -72,7 +72,7 @@ export default class AnimatedEllipsis extends Component<AnimatedEllipsisProps> {
 
     render() {
         let dots = this._animation_state.dot_opacities.map((o, i) => (
-            <Animated.Text key={i} style={[this.props.style, { opacity: o }, tailwind('self-center text-3xl font-bold text-white')]}>
+            <Animated.Text key={i} style={[{ opacity: o }, tailwind('self-center text-3xl font-bold '), this.props.style]}>
                 {' '}
                 .
             </Animated.Text>

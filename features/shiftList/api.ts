@@ -33,15 +33,16 @@ export const getShifts = (first: Number, after: String) => {
                                     tip
                                     employer
                                     shiftId
+                                    screenshots {
+                                        id
+                                        jobId
+                                        onDeviceUri
+                                        timestamp
+                                        imgFilename
+                                        employer
+                                    }
                                 }
                             }
-                        }
-                        screenshots {
-                            onDeviceUri
-                            id
-                            imgFilename
-                            employer
-                            timestamp
                         }
                     }
                 }

@@ -32,7 +32,7 @@ from api.controllers.auth.decorators import login_required
 from api.graphql.object import (
     User,
     ShiftNode,
-    Location, 
+    Location,
     LocationInput,
     AnswerInput,
     EmployerInput,
@@ -244,6 +244,24 @@ class AddLocationsToShift(Mutation):
         db.session.commit()
 
         return AddLocationsToShift(location=shift.locations[-1], ok=True)
+
+
+class DeleteImage(Mutation):
+    class Arguments:
+        id = ID(required=True)
+
+    ok = Field(lambda: Boolean)
+    message = Field(lambda: String)
+
+    @login_required
+    def mutate(self, info, id):
+        screenshot = ScreenshotModel.query.filter_by(id=id, user_id=g.user).first()
+        if not screenshot:
+            return DeleteImage(ok=False, message="Image does not exist or user does not have access.")
+        else:
+            db.session.delete(screenshot)
+            db.session.commit()
+            return DeleteImage(ok=True, message="Image Deleted")
 
 
 class AddScreenshotToShift(Mutation):
@@ -518,6 +536,7 @@ class SetShiftEmployers(Mutation):
         db.session.commit()
         return SetShiftEmployers(shift)
 
+
 class SubmitIntroSurvey(Mutation):
     user = Field(lambda: User, description="user who submitted survey")
 
@@ -604,10 +623,11 @@ class UpdateDataSharingConsent(Mutation):
     def mutate(self, info, dataSharing):
         user_id = g.user
         user = UserModel.query.filter_by(id=user_id).first()
-        user.consent.data_sharing = dataSharing 
+        user.consent.data_sharing = dataSharing
         db.session.add(user)
         db.session.commit()
         return UpdateInterviewConsent(user)
+
 
 class UnenrollAndDelete(Mutation):
     ok = Field(lambda: Boolean)
@@ -619,6 +639,7 @@ class UnenrollAndDelete(Mutation):
         db.session.delete(user)
         db.session.commit()
         return UnenrollAndDelete(True)
+
 
 class SubmitSurvey(Mutation):
     ok = Field(lambda: Boolean)
@@ -653,15 +674,12 @@ class SubmitSurvey(Mutation):
             elif question.question_type == QuestionTypeEnum.RANGE:
                 a.answer_numeric = resp.numericValue
             answers.append(a)
-        ## add answers, not user to session.
-        ## when user is added, answer.user is not populated for some reason.
+        # add answers, not user to session.
+        # when user is added, answer.user is not populated for some reason.
         for answer in answers:
             db.session.add(answer)
         db.session.commit()
         return(SubmitSurvey(ok=True))
-
-
-
 
 
 class Mutation(ObjectType):
@@ -679,6 +697,7 @@ class Mutation(ObjectType):
     setShiftEmployers = SetShiftEmployers.Field()
     addLocationsToShift = AddLocationsToShift.Field()
     addScreenshotToShift = AddScreenshotToShift.Field()
+    deleteImage = DeleteImage.Field()
     submitConsent = SubmitConsent.Field()
     submitIntroSurvey = SubmitIntroSurvey.Field()
     updateDataSharingConsent = UpdateDataSharingConsent.Field()

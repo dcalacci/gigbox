@@ -5,8 +5,8 @@ import { LocationObject } from 'expo-location';
 import * as Location from 'expo-location';
 import { LocationInput, Employers } from '../../types';
 import * as FileSystem from 'expo-file-system';
-import { useQuery } from 'react-query'
-import moment from 'moment'
+import { useQuery } from 'react-query';
+import moment from 'moment';
 import { useNumJobsNeedEntryThisWeek } from '../job/api';
 
 export const fetchActiveShift = async () => {
@@ -53,7 +53,6 @@ export const fetchActiveShift = async () => {
         return data.getActiveShift;
     }
 };
-
 
 export const useNumTrackedShifts = () => {
     return useQuery(
@@ -142,7 +141,7 @@ export const addScreenshotToShift = async ({
 }: {
     screenshotLocalUri: string | undefined;
     modificationTime: number;
-    objectId: string
+    objectId: string;
 }) => {
     const client = getClient(store);
     const query = gql`
@@ -160,7 +159,8 @@ export const addScreenshotToShift = async ({
             ) {
                 data
                 screenshot {
-                    jobId 
+                    id
+                    jobId
                     onDeviceUri
                     imgFilename
                     timestamp
@@ -200,9 +200,9 @@ export const createJob = async ({ shiftId, employer }: { shiftId: string; employ
     });
 
     if (location == null) {
-        log.error("Couldn't retrieve last known location. getting current location..")
+        log.error("Couldn't retrieve last known location. getting current location..");
         // throw new Error("Couldn't retrieve location!");
-        location = await Location.getCurrentPositionAsync()
+        location = await Location.getCurrentPositionAsync();
     }
 
     const startLocation: LocationInput = {
