@@ -16,7 +16,7 @@ services:
             - SECRET_KEY
             - DATA_DIR=/opt/data
         ports:
-            - '80:80'
+            - "80"
         links:
             - osrm
             - db
@@ -35,7 +35,7 @@ services:
     db:
         image: postgis/postgis
         ports:
-            - '5432:5432'
+            - '5432'
         volumes:
             - database-data:/var/lib/postgresql/data
         networks:
@@ -57,8 +57,6 @@ services:
         ## S3 to reduce deploy times
         image: osrm/osrm-backend:v5.24.0
         restart: always
-        ports:
-            - '5001:5000'
         command:
             "osrm-routed --max-matching-size 100000 --algorithm mld us-latest.osrm"
         networks:
