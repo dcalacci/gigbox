@@ -42,7 +42,7 @@ export default function BottomTabNavigator({ navigation }) {
 
     useEffect(() => {
         async function maybeShowSplash() {
-            if (!user) {
+            if (!user || !user) {
                 console.log('preventing splash screen hide...');
                 await SplashScreen.preventAutoHideAsync();
             } else {
