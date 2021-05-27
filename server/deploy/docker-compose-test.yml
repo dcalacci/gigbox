@@ -33,7 +33,6 @@ services:
                 awslogs-stream-prefix: gigbox-server
     db:
         image: postgis/postgis
-        env_file: database.env
         ports:
             - '5432:5432'
         volumes:

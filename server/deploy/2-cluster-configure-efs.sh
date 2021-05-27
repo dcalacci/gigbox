@@ -14,13 +14,13 @@
 ## Create FS for osrm-data
 
 echo -n "> Waiting for filesystem to become available..."
-until [[ $(aws efs describe-file-systems --file-system-id $FS_ID --region $REGION | jq -r ".FileSystems[0].LifeCycleState") =~ 'available' ]];
+until [[ $(aws efs describe-file-systems --file-system-id ${FS_ID} --region $REGION | jq -r ".FileSystems[0].LifeCycleState") =~ 'available' ]];
 do
     echo -n "."
     sleep 5s
 done
 
-echo -e "\n> Filesystem $FS_ID is available. continuing..."
+echo -e "\n> Filesystem is available. continuing..."
 
 ACCOUNT_ID=$(aws sts get-caller-identity | jq -r ".Account")
 
@@ -42,7 +42,7 @@ fi
 
 if ! [[ $(aws efs describe-access-points --file-system-id $FS_ID --region $REGION | jq '.AccessPoints | map(.RootDirectory.Path)') =~ '/screenshots' ]];
 then
-echo -e "\nCreating server access point on $FS_ID"
+echo -e "\nCreating server access point on filesystem..."
 ## Access point for gigbox-server
 ## uwsgi-nginx-flask changes UID/GID to root
 aws efs create-access-point \
@@ -52,7 +52,7 @@ aws efs create-access-point \
 --posix-user '{"Uid": 0, "Gid": 0}'
 fi
 
-echo -e "\n> Creating mount points for each subnet on $FS_ID..."
+echo -e "\n> Creating mount points for each subnet on filesystem..."
 echo -e "\n> This script does not check for existing mount targets or security group rules. If they already exist,\
 The script will not fail, but will report errors. This is normal!"
 ## Create mount points for each subnet ECS created
