@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutAnimation, ScrollView, View, Text, Image, Pressable, TextInput } from 'react-native';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import Modal from 'react-native-modal';
 import { tailwind } from 'tailwind';
 import { Region, Marker, LatLng } from 'react-native-maps';
 import { useQueryClient, useQuery, useMutation } from 'react-query';
 import moment, { Moment } from 'moment';
+import { Ionicons } from '@expo/vector-icons';
 import { Job, Screenshot, Shift } from '../../types';
 import { parse } from 'wellknown';
 import TripMap from '../shiftList/TripMap';
 import ScreenshotUploader from './ScreenshotPicker';
 import DateRangePicker from './DateRangePicker';
-import { getFilteredJobs } from './api';
+import { getFilteredJobs, exportJobs } from './api';
 import { JobItem } from './Job';
 import * as Haptics from 'expo-haptics';
 import { fileAsyncTransport } from 'react-native-logs';
@@ -224,6 +226,12 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
     const [filter, setFilter] = useState<JobFilter>(inputFilters ? inputFilters : defaultFilter);
     const [allJobs, setAllJobs] = useState<{ edges: { node: Job }[] }>({ edges: [] });
 
+    const exportSelection = useMutation(exportJobs, {
+        onSuccess: (d) => {
+            console.log('exported jobs:', d);
+        },
+    });
+
     const filteredJobsStatus = useQuery(['filteredJobs', filter], getFilteredJobs, {
         keepPreviousData: true,
         onSuccess: (data) => {
@@ -244,7 +252,7 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
     const queryClient = useQueryClient();
 
     useEffect(() => {
-        console.log("invalidating filtered jobs query...")
+        console.log('invalidating filtered jobs query...');
         queryClient.invalidateQueries('filteredJobs');
         queryClient.invalidateQueries('trackedJobs');
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
@@ -281,52 +289,68 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
             </>
         );
     };
-
-    return (
-        <View style={tailwind('p-5 pt-10 flex-col')}>
-            <View style={tailwind('flex-col')}>
-                <View style={tailwind('flex-row p-2')}>
+    const JobFilterListHeader = (
+        <View style={tailwind('flex-col')}>
+            <View style={tailwind('flex-row p-2 justify-between mt-5')}>
+                <View style={tailwind('flex-row justify-start')}>
                     <Text style={tailwind('text-3xl text-green-500 font-bold')}>
                         {allJobs.edges.length}
                     </Text>
                     <Text style={tailwind('text-3xl font-bold')}> Jobs</Text>
                 </View>
-                <View style={tailwind('flex-row p-2 flex-wrap')}>
-                    <View style={tailwind('flex-row p-2')}>
-                        <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                            {allJobs.edges
-                                .map((n) => n.node.mileage)
-                                .reduce((a, b) => a + b, 0)
-                                .toFixed(1)}
-                        </Text>
-                        <Text style={tailwind('text-xl font-bold')}> Miles</Text>
-                    </View>
-                    <View style={tailwind('flex-row p-2')}>
-                        <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                            $
-                            {allJobs.edges
-                                .map((n) => (n.node.totalPay ? n.node.totalPay : 0))
-                                .reduce((a, b) => a + b, 0)
-                                .toFixed(1)}
-                        </Text>
-                        <Text style={tailwind('text-xl font-bold')}> Total pay</Text>
-                    </View>
-                    <View style={tailwind('flex-row p-2')}>
-                        <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                            $
-                            {allJobs.edges
-                                .map((n) => (n.node.tip ? n.node.tip : 0))
-                                .reduce((a, b) => a + b, 0)
-                                .toFixed(1)}
-                        </Text>
-                        <Text style={tailwind('text-xl font-bold')}> Tips</Text>
-                    </View>
-                    <View style={tailwind('flex-row p-2')}>{avgTime(allJobs.edges)}</View>
-                    <View style={tailwind('flex-row p-2')}>{totalTime(allJobs.edges)}</View>
+                <Pressable
+                    style={tailwind('rounded-lg bg-green-500 p-2 flex-row')}
+                    onPress={() => {
+                        exportSelection.mutate({ ids: allJobs.edges.map(({ node }) => node.id) });
+                        console.log('Exporting data...');
+                    }}
+                >
+                    <Ionicons name="download" color="white" size={20} />
+                    <Text style={tailwind('text-lg font-bold text-white')}>Export</Text>
+                </Pressable>
+            </View>
+            <View style={tailwind('flex-row p-2 flex-wrap')}>
+                <View style={tailwind('flex-row p-2')}>
+                    <Text style={tailwind('text-xl text-green-500 font-bold')}>
+                        {allJobs.edges
+                            .map((n) => n.node.mileage)
+                            .reduce((a, b) => a + b, 0)
+                            .toFixed(1)}
+                    </Text>
+                    <Text style={tailwind('text-xl font-bold')}> Miles</Text>
                 </View>
+                <View style={tailwind('flex-row p-2')}>
+                    <Text style={tailwind('text-xl text-green-500 font-bold')}>
+                        $
+                        {allJobs.edges
+                            .map((n) => (n.node.totalPay ? n.node.totalPay : 0))
+                            .reduce((a, b) => a + b, 0)
+                            .toFixed(1)}
+                    </Text>
+                    <Text style={tailwind('text-xl font-bold')}> Total pay</Text>
+                </View>
+                <View style={tailwind('flex-row p-2')}>
+                    <Text style={tailwind('text-xl text-green-500 font-bold')}>
+                        $
+                        {allJobs.edges
+                            .map((n) => (n.node.tip ? n.node.tip : 0))
+                            .reduce((a, b) => a + b, 0)
+                            .toFixed(1)}
+                    </Text>
+                    <Text style={tailwind('text-xl font-bold')}> Tips</Text>
+                </View>
+                <View style={tailwind('flex-row p-2')}>{avgTime(allJobs.edges)}</View>
+                <View style={tailwind('flex-row p-2')}>{totalTime(allJobs.edges)}</View>
+            </View>
+        </View>
+    );
 
+    return (
+        <>
+            <View style={tailwind('p-5 pt-10 flex-col')}>
+                {JobFilterListHeader}
                 <View style={tailwind('border-b border-gray-200 h-1 mb-2 mr-5 ml-5')} />
-                <ScrollView
+                <KeyboardAwareScrollView
                     horizontal={true}
                     style={tailwind('content-around flex-row flex-none border-b border-gray-200')}
                 >
@@ -458,7 +482,7 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
                             }
                         }}
                     />
-                </ScrollView>
+                </KeyboardAwareScrollView>
             </View>
             {filteredJobsStatus.isLoading ||
             filteredJobsStatus.isError ||
@@ -471,7 +495,7 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
             ) : (
                 <JobList jobs={filteredJobsStatus.data.allJobs.edges}></JobList>
             )}
-        </View>
+        </>
     );
 };
 
@@ -483,10 +507,10 @@ export const JobList = ({ jobs }: { jobs: [{ node: Job }] | undefined }) => {
     // console.log('fitlered job status', status);
     // console.log('jobs:', jobs);
     return (
-        <ScrollView style={[tailwind('flex-col w-full ml-0 mr-0 pl-2 mr-2')]}>
+        <KeyboardAwareScrollView style={[tailwind('flex-col w-full ml-0 mr-0 pl-2 mr-2')]}>
             {jobs?.map((j) => (
                 <JobItem job={j.node} key={j.node.id} />
             ))}
-        </ScrollView>
+        </KeyboardAwareScrollView>
     );
 };
