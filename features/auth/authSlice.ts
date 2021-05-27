@@ -1,9 +1,11 @@
 import { createAsyncThunk, createSlice } from '@reduxjs/toolkit';
 import { loginWithOtp } from './otpSlice';
-import { User } from '../../types'
+import { User } from '../../types';
+import { State } from 'react-native-gesture-handler';
 
 export interface AuthState {
     lastLoggedIn: number | null;
+    onboarded: boolean;
     jwt: string | null;
     userId: string | null;
     authenticated: boolean;
@@ -12,10 +14,11 @@ export interface AuthState {
         location: boolean;
         notification: boolean;
     };
-    user: User | null
+    user: User | null;
 }
 
 const initialState: AuthState = {
+    onboarded: false,
     lastLoggedIn: null,
     jwt: null,
     userId: null,
@@ -25,7 +28,7 @@ const initialState: AuthState = {
         location: false,
         notification: false,
     },
-    user: null
+    user: null,
 };
 
 const authSlice = createSlice({
@@ -33,8 +36,11 @@ const authSlice = createSlice({
     initialState: initialState,
     reducers: {
         reset: (state) => initialState,
-        setUser: (state, action) =>  {
-            state.user = action.payload
+        setOnboarded: (state, action) => {
+            state.onboarded = action.payload;
+        },
+        setUser: (state, action) => {
+            state.user = action.payload;
         },
         grantLocationPermissions(state) {
             state.permissions.location = true;
@@ -43,10 +49,14 @@ const authSlice = createSlice({
             state.permissions.location = false;
         },
         setLoggedIn(state, action) {
-            state.authenticated = action.payload.authenticated ? action.payload.authenticated : state.authenticated
-            state.user = action.payload.user ? action.payload.user : state.user
-            state.userId = action.payload.user_id ? action.payload.user_id : state.userId
-        }
+            console.log('Setting authenticated:', action.payload);
+            state.authenticated =
+                action.payload.authenticated != null
+                    ? action.payload.authenticated
+                    : state.authenticated;
+            state.user = action.payload.user ? action.payload.user : state.user;
+            state.userId = action.payload.user_id ? action.payload.user_id : state.userId;
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -69,5 +79,12 @@ const authSlice = createSlice({
     },
 });
 
-export const { reset, setUser, grantLocationPermissions, denyLocationPermissions, setLoggedIn} = authSlice.actions;
+export const {
+    reset,
+    setOnboarded,
+    setUser,
+    grantLocationPermissions,
+    denyLocationPermissions,
+    setLoggedIn,
+} = authSlice.actions;
 export default authSlice.reducer;

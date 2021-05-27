@@ -1,0 +1,244 @@
+{
+    "surveys": [
+        {
+            "title": "Demographic Survey",
+            "start_date": "05/21/21",
+            "days_after_install": 0,
+
+            "description": "These questions will help me (MIT PhD student) and other researchers understand the demographics of people who are using this tool and who do gig work more generally. Your information will remain private unless you tell us explicitly that we may share it.",
+            "questions": [
+                {
+                    "question_text": "What is your age?",
+                    "question_type": "SELECT",
+                    "select_options": ["18-24", "25-34", "35-44", "45-54", "55-64", "65-74", "75+"]
+                },
+                {
+                    "question_text": "What gender(s) do you identify as? Mark any that apply.",
+                    "question_type": "MULTISELECT",
+                    "select_options": [
+                        "Man",
+                        "Woman",
+                        "Transgender",
+                        "Cisgender",
+                        "Agender",
+                        "Nonbinary / genderqueer",
+                        "Other"
+                    ]
+                },
+                {
+                    "question_text": "Do you consider yourself to be: (mark any that apply)",
+                    "question_type": "MULTISELECT",
+                    "select_options": [
+                        "Queer",
+                        "Gay or lesbian",
+                        "Heterosexual or straight",
+                        "Bisexual",
+                        "Asexual",
+                        "Unlisted"
+                    ]
+                },
+                {
+                    "question_text": "To which ethnic groups do you identify?",
+                    "question_type": "MULTISELECT",
+                    "select_options": [
+                        "White",
+                        "American Indian or Alaska Native",
+                        "Hispanic, Latino/a, or Spanish Origin",
+                        "Asian",
+                        "Middle Eastern or North African",
+                        "Black or African American",
+                        "Native Hawaiian or Pacific Islander",
+                        "Not Listed"
+                    ]
+                },
+                {
+                    "question_text": "How many hours a week do you do app-based work on average?",
+                    "question_type": "SELECT",
+                    "select_options": ["Under 10", "10-20", "20-30", "30-40", "40-50", "50+"]
+                },
+                {
+                    "question_text": "is this your main occupation, or a side job?",
+                    "question_type": "SELECT",
+                    "select_options": [
+                        "It is my main job",
+                        "It's my main job, but I have other side jobs",
+                        "I do it as a side job"
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Your work & pay",
+            "start_date": "05/21/21",
+            "days_after_install": 0,
+            "description": "These questions will help me (MIT PhD student) and other researchers understand the actual pay of workers like you. Your information will remain private unless you tell us explicitly that we may share it.",
+            "questions": [
+                {
+                    "question_text": "What's your car make/model?",
+                    "question_type": "TEXT"
+                },
+                {
+                    "question_text": "How much do you think you earn approximately per week (before expenses and taxes)?",
+                    "question_type": "NUMBER"
+                },
+                {
+                    "question_text": "How much of what you earn per week consists of tips?",
+                    "question_type": "RANGE",
+                    "range_options": {
+                        "start_val": 0,
+                        "end_val": 100,
+                        "increment": 1,
+                        "unit": "percent"
+                    }
+                },
+                {
+                    "question_text": "How much do you spend per month on: Cell & Internet Service ?",
+                    "question_type": "NUMBER"
+                },
+                {
+                    "question_text": "Car/Bike maintenance?",
+                    "question_type": "NUMBER"
+                },
+                {
+                    "question_text": "Car/Bike insurance?",
+                    "question_type": "NUMBER"
+                },
+                {
+                    "question_text": "Car debt / payments?",
+                    "question_type": "NUMBER"
+                },
+                {
+                    "question_text": "Public Transit?",
+                    "question_type": "NUMBER"
+                },
+                {
+                    "question_text": "Gas?",
+                    "question_type": "NUMBER"
+                },
+                {
+                    "question_text": "Other (e.g. other expenses related to your job)?",
+                    "question_type": "NUMBER"
+                },
+                {
+                    "question_text": "Have you ever had a problem with the app(s) because you were not paid, or were paid less than you were expecting?",
+                    "question_type": "MULTISELECT",
+                    "select_options": [
+                        "I was not paid for an order/delivery",
+                        "I was paid less than indicated in the app",
+                        "I did not receive my tips",
+                        "Never had an issue",
+                        "Other"
+                    ]
+                },
+                {
+                    "question_text": "WHat are your greatest concerns about your job as an app-based worker?",
+                    "question_type": "MULTISELECT",
+                    "select_options": [
+                        "Low Pay",
+                        "Loss of work",
+                        "Risk of accidents",
+                        "Crime",
+                        "Lack of health insurance",
+                        "Other"
+                    ]
+                }
+            ]
+        },
+        {
+            "title": "Problems at work",
+            "start_date": "05/21/21",
+            "days_after_install": 1,
+            "description": "These questions will help me (MIT PhD student) and other researchers understand the issues workers like you face. Your information will remain private unless you tell us explicitly that we may share it.",
+            "questions": [
+                {
+                    "question_text": "During the time you've worked with apps, have you ever been disciplined, punished, or deactivated?",
+                    "question_type": "SELECT",
+                    "select_options": ["Yes", "No"]
+                },
+                {
+                    "question_text": "If yes, please explain (how long did it last, why do you think it happened)?:",
+                    "question_type": "TEXT"
+                },
+                {
+                    "question_text": "If yes, how did you make up for the pay lost during deactivation?",
+                    "question_type": "MULTISELECT",
+                    "select_options": [
+                        "Relied on savings",
+                        "Took on debt",
+                        "Worked for other apps",
+                        "Cut back spending",
+                        "Other"
+                    ]
+                },
+                {
+                    "question_text": "Have you ever been injured, in an accident, or robbed while at work?",
+                    "question_type": "SELECT",
+                    "select_options": ["Yes", "No"]
+                },
+                {
+                    "question_text": "If yes, explain what happened:",
+                    "question_type": "TEXT"
+                },
+                {
+                    "question_text": "If you had an accident, did you receive support from the app you worked for?",
+                    "question_type": "SELECT",
+                    "select_options": [
+                        "Yes, they helped with paperwork",
+                        "Yes, they provided me with financial support",
+                        "Yes, they provided me with a loan",
+                        "No"
+                    ]
+                },
+                {
+                    "question_text": "If you had an accident, who paid for medical care? (Including hospital, medications, and treatment)?",
+                    "question_type": "MULTISELECT",
+                    "select_options": [
+                        "Myself, from my savings",
+                        "Myself, but I had to take on loan/credit to cover costs",
+                        "My health insurance covered it",
+                        "The app I was working for covered it",
+                        "I didn't seek medical treatment because I couldn't afford it",
+                        "Other"
+                    ]
+                },
+                {
+                    "question_text": "Have you ever had an altercation or uncomfortable experience with a client (e.g., harassment)?",
+                    "question_type": "SELECT",
+                    "select_options": ["Yes", "No"]
+                },
+                {
+                    "question_text": "If yes, please explain:",
+                    "question_type": "TEXT"
+                },
+                {
+                    "question_text": "Have you ever gotten sick while at work?",
+                    "question_type": "SELECT",
+                    "select_options": ["Yes", "No"]
+                },
+                {
+                    "question_text": "If yes, did your employer provide any support?:",
+                    "question_type": "TEXT"
+                },
+                {
+                    "question_text": "Have you received pandemic unemployment assistance?",
+                    "question_type": "SELECT",
+                    "select_options": ["Yes", "No"]
+                },
+                {
+                    "question_text": "Have you applied for pandemic unemployment assistance but did not receive it?",
+                    "question_type": "SELECT",
+                    "select_options": ["Yes", "No"]
+                },
+                {
+                    "question_text": "Did the unemployment agency give you a reason why your application for pandemic unemployment assistance was rejected?",
+                    "question_type": "SELECT",
+                    "select_options": ["Yes", "No"]
+                },
+                {
+                    "question_text": "If yes, please explain:",
+                    "question_type": "TEXT"
+                }
+            ]
+        }
+    ]
+}

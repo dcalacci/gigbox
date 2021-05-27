@@ -17,7 +17,7 @@ import { SafeAreaView, View, Text, Settings } from 'react-native';
 
 import { useQuery } from 'react-query';
 import { logIn, LogInResponse } from '../features/auth/api';
-import { setLoggedIn, setUser } from '../features/auth/authSlice';
+import { setOnboarded, setLoggedIn, setUser } from '../features/auth/authSlice';
 import { useDispatch } from 'react-redux';
 import PhoneEntry from '../features/auth/PhoneEntry';
 import { ConsentFlow } from '../features/consent/ConsentFlow';
@@ -25,9 +25,12 @@ import { Signature } from '../features/consent/Signature';
 import { Extras } from '../features/consent/Extras';
 import { getUserInfo } from '../features/consent/api';
 import { InitialSurvey } from '../features/consent/InitialSurvey';
+import { Onboarding } from '../features/onboarding/Onboarding';
 import { StatusBar } from 'expo-status-bar';
 import { User } from '../types';
 import * as SplashScreen from 'expo-splash-screen';
+import { useScrollToTop } from '@react-navigation/native';
+import { SurveyForm } from '../features/surveys/Survey'
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
@@ -35,6 +38,7 @@ export default function BottomTabNavigator({ navigation }) {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState): User | null => state.auth.user);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
+    const isOnboarded = useSelector((state: RootState): boolean => state.auth.onboarded);
 
     useEffect(() => {
         async function maybeShowSplash() {
@@ -48,10 +52,13 @@ export default function BottomTabNavigator({ navigation }) {
         }
 
         maybeShowSplash();
-    }, [user]);
+    }, []);
 
-    // if not authenticated, show phone entry screen. isAuthenticated should be True at the end of the flow.
-    if (!isAuthenticated) {
+    if (!isOnboarded) {
+        return <Onboarding onOnboardingFinish={() => dispatch(setOnboarded(true))} />;
+    } else if (!isAuthenticated) {
+        console.log('not authenticated, redirecting to phoneEntry...');
+        // if not authenticated, show phone entry screen. isAuthenticated should be True at the end of the flow.
         return (
             <View>
                 <PhoneEntry />
@@ -60,7 +67,7 @@ export default function BottomTabNavigator({ navigation }) {
     } else if (!user) {
         // otherwise, return null. If we're here, we should be showing the splash screen (see above)
         return null;
-    } else if (!user.consent.consented) {
+    } else if (!user.consent) {
         return (
             <SafeAreaView>
                 <ConsentFlow
@@ -70,7 +77,7 @@ export default function BottomTabNavigator({ navigation }) {
                 />
             </SafeAreaView>
         );
-    } else if (user.employers.length == 0) {
+    } else if (!user.employers || user.employers.length == 0) {
         return (
             <SafeAreaView>
                 <InitialSurvey onSurveyFinish={() => console.log('finished survey')} />
@@ -87,7 +94,7 @@ export default function BottomTabNavigator({ navigation }) {
                 <>
                     <BottomTab.Screen
                         name="Home"
-                        component={TabOneNavigator}
+                        component={HomeScreen}
                         options={{
                             tabBarIcon: ({ color }) => (
                                 <TabBarIcon name="caret-forward-circle-outline" color={color} />
@@ -135,12 +142,12 @@ function TabBarIcon(props: { name: string; color: string }) {
 
 // Each tab has its own navigation stack, you can read more about this pattern here:
 // https://reactnavigation.org/docs/tab-based-navigation#a-stack-navigator-for-each-tab
-const TabOneStack = createStackNavigator<TabOneParamList>();
+const HomeStack = createStackNavigator<TabOneParamList>();
 
-function TabOneNavigator() {
+function HomeScreen() {
     return (
-        <TabOneStack.Navigator>
-            <TabOneStack.Screen
+        <HomeStack.Navigator>
+            <HomeStack.Screen
                 name="TabOneScreen"
                 component={TabOneScreen}
                 options={{
@@ -148,6 +155,12 @@ function TabOneNavigator() {
                     headerStyle: tailwind('bg-white'),
                 }}
             />
-        </TabOneStack.Navigator>
+            <HomeStack.Screen 
+            name="Survey Form" 
+            component={SurveyForm} 
+            options={{
+                headerBackTitle: 'Home'
+            }}/>
+        </HomeStack.Navigator>
     );
 }
