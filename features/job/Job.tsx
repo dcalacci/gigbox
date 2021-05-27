@@ -1,6 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { ScrollView, View, Text, Image, Pressable, TextInput, StyleSheet} from 'react-native';
+import {
+    ScrollView,
+    View,
+    Text,
+    Image,
+    Pressable,
+    TextInput,
+    StyleSheet,
+    Modal,
+} from 'react-native';
 import { tailwind } from 'tailwind';
+import { Ionicons } from '@expo/vector-icons';
 import { Region, Marker, LatLng } from 'react-native-maps';
 import { useQueryClient, useMutation } from 'react-query';
 import moment from 'moment';
@@ -8,8 +18,10 @@ import { Job, Screenshot, Shift } from '../../types';
 import { parse } from 'wellknown';
 import TripMap from '../shiftList/TripMap';
 import ScreenshotUploader from './ScreenshotPicker';
-import { updateJobValue } from './api';
+import { log } from '../../utils';
+import { updateJobValue, deleteImage } from './api';
 import { EmployerBox } from '../clock/EmployerSelector';
+import { useToast } from 'react-native-fast-toast';
 
 // Scroll view of screenshots
 export const Screenshots = ({
@@ -19,21 +31,40 @@ export const Screenshots = ({
     screenshots: Screenshot[];
     onPressAddScreenshots: () => void;
 }) => {
-    console.log('Screenshots for job:', screenshots);
+    const toast = useToast();
+    const [imageViewVisible, setImageViewVisible] = useState<boolean>(false);
+    const [selectedImage, setSelectedImage] = useState<Screenshot>();
+    const queryClient = useQueryClient()
+    const deleteImg = useMutation(deleteImage, {
+        onSuccess: (d) => {
+            log.info('Deleted image:', d);
+            if (d.deleteImage.ok) {
+                toast?.show('Deleted image.');
+                setImageViewVisible(false)
+                setSelectedImage(undefined)
+                queryClient.invalidateQueries('filteredJobs');
+            } else {
+                toast?.show(d.deleteImage.message);
+            }
+        },
+        onError: (err) => {
+            toast?.show('Error deleting image. Try again.');
+        },
+    });
     const uploadScreenshotView = () => (
         <>
             <Pressable
                 onPress={onPressAddScreenshots}
                 style={tailwind('self-center justify-self-center bg-gray-800 rounded-lg p-2')}
             >
-                <Text style={tailwind('text-white font-bold underline')}>Add Screenshots</Text>
+                <Text style={tailwind('text-white font-bold underline')}>Add Images</Text>
             </Pressable>
             <Text style={tailwind('text-sm text-center p-1')}>
-                Upload a screenshot of this job to automatically record your pay.
+                Upload images to keep track of expenses, verify your pay, and more.
             </Text>
         </>
     );
-    if (screenshots == undefined) {
+    if (!screenshots || screenshots.length === 0) {
         return (
             <View style={tailwind('flex-col justify-center bg-gray-100 w-1/2 rounded-lg m-2 p-2')}>
                 {uploadScreenshotView()}
@@ -43,15 +74,23 @@ export const Screenshots = ({
         const ScreenshotItems = screenshots.map((s, idx) => (
             <View style={tailwind('flex-row p-0 flex-auto')} key={s.id}>
                 <View style={tailwind('flex-col p-1')}>
-                    <Image
+                    <Pressable
                         style={[tailwind('flex-auto m-0')]}
-                        source={{ uri: s.onDeviceUri }}
-                        resizeMethod={'scale'}
-                        resizeMode={'contain'}
-                    />
-                    <Text style={[{ alignSelf: 'flex-start' }, tailwind('font-bold')]}>
-                        {moment.utc(s.timestamp).local().format('h:mm a')}
-                    </Text>
+                        onPress={() => {
+                            setSelectedImage(s);
+                            setImageViewVisible(true);
+                        }}
+                    >
+                        <Image
+                            style={[tailwind('flex-auto m-0')]}
+                            source={{ uri: s.onDeviceUri }}
+                            resizeMethod={'scale'}
+                            resizeMode={'contain'}
+                        />
+                        <Text style={[{ alignSelf: 'flex-start' }, tailwind('font-bold p-1')]}>
+                            {moment.utc(s.timestamp).local().format('M/D h:mm a')}
+                        </Text>
+                    </Pressable>
                 </View>
 
                 {idx < screenshots.length - 1 ? (
@@ -65,6 +104,50 @@ export const Screenshots = ({
                 style={tailwind('m-2 rounded-lg bg-gray-100 w-1/2 m-2 p-2')}
                 contentContainerStyle={tailwind('justify-center')}
             >
+                <Modal
+                    animationType="slide"
+                    transparent={false}
+                    visible={imageViewVisible}
+                    presentationStyle={'formSheet'}
+                    onRequestClose={() => {}}
+                >
+                    <ScrollView style={tailwind('flex flex-col h-full p-5')}>
+                        <View style={tailwind('flex-row justify-between p-2')}>
+                            <Text style={tailwind('text-2xl font-bold text-black')}>
+                                Image Details
+                            </Text>
+                            <Pressable
+                                onPress={() => setImageViewVisible(false)}
+                                style={[tailwind('items-center')]}
+                            >
+                                <Ionicons name="close-circle" size={30} />
+                            </Pressable>
+                        </View>
+                        <Image
+                            style={[tailwind('flex-grow m-5 h-96')]}
+                            source={{ uri: selectedImage?.onDeviceUri }}
+                            resizeMethod={'scale'}
+                            resizeMode={'contain'}
+                        />
+
+                        <Text style={tailwind('text-lg font-black font-normal')}>
+                            Added: {moment.utc(selectedImage?.timestamp).local().format('LLLL')}
+                        </Text>
+
+                        <Pressable
+                            onPress={() => deleteImg.mutate({id: selectedImage?.id})}
+                            style={[
+                                tailwind(
+                                    'border-red-500 bg-red-500 border-2 rounded-lg items-center m-2 p-2'
+                                ),
+                            ]}
+                        >
+                            <Text style={tailwind('text-lg font-bold p-1 text-white')}>
+                                Delete Image
+                            </Text>
+                        </Pressable>
+                    </ScrollView>
+                </Modal>
                 {ScreenshotItems}
                 <View style={tailwind('flex-col justify-center m-2 mr-3 w-32')}>
                     <Pressable
@@ -73,14 +156,9 @@ export const Screenshots = ({
                             'self-center justify-self-center bg-gray-800 rounded-lg p-2'
                         )}
                     >
-                        <Text style={tailwind('text-white font-bold underline')}>
-                            Add Screenshots
-                        </Text>
+                        <Text style={tailwind('text-white font-bold underline')}>Add Images</Text>
                     </Pressable>
-                    <Text style={tailwind('text-sm text-center p-1')}>
-                        Upload more screenshots to track tips. In the future, you'll be able to add
-                        expenses as well.
-                    </Text>
+                    <Text style={tailwind('text-sm text-center p-1')}></Text>
                 </View>
             </ScrollView>
         );
@@ -133,8 +211,8 @@ export const JobItem = ({ job }: { job: Job }) => {
 
         const setJobValue = useMutation(updateJobValue, {
             onSuccess: (data, variables) => {
-                console.log('updating job value:', data, variables);
-                queryClient.invalidateQueries('filteredJobs')
+                log.info('updating job value:', data, variables);
+                queryClient.invalidateQueries('filteredJobs');
                 queryClient.invalidateQueries('shifts');
                 queryClient.invalidateQueries('trackedJobs');
                 queryClient.invalidateQueries('weeklySummary');
@@ -232,9 +310,9 @@ export const JobItem = ({ job }: { job: Job }) => {
             />
 
             <View style={[tailwind('h-36 w-full'), { overflow: 'hidden' }]}>
-                        <View style={styles.mapTitle}>
-                            <EmployerBox employer={job.employer} size={14} style={tailwind('')}/>
-                        </View>
+                <View style={styles.mapTitle}>
+                    <EmployerBox employer={job.employer} size={14} style={tailwind('')} />
+                </View>
 
                 {locations && region ? (
                     <TripMap
@@ -274,7 +352,8 @@ export const JobItem = ({ job }: { job: Job }) => {
                     </Text>
 
                     <Text style={tailwind('text-xl font-bold')}>
-                        {moment.utc(job.startTime).local().format('LT')} - {moment.utc(job.endTime).local().format('LT')}{' '}
+                        {moment.utc(job.startTime).local().format('LT')} -{' '}
+                        {moment.utc(job.endTime).local().format('LT')}{' '}
                     </Text>
                 </View>
                 <View style={tailwind('flex-row p-5')}>
@@ -320,7 +399,6 @@ export const JobItem = ({ job }: { job: Job }) => {
         </View>
     );
 };
-
 
 const styles = StyleSheet.create({
     mapTitle: {

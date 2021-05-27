@@ -4,8 +4,13 @@ import { tailwind } from 'tailwind';
 import { useMutation, useQueryClient } from 'react-query';
 import { Asset } from 'expo-media-library';
 import { addScreenshotToShift } from '../clock/api';
+import { deleteImage } from './api';
+
+import Ellipsis from '../../components/Ellipsis';
 import { log } from '../../utils';
 import * as ImagePicker from 'expo-image-picker';
+
+import { useToast } from 'react-native-fast-toast';
 
 const ScreenshotUploader = ({
     modalVisible,
@@ -20,6 +25,7 @@ const ScreenshotUploader = ({
 }) => {
     const [imageUri, setImageUri] = useState<string>();
     const [parsedText, setParsedText] = useState<string>('');
+    const toast = useToast();
     const queryClient = useQueryClient();
 
     useEffect(() => {
@@ -56,7 +62,6 @@ const ScreenshotUploader = ({
             exif: true,
         });
 
-        console.log(result);
         if (!result.cancelled) {
             setImageUri(result.uri);
             uploadScreenshot.mutate({
@@ -66,6 +71,18 @@ const ScreenshotUploader = ({
             });
         }
     };
+
+    const deleteImg = useMutation(deleteImage, {
+        onSuccess: (d) => {
+            log.info('Deleted image:', d);
+            if (d.deleteImage.ok) {
+                queryClient.invalidateQueries('filteredJobs');
+            }
+        },
+        onError: (err) => {
+            toast?.show('Error deleting image. Try again.');
+        },
+    });
 
     return (
         <Modal
@@ -79,45 +96,32 @@ const ScreenshotUploader = ({
         >
             <ScrollView style={tailwind('flex flex-col h-full p-5')}>
                 <Text style={tailwind('text-3xl underline text-green-500 font-bold p-2')}>
-                    Upload Screenshot
+                    Upload Images
                 </Text>
                 <Text style={tailwind('text-lg p-2')}>
-                    To automatically track pay, the differences between estimated pay and actual
-                    pay, and tips, you can upload a screenshot for this job. You can upload one of
-                    two kinds of screens:
+                    Upload images like receipts, pictures while on the job, and screenshots to keep
+                    for later.
                 </Text>
-                {!imageUri ? (
-                    <View style={tailwind('flex-row content-between pt-5 mb-10')}>
-                        <View style={tailwind('flex-1 flex-col p-1 w-36 ')}>
-                            <Text style={tailwind('text-lg underline p-2 self-center')}>
-                                Job Accept Screen
-                            </Text>
-                            <View style={tailwind('bg-gray-100 rounded-lg ml-5 mr-5 h-48')}></View>
-                        </View>
-                        <View style={tailwind('flex-1 flex-col p-1 w-36')}>
-                            <Text style={tailwind('text-lg underline p-2 self-center')}>
-                                Job Pay Screen
-                            </Text>
-                            <View style={tailwind('bg-gray-100 rounded-lg ml-5 mr-5 h-48')}></View>
-                        </View>
-                    </View>
-                ) : (
-                    <View style={tailwind('flex flex-row w-1/2 h-1/2 content-center')}>
+                <Text style={tailwind('text-lg p-2')}>
+                    In the future, you'll be able to upload screenshots of your in-app pay summaries
+                    to automatically track your pay and tips.
+                </Text>
+                {imageUri ? (
+                    <View style={tailwind('flex flex-col h-1/2 content-center')}>
                         <Image
                             source={{ uri: imageUri }}
                             resizeMethod={'scale'}
                             resizeMode={'contain'}
                             style={[tailwind('self-center flex w-full h-full')]}
                         />
-                        <View style={tailwind('flex flex-grow w-full')}>
-                            {uploadScreenshot.status == 'loading' ? (
-                                <Text>Loading...</Text>
-                            ) : (
-                                <Text>{parsedText}</Text>
-                            )}
-                        </View>
                     </View>
-                )}
+                ) : null}
+
+                <View style={tailwind('flex flex-grow w-full')}>
+                    {uploadScreenshot.status == 'loading' ? (
+                        <Ellipsis style={tailwind('text-black self-center')} />
+                    ) : null}
+                </View>
 
                 {parsedText == '' ? (
                     <Pressable
@@ -131,14 +135,18 @@ const ScreenshotUploader = ({
                                 'text-white font-bold text-lg underline p-2 self-center'
                             )}
                         >
-                            Pick Screenshot
+                            Choose Image
                         </Text>
                     </Pressable>
                 ) : (
                     <Pressable
                         style={tailwind('rounded-lg bg-gray-800 self-center w-10/12 m-2')}
                         onPress={() => {
-                            setModalVisible(false)
+                            setModalVisible(false);
+                            setImageUri(undefined);
+                            setParsedText('');
+                            // update job list to pull new screenshot
+                            queryClient.invalidateQueries('filteredJobs');
                         }}
                     >
                         <Text
@@ -154,13 +162,24 @@ const ScreenshotUploader = ({
                 <Pressable
                     style={tailwind('rounded-lg bg-red-400 self-center w-10/12 m-2')}
                     onPress={() => {
+                        if (uploadScreenshot.data?.addScreenshotToShift.screenshot) {
+                            const screenshot = uploadScreenshot.data?.addScreenshotToShift.screenshot
+                            console.log(
+                                'canceled; deleting screenshot:',
+                                screenshot
+                            );
+                            deleteImg.mutate({ id: screenshot.id });
+                            queryClient.invalidateQueries('filteredJobs');
+                        }
+                        setImageUri(undefined);
+                        setParsedText('');
                         setModalVisible(false);
                     }}
                 >
                     <Text
                         style={tailwind('text-white font-bold text-lg underline p-2 self-center')}
                     >
-                        Close
+                        Cancel
                     </Text>
                 </Pressable>
                 <View style={tailwind('pb-20')} />
