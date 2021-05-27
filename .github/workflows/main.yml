@@ -36,9 +36,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           push: true
-          context: ./server
+          context: server
           file: Dockerfile.prod
-          tags: gigbox/gigboxserver:latest
+          tags: gigbox/gigbox-server:latest
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
