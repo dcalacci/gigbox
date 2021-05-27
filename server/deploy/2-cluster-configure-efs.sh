@@ -113,14 +113,13 @@ version: 1
 task_definition:
   services:
     osrm:
-      mem_limit: 45g
-      mem_reservation: 30g
+      mem_reservation: 10g
       essential: true
     db:
-      mem_reservation: 4g
+      mem_reservation: 1g
       essential: true
     gigbox-server:
-      mem_reservation: 8g
+      mem_reservation: 1g
       essential: true
 
   ecs_network_mode: bridge
