@@ -100,13 +100,15 @@ jobs:
         run: chmod +x $HOME/.local/bin/ecs-cli
       - name: Configure ecs-cli profile
         run: ecs-cli configure profile --profile-name ${{secrets.PROFILE_NAME}}
-        
+
+      - name: dump env
+        run: echo ${{secrets.ENV_PROD}} > $HOME/.env.prod
       - # creates an ECS configuration
         name: Create aws cluster configuration
-        run: cd server/deploy && ./0-cluster-configure.sh
+        run: export $(cat $HOME/.env.prod) && cd server/deploy && ./0-cluster-configure.sh
   #    - # brings raw resources up
   #      name: Bring up cluster
   #      run: cd server/deploy && ./1-cluster-create.sh
       - # ensures our EFS with persistent data can connect to instances, and bring 'em up
         name: Configure EFS with cluster VPC & deploy!
-        run: cd server/deploy && ./2-cluster-configure-efs.sh
+        run: export $(cat $HOME/.env.prod) && cd server/deploy && ./2-cluster-configure-efs.sh
