@@ -88,7 +88,7 @@ jobs:
       # Download and configure ecs-cli. 
 
       - name: Create local bin dir
-        run: mkdir $HOME/.local/bin      
+        run: mkdir -p $HOME/.local/bin      
       - name: Download ECS binary
         run: wget https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest -P $HOME/.local/bin
       - name: Rename ECS binary
