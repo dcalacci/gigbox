@@ -20,13 +20,13 @@ env:
   TWILIO_SID: ${{secrets.TWILIO_SID}}
   TWILIO_TOKEN: ${{secrets.TWILIO_TOKEN}}
   DB_PORT: ${{secrets.DB_PORT}}
-  POSTGRES_USER: ${{secrets.secrets.POSTGRES_USER}}
   POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
   AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
   AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
   KEYPAIR: ${{secrets.KEYPAIR}}
   REGION: us-east-1
   DB_HOST: db
+  POSTGRES_USER: gigbox
   POSTGRES_DB: gigbox
   PROJECT_NAME: gigbox-deploy
   PROFILE_NAME: gigbox-deploy-profile
