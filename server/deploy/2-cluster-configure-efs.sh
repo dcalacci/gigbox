@@ -14,7 +14,7 @@
 ## Create FS for osrm-data
 
 echo -n "> Waiting for filesystem to become available..."
-until [[ $(aws efs describe-file-systems --file-system-id $FS_ID | jq -r ".FileSystems[0].LifeCycleState") =~ 'available' ]];
+until [[ $(aws efs describe-file-systems --file-system-id $FS_ID --region $REGION | jq -r ".FileSystems[0].LifeCycleState") =~ 'available' ]];
 do
     echo -n "."
     sleep 5s
@@ -26,11 +26,12 @@ ACCOUNT_ID=$(aws sts get-caller-identity | jq -r ".Account")
 
 echo -e "\n> Testing for access points on $FS_ID..."
 
-if ! [[ $(aws efs describe-access-points --file-system-id $FS_ID | jq '.AccessPoints | map(.RootDirectory.Path)') =~ '/db' ]];
+if ! [[ $(aws efs describe-access-points --file-system-id $FS_ID --region $REGION | jq '.AccessPoints | map(.RootDirectory.Path)') =~ '/db' ]];
 then
 echo -e "\nCreating db access point on $FS_ID"
 ## Access point for database
 aws efs create-access-point \
+--region $REGION \
 --file-system-id $FS_ID \
 --root-directory '{"Path": "/db", "CreationInfo": {"Permissions": "755", "OwnerUid": 999, "OwnerGid": 999}}' \
 --posix-user '{"Uid": 999, "Gid": 999}'
@@ -39,12 +40,13 @@ aws efs create-access-point \
 ## and https://github.com/docker-library/postgres/commit/8f8c0bbc5236e0deedd35595c504e5fd380b1233
 fi
 
-if ! [[ $(aws efs describe-access-points --file-system-id $FS_ID | jq '.AccessPoints | map(.RootDirectory.Path)') =~ '/screenshots' ]];
+if ! [[ $(aws efs describe-access-points --file-system-id $FS_ID --region $REGION | jq '.AccessPoints | map(.RootDirectory.Path)') =~ '/screenshots' ]];
 then
 echo -e "\nCreating server access point on $FS_ID"
 ## Access point for gigbox-server
 ## uwsgi-nginx-flask changes UID/GID to root
 aws efs create-access-point \
+--region $REGION \
 --file-system-id $FS_ID \
 --root-directory '{"Path": "/screenshots", "CreationInfo": {"Permissions": "755", "OwnerUid": 0, "OwnerGid": 0}}' \
 --posix-user '{"Uid": 0, "Gid": 0}'
@@ -54,13 +56,13 @@ echo -e "\n> Creating mount points for each subnet on $FS_ID..."
 echo -e "\n> This script does not check for existing mount targets or security group rules. If they already exist,\
 The script will not fail, but will report errors. This is normal!"
 ## Create mount points for each subnet ECS created
-aws ec2 describe-subnets --filters Name=tag:project,Values=$PROJECT_NAME |
+aws ec2 describe-subnets --filters Name=tag:project,Values=$PROJECT_NAME --region $REGION |
     jq ".Subnets[].SubnetId" |
     xargs -ISUBNET aws efs create-mount-target \
         --file-system-id $FS_ID --subnet-id SUBNET
 
 ## get the security groups for our EFS mount targets
-efs_sg=$(aws efs describe-mount-targets --file-system-id $FS_ID |
+efs_sg=$(aws efs describe-mount-targets --file-system-id $FS_ID --region $REGION |
     jq ".MountTargets[0].MountTargetId" |
     xargs -IMOUNTG aws efs describe-mount-target-security-groups \
         --mount-target-id MOUNTG | jq ".SecurityGroups[0]" | xargs echo)
@@ -73,16 +75,16 @@ do
 done
 
 echo -e "\nCreating EFS Location....";
-vpc_subnet0=$(aws ec2 describe-subnets --filters Name=tag:project,Values=$PROJECT_NAME |
+vpc_subnet0=$(aws ec2 describe-subnets --region $REGION --filters Name=tag:project,Values=$PROJECT_NAME |
     jq -r ".Subnets[0].SubnetId")
 
 ## Get security group for our VPC
-vpc_sg="$(aws ec2 describe-security-groups \
+vpc_sg="$(aws ec2 describe-security-groups --region $REGION \
     --filters Name=tag:project,Values=$PROJECT_NAME | jq -r '.SecurityGroups[0].GroupId')"
 
 
 ## TODO: This seems like it doesn't work anymore...
-if [[ $(aws ec2 describe-security-groups --group-ids $efs_sg| jq '.SecurityGroups[0].IpPermissions | map(.FromPort)') =~ "2049" ]]
+if [[ $(aws ec2 describe-security-groups --region $REGION --group-ids $efs_sg| jq '.SecurityGroups[0].IpPermissions | map(.FromPort)') =~ "2049" ]]
 then
     echo -e "\n> not creating security group ingress rule -- it already exists."
 else
