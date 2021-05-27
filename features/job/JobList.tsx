@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { LayoutAnimation, ScrollView, View, Text, Image, Pressable, TextInput } from 'react-native';
+import { WebView, Linking } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import * as WebBrowser from 'expo-web-browser';
 import Modal from 'react-native-modal';
 import { tailwind } from 'tailwind';
 import { Region, Marker, LatLng } from 'react-native-maps';
@@ -16,7 +18,7 @@ import { getFilteredJobs, exportJobs } from './api';
 import { JobItem } from './Job';
 import * as Haptics from 'expo-haptics';
 import { fileAsyncTransport } from 'react-native-logs';
-import { log } from '../../utils';
+import { log, uri as API_URI} from '../../utils';
 
 export enum SortArgs {
     START,
@@ -227,8 +229,9 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
     const [allJobs, setAllJobs] = useState<{ edges: { node: Job }[] }>({ edges: [] });
 
     const exportSelection = useMutation(exportJobs, {
-        onSuccess: (d) => {
+        onSuccess: async (d) => {
             console.log('exported jobs:', d);
+            Linking.openURL(`${API_URI}${d.exportJobs.fileUrl}`)
         },
     });
 
