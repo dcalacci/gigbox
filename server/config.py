@@ -9,7 +9,7 @@ class Config(object):
     DATABASE_NAME = "gigbox"
     OTP_MESSAGE = "Your one-time login code from gigbox: {}"
     SECRET_KEY = os.environ["SECRET_KEY"]
-    TWILIO_NUMBER = os.environ["TWILIO_NUMBER"]
+
     TWILIO_SID = os.environ["TWILIO_SID"]
     TWILIO_TOKEN = os.environ["TWILIO_TOKEN"]
     TOKEN_LIFETIME = 31
@@ -18,7 +18,7 @@ class DevelopmentConfig(Config):
     ENV = "DEVELOPMENT"
     DATABASE_NAME = "gigbox-dev"
     DEBUG = True
-    SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["POSTGRES_USERNAME"] + ":"  \
+    SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["POSTGRES_USER"] + ":"  \
                               + os.environ["POSTGRES_PASSWORD"] + "@" \
                               + os.environ["DB_HOST"] + ":" \
                               + os.environ["DB_PORT"] + "/" \
@@ -30,7 +30,7 @@ class TestingConfig(Config):
     DATABASE_NAME = "gigbox-testing"
     TESTING_TO_NUMBER = "+19082298992"
     DEBUG = False
-    SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["POSTGRES_USERNAME"] + ":"  \
+    SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["POSTGRES_USER"] + ":"  \
                               + os.environ["POSTGRES_PASSWORD"] + "@" \
                               + os.environ["DB_HOST"] + ":" \
                               + os.environ["DB_PORT"] + "/" \
@@ -40,7 +40,7 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     ENV = "PRODUCTION"
-    SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["POSTGRES_USERNAME"] + ":"  \
+    SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["POSTGRES_USER"] + ":"  \
                               + os.environ["POSTGRES_PASSWORD"] + "@" \
                               + os.environ["DB_HOST"] + ":" \
                               + os.environ["DB_PORT"] + "/" \
