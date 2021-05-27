@@ -2,9 +2,18 @@ version: '3' # Specify docker-compose version
 services:
     gigbox-server:
         container_name: gigbox-server
-        image: gigbox/gigbox-server-prod
-        env_file:
-            - .env.prod
+        image: gigbox/gigbox-server:latest
+        environment:
+            - TWILIO_NUMBER
+            - TWILIO_SID
+            - TWILIO_TOKEN
+            - DB_HOST
+            - DB_PORT
+            - POSTGRES_USER
+            - POSTGRES_PASSWORD
+            - POSTGRES_DB
+            - ENV
+            - SECRET_KEY
         ports:
             - '80:80'
         links:
@@ -31,6 +40,11 @@ services:
             - database-data:/var/lib/postgresql/data
         networks:
             - backend
+        environment:
+            - POSTGRES_USER
+            - POSTGRES_PASSWORD
+            - POSTGRES_DB
+            - ENV
         logging:
             driver: awslogs 
             options:
