@@ -58,17 +58,17 @@ The script will not fail, but will report errors. This is normal!"
 ## Create mount points for each subnet ECS created
 aws ec2 describe-subnets --filters Name=tag:project,Values=$PROJECT_NAME --region $REGION |
     jq ".Subnets[].SubnetId" |
-    xargs -ISUBNET aws efs create-mount-target \
+    xargs -ISUBNET aws efs create-mount-target --region $REGION \
         --file-system-id $FS_ID --subnet-id SUBNET
 
 ## get the security groups for our EFS mount targets
 efs_sg=$(aws efs describe-mount-targets --file-system-id $FS_ID --region $REGION |
     jq ".MountTargets[0].MountTargetId" |
-    xargs -IMOUNTG aws efs describe-mount-target-security-groups \
+    xargs -IMOUNTG aws efs describe-mount-target-security-groups --region $REGION \
         --mount-target-id MOUNTG | jq ".SecurityGroups[0]" | xargs echo)
 
 echo -en "\nWaiting for mount targets to become available..."
-until [[ $(aws efs describe-mount-targets --file-system-id $FS_ID | jq -r ".MountTargets[].LifeCycleState") =~ 'available' ]];
+until [[ $(aws efs describe-mount-targets --region $REGION --file-system-id $FS_ID | jq -r ".MountTargets[].LifeCycleState") =~ 'available' ]];
 do
     echo -n "."
     sleep 5s;
@@ -100,8 +100,8 @@ else
 fi
 
 
-screenshot_arn_id=$(aws efs describe-access-points --file-system-id $FS_ID | jq -r '.AccessPoints | map(select(.RootDirectory.Path | contains("screenshots"))) | .[] | .AccessPointId')
-db_arn_id=$(aws efs describe-access-points --file-system-id $FS_ID | jq -r '.AccessPoints | map(select(.RootDirectory.Path | contains("db"))) | .[] | .AccessPointId')
+screenshot_arn_id=$(aws efs describe-access-points --region $REGION --file-system-id $FS_ID | jq -r '.AccessPoints | map(select(.RootDirectory.Path | contains("screenshots"))) | .[] | .AccessPointId')
+db_arn_id=$(aws efs describe-access-points --region $REGION --file-system-id $FS_ID | jq -r '.AccessPoints | map(select(.RootDirectory.Path | contains("db"))) | .[] | .AccessPointId')
 
 
 echo -e "- Creating ecs-params.yml"
