@@ -22,6 +22,11 @@ export const submitSurveyAnswers = ({
                 questionId,
                 textValue: value,
             };
+        } else if (questionType == QuestionType.NUMBER) {
+            return {
+                questionId,
+                numericValue: value,
+            };
         } else if (
             questionType == QuestionType.MULTISELECT ||
             questionType == QuestionType.SELECT
@@ -42,6 +47,8 @@ export const submitSurveyAnswers = ({
             };
         }
     });
+    console.log('surveyResponses:', surveyResponses);
+    console.log('sending responses:', responsesToSubmit);
 
     const mutation = gql`
         mutation mutation($surveyId: ID!, $surveyResponses: [AnswerInput]!) {
@@ -79,6 +86,7 @@ export const fetchAvailableSurveys = () => {
                                         startVal
                                         endVal
                                         increment
+                                        unit
                                     }
                                     answers {
                                         edges {

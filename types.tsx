@@ -118,6 +118,7 @@ export enum QuestionType {
     TEXT = "TEXT",
     CHECKBOX = "CHECKBOX",
     MULTISELECT = "MULTISELECT",
+    NUMBER = "NUMBER",
     RANGE = "RANGE",
     SELECT = "SELECT"
 }
