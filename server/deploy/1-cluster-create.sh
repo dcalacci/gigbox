@@ -9,5 +9,4 @@ ecs-cli up \
 --instance-type $INSTANCE_TYPE \
 --cluster-config $PROFILE_NAME \
 --tags project=$PROJECT_NAME \
---timeout 30 \
 --force
