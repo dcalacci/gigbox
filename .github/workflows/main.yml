@@ -100,7 +100,7 @@ jobs:
       - name: Make ecs-cli executable
         run: chmod +x $HOME/.local/bin/ecs-cli
       - name: Configure ecs-cli profile
-        run: ecs-cli configure profile --profile-name ${{secrets.PROFILE_NAME}}
+        run: ecs-cli configure profile --profile-name $PROFILE_NAME
 
       - # creates an ECS configuration
         name: Create aws cluster configuration
@@ -111,5 +111,3 @@ jobs:
       - # ensures our EFS with persistent data can connect to instances, and bring 'em up
         name: Configure EFS with cluster VPC & deploy!
         run: cd server/deploy && ./2-cluster-configure-efs.sh
-        env: 
-          FS_ID: ${{secrets.FS_ID}}
