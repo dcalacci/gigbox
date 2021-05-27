@@ -20,7 +20,7 @@ done
 
 echo -e "\n> Filesystem is available. continuing..."
 
-ACCOUNT_ID=$(aws sts get-caller-identity | jq -r ".Account")
+ACCOUNT_ID=$(aws sts get-caller-identity --region $REGION | jq -r ".Account")
 
 echo -e "\n> Testing for access points on $FS_ID..."
 
