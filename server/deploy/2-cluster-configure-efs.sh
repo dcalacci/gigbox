@@ -121,6 +121,11 @@ aws ec2 authorize-security-group-ingress \
     --port 0-65535 \
     --region $REGION
 
+echo -e "\n\t>Adding vpc security group to load balancer..."
+aws elbv2 set-security-groups \
+    --load-balancer-arn $LOAD_BALANCER_ARN \
+    --security-groups $vpc_sg
+
 
 
 server_data_arn_id=$(aws efs describe-access-points --region $REGION --file-system-id $FS_ID | jq -r '.AccessPoints | map(select(.RootDirectory.Path | contains("server_data"))) | .[] | .AccessPointId')
