@@ -20,12 +20,8 @@ services:
         links:
             - osrm
             - db
-        restart: always
         volumes:
             - server-data:/opt/data
-        networks:
-            - backend
-            - frontend
         logging:
             driver: awslogs 
             options:
@@ -34,12 +30,8 @@ services:
                 awslogs-stream-prefix: gigbox-server
     db:
         image: postgis/postgis
-        ports:
-            - '5432'
         volumes:
             - database-data:/var/lib/postgresql/data
-        networks:
-            - backend
         environment:
             - POSTGRES_USER
             - POSTGRES_PASSWORD
@@ -56,11 +48,8 @@ services:
         ## We use 5.24.0 because that's the version we used to extract the OSRM files that we store on 
         ## S3 to reduce deploy times
         image: osrm/osrm-backend:v5.24.0
-        restart: always
         command:
             "osrm-routed --max-matching-size 100000 --algorithm mld us-latest.osrm"
-        networks:
-            - backend
         volumes:
             - osrm-data:/opt
         logging:
@@ -73,7 +62,3 @@ volumes:
     database-data:
     server-data:
     osrm-data:
-
-networks:
-    backend:
-    frontend:
