@@ -109,6 +109,7 @@ aws ec2 authorize-security-group-ingress \
     --source-group $load_balancer_sg \
     --protocol tcp \
     --port 0-65535 \
+    --region $REGION
 
 
 server_data_arn_id=$(aws efs describe-access-points --region $REGION --file-system-id $FS_ID | jq -r '.AccessPoints | map(select(.RootDirectory.Path | contains("server_data"))) | .[] | .AccessPointId')
