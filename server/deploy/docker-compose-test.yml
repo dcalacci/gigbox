@@ -17,6 +17,7 @@ services:
             - DATA_DIR=/opt/data
         ports:
             - "80:80"
+            - "443:80"
         links:
             - osrm
             - db
