@@ -159,6 +159,7 @@ ecs-cli compose \
 --project-name $PROJECT_NAME \
 --file docker-compose-test.yml \
 --debug service up \
+--timeout 20 \
 --region $REGION \
 --ecs-profile $PROFILE_NAME \
 --cluster-config $PROFILE_NAME \
