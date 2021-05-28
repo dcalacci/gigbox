@@ -38,6 +38,11 @@ env:
   OSRM_DATASYNC_SOURCE: arn:aws:s3:::osrm-us-latest
   IAM_POLICY_NAME: gigbox-osrm-policy
   IAM_ROLE_NAME: gigbox-osrm-access
+  # ARNs for load balancer and target groups
+  LOAD_BALANCER_ARN: arn:aws:elasticloadbalancing:us-east-1:714042534292:loadbalancer/app/gigbox-deploy/60285c6951a6a85d
+  TARGET_GROUP_ARN: arn:aws:elasticloadbalancing:us-east-1:714042534292:targetgroup/gigbox-deploy/978e71d03de42b3a
+  # "container name" -- the docker service name to forward ELB traffic to
+  CONTAINER_NAME: gigbox-server
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
