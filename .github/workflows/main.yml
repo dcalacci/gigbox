@@ -78,7 +78,7 @@ jobs:
         run: echo ${{ steps.docker_build.outputs.digest }}
   aws-deploy:
     # needs latest server to deploy
-    #needs: docker
+    needs: docker
     runs-on: ubuntu-latest
 
     steps:
