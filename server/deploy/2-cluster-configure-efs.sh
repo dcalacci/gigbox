@@ -82,7 +82,6 @@ vpc_sg="$(aws ec2 describe-security-groups --region $REGION \
     --filters Name=tag:project,Values=$PROJECT_NAME | jq -r '.SecurityGroups[0].GroupId')"
 
 
-## TODO: This seems like it doesn't work anymore...
 if [[ $(aws ec2 describe-security-groups --region $REGION --group-ids $efs_sg| jq '.SecurityGroups[0].IpPermissions | map(.FromPort)') =~ "2049" ]]
 then
     echo -e "\n> not creating security group ingress rule -- it already exists."
@@ -97,6 +96,19 @@ else
         --source-group $vpc_sg \
         --region $REGION
 fi
+
+echo -e "\n> Ensuring ingress rule from load balancer to ECS is open..."
+
+LOAD_BALANCER_ARN=arn:aws:elasticloadbalancing:us-east-1:714042534292:loadbalancer/app/gigbox-deploy/60285c6951a6a85d
+TARGET_GROUP_ARN=arn:aws:elasticloadbalancing:us-east-1:714042534292:targetgroup/gigbox-deploy/978e71d03de42b3a
+
+load_balancer_sg=$(aws elbv2 describe-load-balancers --load-balancer-arn $LOAD_BALANCER_ARN | jq -r '.LoadBalancers[0].SecurityGroups[0]')
+
+aws ec2 authorize-security-group-ingress \
+    --group-id $vpc_sg \
+    --source-group $load_balancer_sg \
+    --protocol tcp \
+    --port 0-65535 \
 
 
 server_data_arn_id=$(aws efs describe-access-points --region $REGION --file-system-id $FS_ID | jq -r '.AccessPoints | map(select(.RootDirectory.Path | contains("server_data"))) | .[] | .AccessPointId')
@@ -140,7 +152,7 @@ EOF
 echo -e "\n> EFS Configured for your cluster."
 
 
-echo -e "\n> Bringing cluster up...."
+echo -e "\n> Creating task definition, bringing up service, and connecting to ELB..."
 
 ecs-cli compose \
 --project-name $PROJECT_NAME \
@@ -149,4 +161,22 @@ ecs-cli compose \
 --region $REGION \
 --ecs-profile $PROFILE_NAME \
 --cluster-config $PROFILE_NAME \
---create-log-groups
+--deployment-max-percent 100 \
+--deployment-min-healthy-percent 0 \
+--create-log-groups \
+--target-groups "targetGroupArn=$TARGET_GROUP_ARN,containerPort=80,containerName=$CONTAINER_NAME"
+
+
+# create service with above created task definition & elb
+# aws ecs create-service \
+#     --service-name "$PROJECT_NAME" \
+#     --cluster "$CLUSTER_NAME" \
+#     --task-definition "$CLUSTER_NAME" \
+#     --load-balancers "targetGroupARN=$TARGET_GROUP_ARN,"
+#     --load-balancers "loadBalancerName=$CLUSTER_NAME,containerName='gigbox-server',containerPort=8080" \
+#     --desired-count 1 \
+#     --deployment-max-percent 100 \
+#     --deployment-min-healthy-percent 0 \
+#     --create-log-groups \
+#     --deployment-configuration "maximumPercent=200,minimumHealthyPercent=50" \
+#     --role ecsServiceRole
