@@ -124,7 +124,8 @@ aws ec2 authorize-security-group-ingress \
 echo -e "\n\t>Adding vpc security group to load balancer..."
 aws elbv2 set-security-groups \
     --load-balancer-arn $LOAD_BALANCER_ARN \
-    --security-groups $vpc_sg
+    --security-groups $vpc_sg \
+    --region $REGION
 
 
 
