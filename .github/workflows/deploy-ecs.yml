@@ -48,7 +48,6 @@ env:
 jobs:
   aws-deploy:
     # needs latest server to deploy
-    needs: docker
     runs-on: ubuntu-latest
 
     steps:
