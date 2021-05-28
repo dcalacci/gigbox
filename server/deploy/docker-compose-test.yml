@@ -16,7 +16,7 @@ services:
             - SECRET_KEY
             - DATA_DIR=/opt/data
         ports:
-            - "80"
+            - "80:80"
         links:
             - osrm
             - db
