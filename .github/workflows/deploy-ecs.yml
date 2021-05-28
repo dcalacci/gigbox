@@ -1,0 +1,84 @@
+# This is a basic workflow to help you get started with Actions
+
+name: Deploy to Existing ECS Cluster
+
+# Controls when the action will run. 
+on:
+  # Triggers the workflow on push or pull request events but only for the master branch
+  push:
+    branches: [ deploy ]
+  pull_request:
+    branches: [ deploy ]
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+  
+
+env:
+  ENV: PRODUCTION
+  SECRET_KEY: ${{secrets.SECRET_KEY}}
+  TWILIO_NUMBER: ${{secrets.TWILIO_NUMBER}}
+  TWILIO_SID: ${{secrets.TWILIO_SID}}
+  TWILIO_TOKEN: ${{secrets.TWILIO_TOKEN}}
+  DB_PORT: ${{secrets.DB_PORT}}
+  POSTGRES_PASSWORD: ${{secrets.POSTGRES_PASSWORD}}
+  AWS_SECRET_ACCESS_KEY: ${{secrets.AWS_SECRET_ACCESS_KEY}}
+  AWS_ACCESS_KEY_ID: ${{secrets.AWS_ACCESS_KEY_ID}}
+  KEYPAIR: ${{secrets.KEYPAIR}}
+  REGION: us-east-1
+  DB_HOST: db
+  POSTGRES_USER: gigbox
+  POSTGRES_DB: gigbox
+  PROJECT_NAME: gigbox-deploy
+  PROFILE_NAME: gigbox-deploy-profile
+  CLUSTER_NAME: gigbox-deploy-cluster
+  LAUNCH_TYPE: EC2
+  INSTANCE_TYPE: m5.4xlarge
+  FS_ID: fs-7c0db8c8
+  FS_NAME: gigbox-data
+  OSRM_DATASYNC_SOURCE: arn:aws:s3:::osrm-us-latest
+  IAM_POLICY_NAME: gigbox-osrm-policy
+  IAM_ROLE_NAME: gigbox-osrm-access
+  # ARNs for load balancer and target groups
+  LOAD_BALANCER_ARN: arn:aws:elasticloadbalancing:us-east-1:714042534292:loadbalancer/app/gigbox-deploy/60285c6951a6a85d
+  TARGET_GROUP_ARN: arn:aws:elasticloadbalancing:us-east-1:714042534292:targetgroup/gigbox-deploy/978e71d03de42b3a
+  # "container name" -- the docker service name to forward ELB traffic to
+  CONTAINER_NAME: gigbox-server
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  aws-deploy:
+    # needs latest server to deploy
+    needs: docker
+    runs-on: ubuntu-latest
+
+    steps:
+      - 
+        name: Checkout
+        uses: actions/checkout@v2
+      - # enable our aws credentials
+        id: install-aws-cli
+        uses: unfor19/install-aws-cli-action@v1
+        with:
+          version: 2 # default
+          verbose: false # default
+
+      # Download and configure ecs-cli. 
+
+      - name: Create local bin dir
+        run: mkdir -p $HOME/.local/bin      
+      - name: Download ECS binary
+        run: wget https://amazon-ecs-cli.s3.amazonaws.com/ecs-cli-linux-amd64-latest -P $HOME/.local/bin
+      - name: Rename ECS binary
+        run: mv $HOME/.local/bin/ecs-cli-linux-amd64-latest $HOME/.local/bin/ecs-cli
+      - name: Add ecs-cli to path
+        run: echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: Make ecs-cli executable
+        run: chmod +x $HOME/.local/bin/ecs-cli
+      - name: Configure ecs-cli profile
+        run: ecs-cli configure profile --profile-name $PROFILE_NAME
+      - # creates / configure ECS config
+        name: Create aws cluster configuration
+        run: cd server/deploy && ./0-cluster-configure.sh
+      - # ensures our EFS with persistent data can connect to instances, and bring them up
+        name: Configure EFS with cluster VPC & deploy!
+        run: cd server/deploy && ./2-cluster-configure-efs.sh
