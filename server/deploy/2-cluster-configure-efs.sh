@@ -103,6 +103,7 @@ LOAD_BALANCER_ARN=arn:aws:elasticloadbalancing:us-east-1:714042534292:loadbalanc
 TARGET_GROUP_ARN=arn:aws:elasticloadbalancing:us-east-1:714042534292:targetgroup/gigbox-deploy/978e71d03de42b3a
 
 load_balancer_sg=$(aws elbv2 describe-load-balancers --load-balancer-arn $LOAD_BALANCER_ARN | jq -r '.LoadBalancers[0].SecurityGroups[0]')
+echo -e "\n\t> ingress for vpc sg $vpc_sg"
 
 aws ec2 authorize-security-group-ingress \
     --group-id $vpc_sg \
@@ -110,6 +111,16 @@ aws ec2 authorize-security-group-ingress \
     --protocol tcp \
     --port 0-65535 \
     --region $REGION
+
+
+echo -e "\n\t> ingress for load balancer sg $load_balancer_sg"
+aws ec2 authorize-security-group-ingress \
+    --source-group $vpc_sg \
+    --group-id $load_balancer_sg \
+    --protocol tcp \
+    --port 0-65535 \
+    --region $REGION
+
 
 
 server_data_arn_id=$(aws efs describe-access-points --region $REGION --file-system-id $FS_ID | jq -r '.AccessPoints | map(select(.RootDirectory.Path | contains("server_data"))) | .[] | .AccessPointId')
