@@ -1,5 +1,5 @@
 import requests
-
+from requests.exceptions import ConnectionError
 from flask import current_app
 from api.graphql.object import Location
 from api.models import Location as LocationModel
@@ -14,9 +14,9 @@ def match(coordinates):
         ';'.join([f'{c["lng"]},{c["lat"]}' for c in coordinates]))
     # timestamp_str = requests.utils.quote(';'.join([f'{int(c["timestamp"].timestamp())}' for c in
     #                                                coordinates]))
-    payload = {#'timestamps': timestamp_str,
-               "geometries": "geojson",
-               "tidy": "true"}
+    payload = {  # 'timestamps': timestamp_str,
+        "geometries": "geojson",
+        "tidy": "true"}
     MATCH_URI = f'{OSRM_URI}/match/v1/car/{coord_str}'
     return requests.post(MATCH_URI, params=payload)
 
@@ -61,7 +61,12 @@ def get_match_geometry(res):
 
 
 def get_route_distance_and_geometry(locations):
-    res = get_match_for_locations(locations)
+    try:
+        res = get_match_for_locations(locations)
+    except ConnectionError as e:
+        return {'status': 'error',
+                'message': 'Connection error.'}
+
     if res['code'] == 'TooBig':
         return {'status': 'error',
                 'message': 'trace too large'}

@@ -415,7 +415,9 @@ def get_job_mileage_and_geometry(info, job, shift=None):
         locs = sorted(job_locations, key=lambda l: l.timestamp)
         match_obj = get_route_distance_and_geometry(locs)
 
-        if 'geom_obj' not in match_obj or not match_obj['geom_obj']:
+        if ('geom_obj' not in match_obj 
+                or not match_obj['geom_obj'] 
+                or match_obj.status == 'error'):
             current_app.logger.error("Failed to match a route to job...")
             return job
 
