@@ -4,10 +4,19 @@ from flask import current_app
 from api.graphql.object import Location
 from api.models import Location as LocationModel
 from geoalchemy2.shape import to_shape
+from urllib3.util.retry import Retry
+from requests.adapters import HTTPAdapter
 import itertools
 
-OSRM_URI = "http://osrm:5000"
+# retry and backoff a 0.1, 0.2, ... 0.5 on retry
+s = requests.Session()
+retries = Retry(total=5,
+                backoff_factor=0.1,
+                status_forcelist=[ 500, 502, 503, 504 ])
 
+s.mount('http://', HTTPAdapter(max_retries=retries))
+
+OSRM_URI = "http://osrm:5000"
 
 def match(coordinates):
     coord_str = requests.utils.quote(
@@ -18,7 +27,7 @@ def match(coordinates):
         "geometries": "geojson",
         "tidy": "true"}
     MATCH_URI = f'{OSRM_URI}/match/v1/car/{coord_str}'
-    return requests.post(MATCH_URI, params=payload)
+    return s.post(MATCH_URI, params=payload)
 
 
 def get_match_for_locations(locations):
