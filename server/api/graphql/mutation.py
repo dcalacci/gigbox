@@ -234,7 +234,7 @@ class AddLocationsToShift(Mutation):
         # Every 5 locations added, update the distance on the shift by doing
         # map matching
         n_locations = len(shift.locations)
-        if n_locations % 5 == 0 and n_locations > 2:
+        if n_locations % 10 == 0 and n_locations > 2:
             current_app.logger.info(
                 "Updating mileage & calculated route on shift...")
             shift = updateShiftMileageAndGeometry(shift, info)
