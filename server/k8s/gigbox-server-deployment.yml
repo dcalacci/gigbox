@@ -1,0 +1,138 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: gigbox-server
+  labels:
+      app: gigbox-server
+spec:
+  type: LoadBalancer
+  ports:
+      - port: 8080
+        targetPort: 80
+        protocol: TCP
+  selector:
+      app: gigbox-server
+      tier: server
+
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: server-data-claim
+  creationTimestamp: null
+  labels:
+      app: gigbox-server
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 20Gi 
+status: {}
+---
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  name: server-data
+  labels:
+    type: local
+spec:
+  storageClassName: manual
+  capacity:
+    storage: 20Gi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: "/mnt/data"
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: gigbox-server
+  labels:
+    app: gigbox-server
+    tier: server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+        app: gigbox-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+        labels: 
+            app: gigbox-server
+            tier: server
+    spec:
+      containers:
+        - image: gigbox/gigbox-server:latest
+          name: gigbox-server
+          imagePullPolicy: Always
+          env:
+            - name: ENV
+              valueFrom:
+                  configMapKeyRef:
+                      name: gigbox-config
+                      key: env
+            - name: DB_HOST
+              valueFrom:
+                  configMapKeyRef:
+                      name: gigbox-config
+                      key: db_host
+            - name: DB_PORT
+              valueFrom:
+                  configMapKeyRef:
+                      name: gigbox-config
+                      key: db_port
+            - name: DATA_DIR
+              valueFrom:
+                  configMapKeyRef:
+                      name: gigbox-config
+                      key: data_dir
+            - name: SECRET_KEY
+              valueFrom:
+                  configMapKeyRef:
+                      name: gigbox-config
+                      key: secret_key
+            - name: TWILIO_TOKEN
+              valueFrom:
+                  configMapKeyRef:
+                      name: gigbox-config
+                      key: twilio_token
+            - name: TWILIO_SID
+              valueFrom:
+                  configMapKeyRef:
+                      name: gigbox-config
+                      key: twilio_sid
+            - name: TWILIO_NUMBER
+              valueFrom:
+                  configMapKeyRef:
+                      name: gigbox-config
+                      key: twilio_number
+            - name: POSTGRES_DB
+              valueFrom:
+                  configMapKeyRef:
+                      name: gigbox-config
+                      key: postgres_db
+            - name: POSTGRES_USER
+              valueFrom:
+                  configMapKeyRef:
+                      name: gigbox-config
+                      key: postgres_user
+            - name: POSTGRES_PASSWORD
+              valueFrom:
+                  configMapKeyRef:
+                      name: gigbox-config
+                      key: postgres_password
+          ports:
+            - containerPort: 80
+          resources: {}
+          volumeMounts:
+            - mountPath: /opt/data
+              name: server-data
+      restartPolicy: Always
+      volumes:
+        - name: server-data
+          persistentVolumeClaim:
+            claimName: server-data-claim

@@ -1,0 +1,70 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: osrm
+  labels:
+    app: gigbox-server
+spec:
+  ports:
+    - port: 5000
+      targetPort: 5000
+  selector:
+    app: gigbox-server
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: osrm-data-claim
+  creationTimestamp: null
+  labels:
+      app: gigbox-server
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 80Gi 
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: osrm
+  labels:
+      app: gigbox-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+        app: gigbox-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: gigbox-server
+    spec:
+      containers:
+        - name: gigbox-osrm
+          image: osrm/osrm-backend:v5.24.0
+          ports:
+              - containerPort: 5000
+          args:
+            - osrm-routed
+            - --max-matching-size
+            - "100000"
+            - --algorithm
+            - mld
+            - us-latest.osrm
+          volumeMounts:
+              - name: osrm-data
+                mountPath: /opt
+              - name: local-osrm-data
+                mountPath: /opt/local
+      restartPolicy: Always
+      volumes:
+        - name: osrm-data
+          hostPath: 
+              path: /mnt/s3data/osrm
+        - name: local-osrm-data
+          persistentVolumeClaim:
+              claimName: osrm-data-claim
