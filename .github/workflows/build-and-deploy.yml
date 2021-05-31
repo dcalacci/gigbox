@@ -2,9 +2,9 @@ name: Build and Deploy to ECR/EKS
 on:
   push:
       branches: [ master ]
-    paths:
+      paths: 
         - server/**
-    workflow_dispatch:
+  workflow_dispatch:
 
 
 # https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
