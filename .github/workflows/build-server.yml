@@ -12,15 +12,22 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
   
+env:
+  AWS_DEFAULT_REGION: us-east-1
+  AWS_DEFAULT_OUTPUT: json
+  AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+  AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  CONTAINER_IMAGE: gigbox-server:${{ github.sha }}
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  docker:
+  build-and-push-docker-hub:
     runs-on: ubuntu-latest
     steps:
       - 
         name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@master
       -
         name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -45,3 +52,33 @@ jobs:
       -
         name: Image digest
         run: echo ${{ steps.docker_build.outputs.digest }}
+
+  build-and-push-aws-ecr:
+    name: Build and deploy
+    runs-on: ubuntu-latest
+    steps:
+
+    - name: Checkout
+      uses: actions/checkout@master
+
+    # Add steps here like linting, testing, minification, etc.
+      
+    - name: Setup ECR
+      run: |
+        # Login to AWS ECR
+        $( aws ecr get-login --no-include-email )
+    - name: Build and tag the image
+      run: |
+        # Build and tag the image
+        docker build \
+          -t $CONTAINER_IMAGE \
+          -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$CONTAINER_IMAGE ./app
+           
+    # Add additional steps here like scanning of image
+
+    # Only push to registry on master
+    - name: Push
+      if: github.ref == 'refs/heads/master'
+      run: |
+        # Push image to AWS ECR
+        docker push $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$CONTAINER_IMAGE
