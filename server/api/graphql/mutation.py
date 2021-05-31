@@ -234,7 +234,7 @@ class AddLocationsToShift(Mutation):
         # Every 5 locations added, update the distance on the shift by doing
         # map matching
         n_locations = len(shift.locations)
-        if n_locations % 5 == 0 and n_locations > 2:
+        if n_locations % 10 == 0 and n_locations > 2:
             current_app.logger.info(
                 "Updating mileage & calculated route on shift...")
             shift = updateShiftMileageAndGeometry(shift, info)
@@ -310,7 +310,8 @@ class AddScreenshotToShift(Mutation):
 
         # TODO: if they give us a job, add the screenshot to the job, and parse it.
         if app:
-            img_filename = os.path.join('/opt/images',
+            os.makedirs('/opt/data/images', exist_ok=True)
+            img_filename = os.path.join('/opt/data/images',
                                         generate_filename(obj_id))
             print("IMAGE FILENAME:", img_filename)
             cv2.imwrite(img_filename, image)
@@ -414,7 +415,9 @@ def get_job_mileage_and_geometry(info, job, shift=None):
         locs = sorted(job_locations, key=lambda l: l.timestamp)
         match_obj = get_route_distance_and_geometry(locs)
 
-        if 'geom_obj' not in match_obj or not match_obj['geom_obj']:
+        if ('geom_obj' not in match_obj 
+                or not match_obj['geom_obj'] 
+                or match_obj['status'] == 'error'):
             current_app.logger.error("Failed to match a route to job...")
             return job
 
@@ -578,7 +581,7 @@ class SubmitConsent(Mutation):
         f_array = np.asarray(bytearray(decoded))
         image = cv2.imdecode(f_array, 0)
 
-        img_filename = os.path.join('/opt/signatures',
+        img_filename = os.path.join('/opt/data/signatures',
                                     generate_filename(user_id))
         cv2.imwrite(img_filename, image)
         print("wrote signature to file...")
@@ -677,7 +680,7 @@ class ExportJobs(Mutation):
 
         # copy screenshots to export dir, one subdirectory for each job
         nowstr = datetime.now().strftime("%d-%m-%Y_%H-%M-%S")
-        export_dir = f'/opt/exports/{user_id}_{nowstr}'
+        export_dir = f'/opt/data/exports/{user_id}_{nowstr}'
         os.makedirs(export_dir, exist_ok=True)
         for s in screenshots:
             print(str(s.job_id))
