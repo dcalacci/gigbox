@@ -35,7 +35,7 @@ jobs:
       run: |
         # Build and tag the image
         docker build \
-          -f Dockerfile.prod \
+          -f ./server/Dockerfile.prod \
           -t $CONTAINER_IMAGE \
           -t $AWS_ACCOUNT_ID.dkr.ecr.$AWS_DEFAULT_REGION.amazonaws.com/$CONTAINER_IMAGE ./server
            
