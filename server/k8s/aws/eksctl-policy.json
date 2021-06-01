@@ -25,9 +25,9 @@
                 "iam:GetOpenIDConnectProvider"
             ],
             "Resource": [
-                "arn:aws:iam::<AWS-account-ID>:instance-profile/eksctl-*",
-                "arn:aws:iam::<AWS-account-ID>:role/eksctl-*",
-                "arn:aws:iam::<AWS-account-ID>:oidc-provider/oidc.eks.*"
+                "arn:aws:iam::714042534292:instance-profile/eksctl-*",
+                "arn:aws:iam::714042534292:role/eksctl-*",
+                "arn:aws:iam::714042534292:oidc-provider/oidc.eks.*"
             ]
         },
         {
@@ -37,16 +37,22 @@
         },
         {
             "Effect": "Allow",
-            "Action": [
-                "eks:*"
-            ],
+            "Action": ["eks:*"],
             "Resource": "*"
         },
         {
             "Effect": "Allow",
-            "Action": [
-                "elasticloadbalancing:*"
-            ],
+            "Action": ["ecs:*"],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": ["ecr:*"],
+            "Resource": "*"
+        },
+        {
+            "Effect": "Allow",
+            "Action": ["elasticloadbalancing:*"],
             "Resource": "*"
         },
         {
@@ -122,3 +128,4 @@
         }
     ]
 }
+

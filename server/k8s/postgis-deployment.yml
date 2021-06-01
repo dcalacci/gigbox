@@ -23,6 +23,7 @@ spec:
   resources:
     requests:
       storage: 10Gi
+  storageClassName: standard
 ---
 kind: PersistentVolume
 apiVersion: v1
@@ -31,7 +32,7 @@ metadata:
   labels:
     type: local
 spec:
-  storageClassName: manual
+  storageClassName: standard
   capacity:
     storage: 10Gi
   accessModes:

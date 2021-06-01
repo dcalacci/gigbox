@@ -1,3 +1,13 @@
+# current notes
+
+-   for certs:
+
+```
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.3.1/cert-manager.yaml
+```
+
+see https://cert-manager.io/docs/installation/kubernetes/
+
 # Running locally
 
 (method taken from [here](https://blog.meain.io/2020/mounting-s3-bucket-kube/))

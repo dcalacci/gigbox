@@ -4,12 +4,41 @@ This is the server-side API for the gigbox project, including:
 
 -   the GraphQL api used to run the gigbox mobile app
 -   the OSRM setup used for map-matching
--   deploy scripts to get your own version of the gigbox project running on your own (aws)
-    infrastructure, namely an ECS cluster.
+-   Kubernetes config to run the OSRM server, the gigbox-server api, and a postgis instance
+-   Additional scripts and config to run the kubernetes setup on an EKS cluster (plus config for
+    that cluster)
 
-## Installation / requirements
+## Running on an EKS cluster
 
-To get started using the server in development, there are a couple of steps that require some
+1. Create an EKS cluster using `m5.4xlarge` and `m5.large` instance types:
+
+```
+eksctl create cluster -f k8s/aws/cluster.yml
+```
+
+2. Make sure your context is set to the AWS cluster you just created:
+
+```
+kubectl config get-contexts
+```
+
+2. Apply our kubernetes deployments and services, including mounting s3://osrm-us-latest on our OSRM
+   instance as a volume:
+
+```
+kubectl apply -f k8s
+```
+
+3. Get the hostname of the ELB for our ingress point to the server:
+
+```
+# -n default here if you're using the default kubernetes namespace
+kubectl -n default get svc gigbox-server -o json | jq -r .status.loadBalancer.ingress[0].hostname
+```
+
+## Installing and running locally
+
+To get started using the server in development locally, there are a couple of steps that require some
 heavy compute.
 
 Because this project aims to keep data collection and sharing at an absolute minimum, we use
@@ -39,10 +68,7 @@ available in a docker volume. There are two ways to create this:
 2. Don't want the hassle? Use a pre-extracted version of the `us-latest` road network, available in this S3 bucket:
    `s3://osrm-us-latest`. Download that or use it as a docker volume in development.
 
-## Running & environment
-
-You need these environment variables saved in a `/deploy/.env` file to deploy to AWS. To develop,
-you need all variables up to `AWS_ACCESS_KEY`, and you should change `ENV` to `ENV=DEVELOPMENT`.
+## env and secrets
 
 ```
 ENV=PRODUCTION
@@ -58,20 +84,11 @@ POSTGRES_USER=gigbox
 POSTGRES_PASSWORD={secret-password-here}
 POSTGRES_DB=gigbox
 
+AWS_ACCOUNT_ID={aws account id}
 AWS_ACCESS_KEY_ID={aws access key id}
 AWS_SECRET_ACCESS_KEY={aws secret}
-PROJECT_NAME=gigbox-test-end2end
-PROFILE_NAME=gigbox-end2end-profile
-CLUSTER_NAME=gigbox-test-end2end-cluster
 REGION=us-east-1
-LAUNCH_TYPE=EC2
-INSTANCE_TYPE=m5.4xlarge
 KEYPAIR=gigbox-dev-aws
 
-FS_ID=fs-7c0db8c8
-FS_ID={EFS id that has osrm-data in /osrm }
-FS_NAME=gigbox-data
 OSRM_DATASYNC_SOURCE=arn:aws:s3:::osrm-us-latest
-IAM_POLICY_NAME=gigbox-osrm-policy
-IAM_ROLE_NAME=gigbox-osrm-access
 ```
