@@ -6,7 +6,6 @@ on:
         - server/**
   workflow_dispatch:
 
-
 # https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 env:
   AWS_DEFAULT_REGION: ${{ secrets.REGION }}
@@ -14,7 +13,7 @@ env:
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  CONTAINER_IMAGE: gigbox-server:${{ github.sha }}
+  CONTAINER_IMAGE: gigbox:${{ github.sha }}
 
 jobs:
   build-and-push:
