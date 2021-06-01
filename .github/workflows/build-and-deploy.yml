@@ -9,12 +9,12 @@ on:
 
 # https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html
 env:
-  AWS_DEFAULT_REGION: us-east-1
+  AWS_DEFAULT_REGION: ${{ secrets.REGION }}
   AWS_DEFAULT_OUTPUT: json
   AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
   AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  CONTAINER_IMAGE: example-eks:${{ github.sha }}
+  CONTAINER_IMAGE: gigbox-server:${{ github.sha }}
 
 jobs:
   build-and-push:
