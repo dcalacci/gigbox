@@ -21,7 +21,7 @@ spec:
           privileged: true
         envFrom:
         - configMapRef:
-            name: s3-config
+            name: aws-config
         volumeMounts:
         - name: devfuse
           mountPath: /dev/fuse
