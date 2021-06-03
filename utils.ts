@@ -1,4 +1,6 @@
 import moment, { Moment } from 'moment';
+import Constants from 'expo-constants';
+import { GraphQLClient } from 'graphql-request';
 /**
  *
  * @param startTimestamp A timestamp (number) to calculate elapsed time from.
@@ -11,25 +13,22 @@ export const formatElapsedTime = (startTimestamp: number | Date | null | Moment)
         const st = moment.utc(startTimestamp);
         const hdiff = moment().diff(st, 'hours');
         const mdiff = moment().diff(st, 'minutes') - hdiff * 60;
-        const sdiff = moment().diff(st, 'seconds') - (moment().diff(st, 'minutes') * 60);
+        const sdiff = moment().diff(st, 'seconds') - moment().diff(st, 'minutes') * 60;
         if (mdiff >= 1) {
-
-        return `${hdiff}h ${mdiff}m`;
+            return `${hdiff}h ${mdiff}m`;
         } else {
-        return `${hdiff}h ${mdiff}m ${sdiff}s`;
+            return `${hdiff}h ${mdiff}m ${sdiff}s`;
         }
     }
 };
-
-import Constants from 'expo-constants';
-import { GraphQLClient } from 'graphql-request';
 
 const { manifest } = Constants;
 
 // export const uri = manifest.debuggerHost
 //     ? `http://${manifest?.debuggerHost?.split(':').shift()}:5000`
 //     : 'http://localhost:5000';
-export const uri = 'http://192.168.1.46:5000';
+// export const uri = 'http://gigbox.ngrok.io';
+export const uri = manifest.extra.apiUrl;
 export const graphqlUri = `${uri}/graphql`;
 console.log(`API URI: ${uri}`);
 
