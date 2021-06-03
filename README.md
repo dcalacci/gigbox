@@ -10,7 +10,7 @@ by PhD student [Dan Calacci](https://twitter.com/dcalacci).
 
 ## Features:
 
-- 🆓 Free and open-source. Forever.
+- 🆓 Free and open-source
 - 📍 Automatic mileage tracking using [OSRM](http://project-osrm.org/) for mileage and expense tracking.
 - 🚗 Track shifts _and_ jobs, so you know how much time you've spent waiting for work
 - 📲 Track multiple apps, so you can compare your effective hourly pay between services
