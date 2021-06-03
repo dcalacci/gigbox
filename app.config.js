@@ -38,7 +38,7 @@ export default {
         versionCode: 1,
         config: {
             googleMaps: {
-                apiKey: 'AIzaSyD1GYNrLb6PpaGFVlzbN2QNC5XOp1ZBTDw',
+                apiKey: process.env.GOOGLE_API_KEY,
             },
         },
         adaptiveIcon: {
