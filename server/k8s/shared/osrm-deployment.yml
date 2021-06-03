@@ -57,9 +57,9 @@ spec:
             - us-latest.osrm
           volumeMounts:
               - name: osrm-data
-                mountPath: /opt
+                mountPath: /opt/s3
               - name: local-osrm-data
-                mountPath: /opt/local
+                mountPath: /opt
       restartPolicy: Always
       volumes:
         - name: osrm-data
