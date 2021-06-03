@@ -1,3 +1,30 @@
+# Kubernetes Configuration
+
+```
+k8s/
+├── aws
+│   ├── cluster.yml -- cluster configuration for AWS resources
+│   └── iam_policy.json -- policy needed for cluster creator
+├── configs
+│   ├── aws-config.yml -- configmap that holds aws credentials
+│   └── configmap.yml -- configmap that holds deployment and config variables
+├── development
+│   ├── gigbox-server-deployment.yml -- development storage, service, and deployment for the gigbox-server
+│   ├── postgis-deployment.yml -- development storage, service, and deploy for postgis
+│   └── storage.yml -- storage config for development
+├── namespaces
+│   └── dev-namespace.yml -- namespace creation for development
+├── production
+│   ├── gigbox-server-deployment.yml -- deploy, storage, service for production gigbox-server
+│   ├── postgis-deployment.yml -- deploy, storage, service for production postgis
+│   └── storage.yml -- storage config for production
+├── readme.md
+└── shared
+    ├── daemonset.yml -- daemonset that attaches our OSRM s3 bucket to our nodes
+    └── osrm-deployment.yml -- OSRM deployment that uses the mounted s3 bucket. This is shared
+    across development and production.
+```
+
 # Deployment and Development deploys
 
 Currently, running locally is difficult because of the resources that OSRM requires. Until we get a
@@ -6,6 +33,16 @@ be able to run this whole stack locally.
 
 Until then, the easiest way to develop _and_ deploy is through using [eksctl](https://eksctl.io/)
 and the kubernetes manifests included here.
+
+## Development / Staging
+
+We have one namespace for development / staging, `development`. It pushes changes on the
+`dev/server` branch, and is available at `dev.gigbox.org`. It uses the same OSRM server as
+production so that we save some money.
+
+## Production
+
+We use the default namespace for production (this is probably dangerous / should change)
 
 # Running locally
 
@@ -114,17 +151,3 @@ returns:
 $ curl $(kubectl get svc gigbox-server -o json | jq .status.loadBalancer.ingress[0].hostname)
 go to /graphql
 ```
-
-## auth errors
-
-I received this error pretty consistently to start:
-
-> "Your current user or role does not have access to Kubernetes objects on this EKS cluster"
-
-This is because **only the original user that created the cluster can access its resources without
-additional configuration**
-
-According to [this](https://docs.aws.amazon.com/eks/latest/userguide/add-user-role.html), to enable
-wider access, you'll
-need to configure a configmap for our cluster with some auth information [see
-here](https://console.aws.amazon.com/iam/home?region=us-east-1#/roles/eksctl-gigbox-test-cluster-ServiceRole-ZFGSB8KYKL1L). I haven't tested this fully.

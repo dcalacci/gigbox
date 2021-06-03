@@ -1,0 +1,9 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: aws-config
+data:
+    S3_REGION: "us-east-1"
+    S3_BUCKET: "osrm-us-latest"
+    AWS_KEY: "AKIA2MQCANGKLVU6VJGJ"
+    AWS_SECRET_KEY: "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"

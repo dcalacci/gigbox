@@ -6,6 +6,7 @@ from api.models import Location as LocationModel
 from geoalchemy2.shape import to_shape
 from urllib3.util.retry import Retry
 from requests.adapters import HTTPAdapter
+import os
 import itertools
 
 # retry and backoff a 0.1, 0.2, ... 0.5 on retry
@@ -16,7 +17,8 @@ retries = Retry(total=5,
 
 s.mount('http://', HTTPAdapter(max_retries=retries))
 
-OSRM_URI = "http://osrm:5000"
+# OSRM_URI = "http://osrm:5000"
+OSRM_URI = os.environ['OSRM_URI']
 
 def match(coordinates):
     coord_str = requests.utils.quote(
@@ -50,6 +52,22 @@ def get_match_distance(res):
         return mileage
     return 0
 
+# def rdp_with_index(points, indices, epsilon):
+#     """rdp with returned point indices
+#     """
+#     dmax, index = 0.0, 0
+#     for i in range(1, len(points) - 1):
+#         d = point_line_distance(points[i], points[0], points[-1])
+#         if d > dmax:
+#             dmax, index = d, i
+#     if dmax >= epsilon:
+#         first_points, first_indices = rdp_with_index(points[:index+1], indices[:index+1], epsilon)
+#         second_points, second_indices = rdp_with_index(points[index:], indices[index:], epsilon)
+#         results = first_points[:-1] + second_points
+#         results_indices = first_indices[:-1] + second_indices
+#     else:
+#         results, results_indices = [points[0], points[-1]], [indices[0], indices[-1]]
+#     return results, results_indices
 
 def get_match_geometry(res):
     # print("matchings:", res.json()['matchings'])
