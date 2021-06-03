@@ -48,6 +48,6 @@ One of the first steps is to make collecting and sharing information about worke
 
 # License
 
-This project uses an MIT license, with a [Commons Clause](https://commonsclause.com/) added. This clause is meant not to restrict use. Because gigbox is a full-stack end-user project, it could easily be pulled by a company and sold as a product, against the spirit of the project. The commons clause restricts this specific kind of use.
+This project uses an MIT license, with a [Commons Clause](https://commonsclause.com/) added. 
 
-, but is instead meant to ensure that an actor cannot take gigbox 
+This clause is meant not to restrict use. Because gigbox is a full-stack end-user project, it could easily be pulled by a company and sold as a product, against the spirit of the project. The commons clause restricts this specific kind of use.
