@@ -1,7 +1,7 @@
 name: Expo Review
 on: [pull_request]
 env: 
-  API_URL: ${{ secrets.API_URL }}
+  API_URL: ${{ secrets.DEV_API_URL }}
 jobs:
   publish:
     name: Install and publish
