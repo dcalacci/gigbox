@@ -90,7 +90,6 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
         onSuccess: (data) => {
             console.log('woohoo, submitted consent:', data);
             queryClient.invalidateQueries('userInfo');
-            queryClient.invalidateQueries('loggedIn');
         },
         onError: (err) => {
             console.log("couldn't submit consent:", err);

@@ -229,11 +229,11 @@ const SurveyItem = ({ survey, navigation }: { survey: Survey; navigation: any })
                         surveyId: survey.id,
                         surveyResponses,
                     });
-                    //TODO: send value to server, wait until we get a response back, and continue
                 }}
             >
                 {submitSurvey.isLoading ? (
                     <Ellipsis style={tailwind('text-lg self-center')} />
+
                 ) : (
                     <Text style={tailwind('font-bold text-white text-xl text-center')}>
                         {!surveyDone ? `Finish the survey to submit!` : `Submit Survey`}

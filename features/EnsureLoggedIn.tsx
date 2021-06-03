@@ -22,7 +22,7 @@ export const EnsureLoggedIn = ({ children }: { children: JSX.Element }) => {
     const jwt = useSelector((state: RootState): string | null => state.auth.jwt);
     const dispatch = useDispatch();
     const loggedIn = async () => {
-        return logIn(jwt);
+        return await logIn(jwt);
     };
     SplashScreen.preventAutoHideAsync().catch(console.warn);
     const userInfoStatus = useQuery('userInfo', getUserInfo, {
