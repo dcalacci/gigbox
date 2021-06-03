@@ -46,7 +46,7 @@ export default function TabOneScreen({ navigation }) {
                 <SurveyCard navigation={navigation}/>
                 <Pressable style={[tailwind('bg-white m-2 p-5 rounded-2xl flex-col')]}>
                     <Text style={tailwind('text-green-500 text-3xl font-bold underline')}>
-                        Today
+                       Today 
                     </Text>
 
                     <View
