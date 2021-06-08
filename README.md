@@ -17,7 +17,7 @@ by PhD student [Dan Calacci](https://twitter.com/dcalacci).
 - 📈 Easily see your work history — pay, tips, mileage, and time — using powerful filters to select only certain jobs
 - 📸 Attach screenshots and other images to your jobs to keep track of additional expenses, proof of delivery, and other info.
 - ↗️ Export your data quickly and easily
-- 🔐 Private: data is governed by MIT's Institutional Review Board (IRB) - your data will never be sold or shared without your explicit permission. For all intents and purposes, it is _yours._
+- 🔐 Private: data is governed by MIT's Institutional Review Board (IRB) - your data will never be sold, and only shared with your explicit permission.
 - Contribute research data to Dan's PhD dissertation by answering surveys about your work experience :)
 
 ### 🔜 In the near future:
