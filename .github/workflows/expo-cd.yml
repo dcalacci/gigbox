@@ -5,7 +5,7 @@ on:
     types: [prereleased]
     
 env: 
-  API_URL: ${{ secrets.PROD_API_URL }}
+  API_URL: ${{ secrets.DEV_API_URL }}
 jobs:
   publish:
     name: Publish Production App
