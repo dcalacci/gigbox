@@ -5,5 +5,5 @@ metadata:
 data:
     S3_REGION: "us-east-1"
     S3_BUCKET: "osrm-us-latest"
-    AWS_KEY: "AKIA2MQCANGKLVU6VJGJ"
-    AWS_SECRET_KEY: "vIO02NO2qnrRqljlwtOrVarUO+5mk6qvZddlGiOW"
+    AWS_KEY: "your-aws-key"
+    AWS_SECRET_KEY: "your-aws-secret-key"
