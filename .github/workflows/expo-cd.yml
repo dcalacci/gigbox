@@ -1,0 +1,28 @@
+name: Expo CD
+
+on:
+  push :
+    branches : [release]
+    
+env: 
+  API_URL: ${{ secrets.PROD_API_URL }}
+jobs:
+  publish:
+    name: Publish Production App
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - uses: expo/expo-github-action@v5
+        with:
+          expo-version: 4.x
+          expo-token: ${{ secrets.EXPO_TOKEN }}
+      - run: yarn install
+      - run: expo publish --release-channel=prod
+      - uses: unsplash/comment-on-pr@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          msg: Expo app on release channel prod updated. [see it here](https://expo.io/@dcalacci/gigbox?release-channel=prod).
