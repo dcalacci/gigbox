@@ -25,11 +25,6 @@ jobs:
           expo-token: ${{ secrets.EXPO_TOKEN }}
       - run: yarn install
       - run: expo publish --release-channel=develop
-      - uses: unsplash/comment-on-pr@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          msg: Expo app on release channel prod updated. [see it here](https://expo.io/@dcalacci/gigbox?release-channel=develop).
   build-and-push-docker-hub:
     name: Build and push to Docker Hub
     runs-on: ubuntu-latest
