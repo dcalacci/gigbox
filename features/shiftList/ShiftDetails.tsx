@@ -1,22 +1,94 @@
 import React, { useEffect, useState } from 'react';
-import { ScrollView, View, Text, StyleSheet, Pressable } from 'react-native';
+import { ScrollView, View, Modal, Text, StyleSheet, Pressable } from 'react-native';
 import { tailwind } from 'tailwind';
+import { useMutation, useQueryClient } from 'react-query';
 import { Job, Shift } from '../../types';
 import { JobList } from '../job/JobList';
 import TripMap from './TripMap';
+import { log } from '../../utils';
 
-export const ShiftTrips = ({ shift }: { shift: Shift }) => {
+import { deleteShift } from './api';
+
+export const ShiftTrips = ({
+    routeParams,
+    shift,
+    goHome,
+}: {
+    routeParams: any;
+    shift: Shift;
+    goHome: () => void;
+}) => {
     const [jobs, setJobs] = useState<[{ node: Job }]>();
+    const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
+    const queryClient = useQueryClient();
+    const deleteShiftById = useMutation(deleteShift, {
+        onSuccess: (d) => {
+            log.info('deleted Shift');
+            queryClient.invalidateQueries('shifts');
+            setDeleteModalVisible(false);
+            goHome();
+        },
+    });
     useEffect(() => {
         setJobs(shift.jobs.edges);
     }, [shift]);
 
-    const deleteShift = () => {
-        console.log('deleting shift');
-    };
-
     return (
         <>
+            <Modal
+                animationType="slide"
+                transparent={false}
+                visible={deleteModalVisible}
+                presentationStyle={'formSheet'}
+                onRequestClose={() => {
+                    console.log('modal closed');
+                }}
+            >
+                <View style={tailwind('flex flex-col w-full h-full p-5')}>
+                    <Text style={tailwind('text-3xl underline text-red-500 font-bold p-2')}>
+                        Delete Shift
+                    </Text>
+
+                    <Text style={tailwind('text-lg p-2')}>
+                        Are you sure you want to delete this shift? By deleting this shift you will
+                        also delete {shift.jobs.edges.length} jobs.
+                    </Text>
+                    <View style={[tailwind('h-1/4 m-2'), { borderRadius: 10, overflow: 'hidden' }]}>
+                        <TripMap
+                            interactive={true}
+                            isActive={false}
+                            tripLocations={routeParams.locations}
+                            region={routeParams.region}
+                        >
+                            <></>
+                        </TripMap>
+                    </View>
+                    <View style={tailwind('pl-2 flex-auto flex-col rounded-lg bg-white m-2 p-3')}>
+                        <Text style={tailwind('text-black text-lg font-bold')}>
+                            {routeParams.startStr}
+                        </Text>
+                        <Text style={tailwind('text-gray-800 text-lg font-bold')}>
+                            {routeParams.mileage.toFixed(2)} miles (total)
+                        </Text>
+                    </View>
+                    <Pressable
+                        onPress={() => deleteShiftById.mutate({ id: shift.id })}
+                        style={[tailwind('bg-red-500 rounded-lg items-center p-2 m-2')]}
+                    >
+                        <Text style={tailwind('text-lg font-bold p-1 text-white')}>
+                            Yes, Delete Shift
+                        </Text>
+                    </Pressable>
+
+                    <Pressable
+                        onPress={() => setDeleteModalVisible(false)}
+                        style={[tailwind('bg-gray-500 rounded-lg items-center p-2 m-2')]}
+                    >
+                        <Text style={tailwind('text-lg font-bold p-1 text-white')}>Cancel</Text>
+                    </Pressable>
+
+                </View>
+            </Modal>
             <View style={tailwind('flex-col')}>
                 <View style={tailwind('flex flex-row flex-auto content-between')}>
                     <JobList jobs={jobs} />
@@ -27,7 +99,7 @@ export const ShiftTrips = ({ shift }: { shift: Shift }) => {
 
             <View style={[tailwind('flex flex-col pl-10 pr-10 m-10 ')]}>
                 <Pressable
-                    onPress={deleteShift}
+                    onPress={() => setDeleteModalVisible(true)}
                     style={[tailwind('border-red-500 bg-red-500 border-2 rounded-lg items-center')]}
                 >
                     <Text style={tailwind('text-lg font-bold p-1 text-white')}>Delete Shift</Text>
@@ -72,7 +144,7 @@ const ShiftDetails = ({ route }) => {
                 {route.params.shift.jobs.edges.length} Jobs
             </Text>
 
-            <ShiftTrips shift={shift} />
+            <ShiftTrips routeParams={route.params} goHome={route.params.goHome} shift={shift} />
         </ScrollView>
     );
 };

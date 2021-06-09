@@ -56,3 +56,18 @@ export const getShifts = (first: Number, after: String) => {
     };
     return client.request(query, variables);
 };
+
+
+export const deleteShift = ({ id }: { id: string }) => {
+    const client = getClient(store);
+    const query = gql`
+        mutation mutation($id: ID!) {
+            deleteShift(id: $id) {
+                ok
+                message
+            }
+        }
+    `;
+    return client.request(query, { id });
+};
+
