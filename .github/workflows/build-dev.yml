@@ -1,4 +1,4 @@
-name: Build and push development server to docker hub
+name: Build and push development code
 
 # Controls when the action will run. 
 on:
@@ -10,6 +10,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 env: 
   API_URL: ${{ secrets.DEV_API_URL }}
+  ENV: DEVELOPMENT
 jobs:
   build-and-release-expo-dev-channel:
     name: Publish App to Development Release Channel
