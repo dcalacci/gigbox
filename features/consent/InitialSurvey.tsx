@@ -28,7 +28,6 @@ export const InitialSurvey = ({ onSurveyFinish }: { onSurveyFinish: () => void }
         onSuccess: (data) => {
             console.log("data:", data)
             queryClient.invalidateQueries('userInfo');
-            queryClient.invalidateQueries('loggedIn');
             onSurveyFinish();
         },
     });

@@ -70,6 +70,9 @@ from api.controllers.errors import ShiftInvalidError, JobInvalidError
 
 # All requests are associated with a token.
 
+from config import get_environment_config
+
+c = get_environment_config()
 
 class CreateUser(Mutation):
     """Mutation to create a user. must be given a UID"""
@@ -134,7 +137,7 @@ class EndShift(Mutation):
                 id=shift_id, user_id=g.user).first()
         )
 
-        if (end_time - shift.start_time).seconds < 5*60:
+        if (end_time - shift.start_time).seconds < c.MIN_SHIFT_DURATION:
             shift.end_time = end_time
             shift.active = False
             shift = endAnyActiveJobs(shift, info)
@@ -146,7 +149,7 @@ class EndShift(Mutation):
         # calculate final mileage for this shift
         shift = updateShiftMileageAndGeometry(shift, info)
 
-        if (shift.road_snapped_miles is None or shift.road_snapped_miles < 1):
+        if (shift.road_snapped_miles is None or shift.road_snapped_miles < c.MIN_SHIFT_MILEAGE):
             shift.end_time = end_time
             shift.active = False
             shift = endAnyActiveJobs(shift, info)
@@ -162,6 +165,25 @@ class EndShift(Mutation):
         db.session.commit()
 
         return EndShift(shift=shift)
+
+class DeleteShift(Mutation):
+    class Arguments:
+        id = ID(required=True)
+
+    ok = Field(lambda: Boolean)
+    message = Field(lambda: String)
+
+    @login_required
+    def mutate(self, info, id):
+        shift_id = from_global_id(id)[1]
+        shift = ShiftModel.query.filter_by(
+            id=shift_id, user_id=g.user).first()
+        if not shift:
+            return DeleteShift(ok=False, message="Either that shift doesn't exist or you don't have access.")
+        else:
+            db.session.delete(shift)
+            db.session.commit()
+            return DeleteImage(ok=True, message="Shift Deleted")
 
 
 def updateShiftMileageAndGeometry(shift, info):
@@ -764,6 +786,7 @@ class Mutation(ObjectType):
     createUser = CreateUser.Field()
     createShift = CreateShift.Field()
     endShift = EndShift.Field()
+    deleteShift = DeleteShift.Field()
     createJob = CreateJob.Field()
     setJobTotalPay = SetJobTotalPay.Field()
     setJobTip = SetJobTip.Field()
