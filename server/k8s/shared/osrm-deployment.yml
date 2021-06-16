@@ -11,20 +11,6 @@ spec:
   selector:
     app: gigbox-server
 ---
-kind: PersistentVolumeClaim
-apiVersion: v1
-metadata:
-  name: osrm-data-claim
-  creationTimestamp: null
-  labels:
-      app: gigbox-server
-spec:
-  accessModes:
-    - ReadWriteOnce
-  resources:
-    requests:
-      storage: 80Gi 
----
 kind: Deployment
 apiVersion: apps/v1
 metadata:
@@ -46,6 +32,11 @@ spec:
       containers:
         - name: gigbox-osrm
           image: osrm/osrm-backend:v5.24.0
+          resources:
+              requests:
+                  memory: 40G
+                  cpu: 2
+
           ports:
               - containerPort: 5000
           args:
@@ -57,14 +48,9 @@ spec:
             - us-latest.osrm
           volumeMounts:
               - name: osrm-data
-                mountPath: /opt/s3
-              - name: local-osrm-data
                 mountPath: /opt
       restartPolicy: Always
       volumes:
         - name: osrm-data
-          hostPath: 
-              path: /mnt/s3data/osrm
-        - name: local-osrm-data
-          persistentVolumeClaim:
-              claimName: osrm-data-claim
+          persistentVolumeClaim: 
+            claimName: osrm-claim
