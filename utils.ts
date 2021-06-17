@@ -1,5 +1,6 @@
 import moment, { Moment } from 'moment';
 import Constants from 'expo-constants';
+import fetch from 'node-fetch';
 import { GraphQLClient } from 'graphql-request';
 /**
  *

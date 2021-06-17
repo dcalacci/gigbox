@@ -1,10 +1,10 @@
 import { fetchWithQueryParams, uri } from '../../utils';
-import { User } from '../../types'
+import { User } from '../../types';
 
 export interface OtpResponse {
     status: number;
     message: string;
-    phone: string
+    phone: string;
 }
 
 /**
@@ -18,8 +18,9 @@ export const getOtp = async (phone: string): Promise<OtpResponse> => {
         { phone: phone },
         'POST'
     );
+    console.log(` SENDING REQUEST TO: ${uri}/api/v1/auth/get_otp`);
     const data = await response.json();
-    return {...data, phone};
+    return { ...data, phone };
 };
 
 export interface VerifyOtpResponse {
@@ -60,13 +61,12 @@ export interface LogInResponse {
 
 export const logIn = async (jwt: string | null): Promise<LogInResponse> => {
     if (!jwt) {
-        console.log("No token found. Not authenticated.")
+        console.log('No token found. Not authenticated.');
         return {
             status: 401,
             onboarded: false,
-            authenticated: false
-        }
-
+            authenticated: false,
+        };
     }
     const response = await fetchWithQueryParams(
         `${uri}/api/v1/auth/login`,

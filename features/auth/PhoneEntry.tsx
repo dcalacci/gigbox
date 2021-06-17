@@ -74,6 +74,7 @@ const PhoneEntry: React.FC = (props) => {
                         autoFocus={true}
                     ></TextInput>
                     <Pressable
+                        testID="verify-code-button"
                         style={tailwind('items-center rounded-md py-2 w-full mt-6 bg-green-500')}
                         onPress={() => {
                             queryClient.refetchQueries('loggedIn');
