@@ -24,11 +24,16 @@ export const formatElapsedTime = (startTimestamp: number | Date | null | Moment)
 
 const { manifest } = Constants;
 
-// export const uri = manifest.debuggerHost
-//     ? `http://${manifest?.debuggerHost?.split(':').shift()}:5000`
-//     : 'http://localhost:5000';
-// export const uri = 'http://gigbox.ngrok.io';
-export const uri = manifest.extra.apiUrl;
+const getApiUrl = () => {
+    const rc = Constants.manifest.releaseChannel;
+    if (rc === 'production') {
+        return manifest.extra.prodApiUrl;
+    } else {
+        return manifest.extra.devApiUrl;
+    }
+};
+
+export const uri = getApiUrl();
 export const graphqlUri = `${uri}/graphql`;
 console.log(`API URI: ${uri}`);
 
