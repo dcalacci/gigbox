@@ -1,4 +1,4 @@
-name: Build expo review app for pre-releases on staging channel
+name: Expo App (Staging)
 
 on:
   release:
@@ -21,8 +21,3 @@ jobs:
           expo-token: ${{ secrets.EXPO_TOKEN }}
       - run: yarn install
       - run: expo publish --release-channel=staging
-      - uses: unsplash/comment-on-pr@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          msg: Expo app on release channel prod updated. [see it here](https://expo.io/@dcalacci/gigbox?release-channel=staging).
