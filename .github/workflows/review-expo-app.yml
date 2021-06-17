@@ -1,4 +1,4 @@
-name: Expo Review
+name: Build expo review app on pull request
 on: [pull_request]
 env: 
   API_URL: ${{ secrets.DEV_API_URL }}

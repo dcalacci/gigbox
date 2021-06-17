@@ -43,9 +43,15 @@ const ShiftCard: FunctionComponent<ShiftCardProps> = (props: any) => {
     const daysAgo = moment.utc(props.item.node.startTime).diff(moment(), 'days');
     const mileage = props.item.node.roadSnappedMiles ? props.item.node.roadSnappedMiles : 0;
 
+    const goHome = () => {
+        props.navigation.popToTop()
+        // props.navigation.navigate("Shifts")
+    }
+
     const openDetails = () => {
         props.navigation.navigate('Shift Details', {
             shift: props.item.node,
+            goHome,
             locations,
             region,
             mileage,

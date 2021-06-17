@@ -12,12 +12,16 @@ class Config(object):
     TWILIO_NUMBER = os.environ['TWILIO_NUMBER']
     TWILIO_SID = os.environ["TWILIO_SID"]
     TWILIO_TOKEN = os.environ["TWILIO_TOKEN"]
+    MIN_SHIFT_MILEAGE = 1
+    MIN_SHIFT_DURATION = 5*60
     TOKEN_LIFETIME = 31
 
 class DevelopmentConfig(Config):
     ENV = "DEVELOPMENT"
     DATABASE_NAME = "gigbox-dev"
     DEBUG = True
+    MIN_SHIFT_MILEAGE = 0
+    MIN_SHIFT_DURATION = 0
     SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["POSTGRES_USER"] + ":"  \
                               + os.environ["POSTGRES_PASSWORD"] + "@" \
                               + os.environ["DB_HOST"] + ":" \
@@ -40,6 +44,8 @@ class TestingConfig(Config):
 
 class ProductionConfig(Config):
     ENV = "PRODUCTION"
+    MIN_SHIFT_MILEAGE = 1
+    MIN_SHIFT_DURATION = 5*60
     SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["POSTGRES_USER"] + ":"  \
                               + os.environ["POSTGRES_PASSWORD"] + "@" \
                               + os.environ["DB_HOST"] + ":" \
