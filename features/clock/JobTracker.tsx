@@ -6,7 +6,7 @@ import { formatElapsedTime, log } from '../../utils';
 import { Shift, Job, Employers } from '@/types';
 import { LatLng, Marker, Region } from 'react-native-maps';
 import { useQueryClient, useMutation, useQuery } from 'react-query';
-import { useToast } from 'react-native-fast-toast';
+import Toast from 'react-native-root-toast';
 import moment from 'moment';
 
 import { createJob, endJob } from './api';
@@ -29,7 +29,6 @@ export default function JobTracker({ shift }: { shift: Shift }) {
     const [employer, setEmployer] = useState<Employers>();
     const [activeJob, setActiveJob] = useState<Job>();
     const queryClient = useQueryClient();
-    const toast = useToast();
 
     const [ttVisible, setTtVisible] = useState<boolean>(true);
 
@@ -73,7 +72,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
                 setActiveJob(data.createJob.job);
             } else {
                 //TODO: toast saying we couldn't start a job for some reason
-                toast?.show("Couldn't start that job. Try again?");
+                Toast.show("Couldn't start that job. Try again?");
             }
         },
         onError: (data, variables) => {
@@ -95,7 +94,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
             } else {
                 //TODO: send toast
                 log.error('failed to end job...');
-                toast?.show("Couldn't stop your job. Try again?");
+                Toast.show("Couldn't stop your job. Try again?");
                 queryClient.invalidateQueries('trackedJobs');
             }
         },
@@ -103,7 +102,7 @@ export default function JobTracker({ shift }: { shift: Shift }) {
             //TODO: send toast
             queryClient.invalidateQueries('activeShift');
             log.error('Couldnt finish job.');
-            err.response.errors.map((e) => toast?.show(e.message));
+            err.response.errors.map((e) => Toast.show(e.message));
             setJobStarted(false);
             queryClient.invalidateQueries('trackedJobs');
         },

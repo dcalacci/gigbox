@@ -3,7 +3,7 @@ import { TextInput, Text, Pressable } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { tailwind } from 'tailwind';
-import { useToast } from 'react-native-fast-toast';
+import Toast from 'react-native-root-toast';
 import { AsYouType, parsePhoneNumber } from 'libphonenumber-js';
 import { RootState } from '../../store/index';
 import { requestOtp, loginWithOtp, reset, clearErrorMessage } from './otpSlice';
@@ -21,12 +21,11 @@ const PhoneEntry: React.FC = (props) => {
     const submittedPhone = useSelector((state: RootState): string => state.otp.phone);
 
     const ayt = new AsYouType('US');
-    const toast = useToast();
 
     useEffect(() => {
         if (errormsg != '')
             //TODO: figure out how to type this
-            toast?.show(errormsg);
+            Toast.show(errormsg);
         dispatch(clearErrorMessage());
     }, [errormsg]);
 
@@ -86,7 +85,7 @@ const PhoneEntry: React.FC = (props) => {
                     <Pressable
                         style={tailwind('items-center rounded-md py-2 w-full mt-6 bg-gray-800')}
                         onPress={() => {
-                            toast?.show(`Sending code to ${submittedPhone}`)
+                            Toast.show(`Sending code to ${submittedPhone}`)
                             dispatch(requestOtp(submittedPhone))
                         }}
                     >
@@ -136,7 +135,7 @@ const PhoneEntry: React.FC = (props) => {
                         ]}
                         disabled={!phoneIsValid}
                         onPress={() =>  {
-                            toast?.show(`Sending code to ${phone}`)
+                            Toast.show(`Sending code to ${phone}`)
                             dispatch(requestOtp(phone))}
                         }
                     >

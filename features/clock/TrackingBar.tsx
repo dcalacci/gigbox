@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, LayoutAnimation } from 'react-native';
 import { useSelector } from 'react-redux';
 import { tailwind } from 'tailwind';
-import { useToast } from 'react-native-fast-toast';
+
+import Toast from 'react-native-root-toast';
 
 import * as MediaLibrary from 'expo-media-library';
 import { Asset } from 'expo-media-library';
@@ -31,7 +32,6 @@ import { Employers } from '../../types';
 import { fetchWeeklySummary } from '../weeklySummary/api';
 
 export default function TrackingBar() {
-    const toast = useToast();
     const queryClient = useQueryClient();
     const auth = useSelector((state: RootState): AuthState => state.auth);
     const activeShift = useQuery('activeShift', fetchActiveShift, {
@@ -76,7 +76,7 @@ export default function TrackingBar() {
             queryClient.invalidateQueries('activeShift');
             log.error(`Problem ending shift: ${err}`);
             // toast?.show(err)
-            err.response.errors.map((e) => toast?.show(e.message));
+            err.response.errors.map((e) => Toast.show(e.message));
         },
     });
 
@@ -100,7 +100,7 @@ export default function TrackingBar() {
         onError: (err, newShift, context) => {
             log.error(`Problem starting shift: ${err}, ${context}`);
             queryClient.setQueryData('activeShift', context.previousShift);
-            toast?.show("Couldn't start a shift. Try again?");
+            Toast.show("Couldn't start a shift. Try again?");
         },
         onSettled: () => {
             queryClient.invalidateQueries('activeShift');
@@ -126,7 +126,7 @@ export default function TrackingBar() {
     }
     if (activeShift.isError) {
         log.error(`tracking bar Error! ${activeShift.error}`);
-        toast?.show(`Problem loading shifts: ${activeShift.error}`);
+        Toast.show(`Problem loading shifts: ${activeShift.error}`);
     }
 
     const [elapsedTime, setElapsedTime] = useState<string>(formatElapsedTime(null));

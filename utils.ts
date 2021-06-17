@@ -25,6 +25,9 @@ export const formatElapsedTime = (startTimestamp: number | Date | null | Moment)
 const { manifest } = Constants;
 
 const getApiUrl = () => {
+    if (!Constants.manifest.extra) {
+        return process.env.DEV_API_URL;
+    }
     const rc = Constants.manifest.releaseChannel;
     if (rc === 'production') {
         return manifest.extra.prodApiUrl;
