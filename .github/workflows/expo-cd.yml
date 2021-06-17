@@ -3,6 +3,7 @@ name: Expo App (Staging)
 on:
   release:
     types: [prereleased]
+  workflow_dispatch:
     
 env: 
   API_URL: ${{ secrets.DEV_API_URL }}
