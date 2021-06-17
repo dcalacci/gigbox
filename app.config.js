@@ -9,7 +9,8 @@ export default {
     scheme: 'myapp',
     userInterfaceStyle: 'automatic',
     extra: {
-        apiUrl: process.env.API_URL,
+        devApiUrl: process.env.DEV_API_URL,
+        prodApiUrl: process.env.PROD_API_URL,
     },
     splash: {
         image: './assets/images/splash.png',

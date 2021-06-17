@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     
 env: 
-  API_URL: ${{ secrets.DEV_API_URL }}
+  DEV_API_URL: ${{ secrets.DEV_API_URL }}
 jobs:
   publish:
     name: Publish App to Staging Release Channel
