@@ -1,4 +1,4 @@
-name: Expo Staging Release
+name: Build expo review app for pre-releases on staging channel
 
 on:
   release:
