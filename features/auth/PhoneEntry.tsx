@@ -85,8 +85,8 @@ const PhoneEntry: React.FC = (props) => {
                     <Pressable
                         style={tailwind('items-center rounded-md py-2 w-full mt-6 bg-gray-800')}
                         onPress={() => {
-                            Toast.show(`Sending code to ${submittedPhone}`)
-                            dispatch(requestOtp(submittedPhone))
+                            Toast.show(`Sending code to ${submittedPhone}`);
+                            dispatch(requestOtp(submittedPhone));
                         }}
                     >
                         <Text style={tailwind('text-white font-semibold')}>Re-Send Passcode</Text>
@@ -116,6 +116,7 @@ const PhoneEntry: React.FC = (props) => {
                         Enter your phone number below:
                     </Text>
                     <TextInput
+                        testID="phone-input"
                         style={[
                             tailwind('items-center py-2 px-2 rounded-md border-4'),
                             tokenSent ? tailwind('border-green-500') : null,
@@ -129,17 +130,23 @@ const PhoneEntry: React.FC = (props) => {
                         autoFocus={true}
                     ></TextInput>
                     <Pressable
+                        testID="request-code-button"
                         style={[
                             tailwind('items-center rounded-md py-2 w-full mt-6'),
                             phoneIsValid ? tailwind('bg-green-500') : tailwind('bg-gray-600'),
                         ]}
                         disabled={!phoneIsValid}
-                        onPress={() =>  {
-                            Toast.show(`Sending code to ${phone}`)
-                            dispatch(requestOtp(phone))}
-                        }
+                        onPress={() => {
+                            Toast.show(`Sending code to ${phone}`);
+                            dispatch(requestOtp(phone));
+                        }}
                     >
-                        <Text style={tailwind('text-white font-semibold')}>Request Code</Text>
+                        <Text
+                            testID="request-code-button-text"
+                            style={tailwind('text-white font-semibold')}
+                        >
+                            {!phoneIsValid ? 'Enter a Valid Number' : 'Request Code'}
+                        </Text>
                     </Pressable>
                 </SafeAreaView>
             )}
