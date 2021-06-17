@@ -9,7 +9,8 @@ on:
   
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 env: 
-  API_URL: ${{ secrets.DEV_API_URL }}
+  DEV_API_URL: ${{ secrets.DEV_API_URL }}
+  PROD_API_URL: ${{ secrets.PROD_API_URL }}
   ENV: DEVELOPMENT
 jobs:
   build-and-release-expo-dev-channel:
