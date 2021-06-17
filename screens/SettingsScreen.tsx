@@ -1,6 +1,8 @@
 import * as React from 'react';
 import { ScrollView, Pressable, SafeAreaView, StyleSheet, View, Text } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
+
+import Constants from 'expo-constants';
 import {
     getUserInfo,
     updateDataSharing,
@@ -17,6 +19,7 @@ import BinarySurveyQuestion from '../features/consent/BinarySurveyQuestion';
 import { reset } from '../features/auth/authSlice';
 import { useDispatch } from 'react-redux';
 import { User } from '../types';
+import { uri } from '../utils'
 import { Ionicons } from '@expo/vector-icons';
 
 export default function SettingsScreen({ route }) {
@@ -125,6 +128,8 @@ export default function SettingsScreen({ route }) {
                             Un-Enroll & Delete Data
                         </Text>
                     </Pressable>
+                    <Text>API: {uri}</Text>
+                        <Text>Release Channel: {Constants.manifest.releaseChannel}</Text>
                 </View>
             </ScrollView>
         </SafeAreaView>
