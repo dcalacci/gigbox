@@ -1,5 +1,10 @@
 import * as Loc from 'expo-location';
-import { LocationObject } from 'expo-location';
+import {
+    requestForegroundPermissionsAsync,
+    requestBackgroundPermissionsAsync,
+    getBackgroundPermissionsAsync,
+    getForegroundPermissionsAsync,
+} from 'expo-location';
 import * as TaskManager from 'expo-task-manager';
 import { grantLocationPermissions, denyLocationPermissions } from './features/auth/authSlice';
 import { store } from './store/store';
@@ -7,6 +12,7 @@ import * as Permissions from 'expo-permissions';
 
 import { request, gql } from 'graphql-request';
 import { log, getClient } from './utils';
+import { Alert } from 'react-native';
 
 interface Location {
     point: {
@@ -48,6 +54,7 @@ export const addLocationsToShift = async (shiftId: string, locations: Location[]
         ShiftId: shiftId,
         Locations: locs,
     };
+    log.info('Adding locations to shift:', locs);
     const mutation = gql`
         mutation AddLocations($ShiftId: ID!, $Locations: [LocationInput]!) {
             addLocationsToShift(shiftId: $ShiftId, locations: $Locations) {
@@ -67,18 +74,30 @@ export const registerMileageTask = () => {
         if (isRegistered) {
             log.debug('gigbox mileage task already registered.');
         } else {
-                    }
+            log.debug('gigbox mileage task not registered.');
+        }
     });
 };
 
+export const hasNeededPermissions = async () => {
+    const fgPermissionResponse = await getForegroundPermissionsAsync();
+    const bgPermissionResponse = await getBackgroundPermissionsAsync();
+
+    return fgPermissionResponse.status === 'granted' && bgPermissionResponse.status === 'granted';
+};
+
+export const getAllLocationPermissions = async () => {
+    const fgPermissionResponse = await getForegroundPermissionsAsync();
+    const bgPermissionResponse = await getBackgroundPermissionsAsync();
+
+    return { fgPermissionResponse, bgPermissionResponse };
+};
+
 export const askPermissions = async () => {
-    const state = store.getState();
-    const { status, granted } = await Permissions.askAsync(Permissions.LOCATION);
-    if (status === 'granted') {
-        store.dispatch(grantLocationPermissions());
-    } else {
-        store.dispatch(denyLocationPermissions());
-    }
+    const fgResponse = await requestForegroundPermissionsAsync();
+    const bgResponse = await requestBackgroundPermissionsAsync();
+
+    return await hasNeededPermissions();
 };
 
 /**
@@ -92,13 +111,10 @@ export const startGettingBackgroundLocation = async () => {
     Loc.startLocationUpdatesAsync('gigbox.mileageTracker', {
         accuracy: Loc.Accuracy.BestForNavigation,
         timeInterval: 2000,
-        foregroundService: {
-            notificationTitle: 'Gigbox is tracking your mileage',
-            notificationBody:
-                'MIT Gigbox is using your location to track your mileage and work shifts.',
-            notificationColor: '#ffffff',
-        },
+        distanceInterval: 15,
         activityType: Loc.ActivityType.AutomotiveNavigation,
+        deferredUpdatesDistance: 30,
+        pausesUpdatesAutomatically: true,
     }).then(() => log.info('Location task started.'));
 };
 

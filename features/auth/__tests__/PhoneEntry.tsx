@@ -60,22 +60,22 @@ describe('<PhoneEntry/>', () => {
         expect(submitText.props.children).toBe('Request Code');
     });
 
-    it('moves to verify otp screen if phone is submitted', async () => {
-        const { getByTestId, toJSON } = render(
-            qMount(
-                <Provider store={store}>
-                    <PhoneEntry />
-                </Provider>
-            )
-        );
-        expect(toJSON()).toMatchSnapshot();
-        const phoneInput = getByTestId('phone-input');
-        /* expect(getByTestId('phone-input').textContent).tobe(''); */
-        fireEvent.changeText(phoneInput, '7325630288');
-        const submitButton = getByTestId('request-code-button');
-        fireEvent.press(submitButton);
-        expect(toJSON()).toMatchSnapshot();
-        await waitFor(() => expect(getByTestId('verify-code-button')).toBeTruthy())
-    });
+    /* it('moves to verify otp screen if phone is submitted', async () => { */
+    /*     const { getByTestId, toJSON } = render( */
+    /*         qMount( */
+    /*             <Provider store={store}> */
+    /*                 <PhoneEntry /> */
+    /*             </Provider> */
+    /*         ) */
+    /*     ); */
+    /*     expect(toJSON()).toMatchSnapshot(); */
+    /*     const phoneInput = getByTestId('phone-input'); */
+    /*     /1* expect(getByTestId('phone-input').textContent).tobe(''); *1/ */
+    /*     fireEvent.changeText(phoneInput, '7325630288'); */
+    /*     const submitButton = getByTestId('request-code-button'); */
+    /*     fireEvent.press(submitButton); */
+    /*     expect(toJSON()).toMatchSnapshot(); */
+    /*     await waitFor(() => expect(getByTestId('verify-code-button')).toBeTruthy()) */
+    /* }); */
 
 });
