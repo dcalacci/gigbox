@@ -214,11 +214,13 @@ class AddLocationsToShift(Mutation):
 
     @login_required
     def mutate(self, info, shift_id, locations):
+        from api.routing.mapmatch import clean_trajectory
         shift_id = from_global_id(shift_id)[1]
         # ensure the user owns this shift
         shift = ShiftModel.query.filter_by(id=shift_id, user_id=g.user).first()
         # TODO: compute distance from last location. if it is within an epsilon, do not
         # add our trace.
+
         for l in locations:
             shift.locations.append(
                 LocationModel(
@@ -229,9 +231,8 @@ class AddLocationsToShift(Mutation):
                     shift_id,
                 )
             )
-
-        # Every 5 locations added, update the distance on the shift by doing
-        # map matching
+        # Every 5 locations added, update the distance on the shift by cleaning locations and map
+        # matching.
         n_locations = len(shift.locations)
         if n_locations % 5 == 0 and n_locations > 2:
             current_app.logger.info(

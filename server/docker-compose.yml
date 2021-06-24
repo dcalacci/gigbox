@@ -32,6 +32,8 @@ services:
         container_name: gigbox-osrm
         image: osrm/osrm-backend 
         restart: always
+        ports: 
+            - '5001:5000'
         volumes:
             - osrm-data:/opt
         command:
