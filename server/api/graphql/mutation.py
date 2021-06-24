@@ -147,6 +147,9 @@ class EndShift(Mutation):
         # calculate final mileage for this shift
         shift = updateShiftMileageAndGeometry(shift, info)
 
+        createJobsFromLocations(shift, shift.locations, info)
+
+        # create jobs from the shift
         shift.end_time = end_time
         shift.active = False
         db.session.add(shift)
@@ -198,6 +201,33 @@ def updateShiftMileageAndGeometry(shift, info):
     current_app.logger.info(f'matched route added to shift...')
     return shift
 
+
+def createJobsFromLocations(shift, locations, info):
+    """ Create job objects in our database from a list of locations and a shift 
+    """
+    from api.routing.mapmatch import get_trips_from_locations, get_match_for_trajectory
+    trips = get_trips_from_locations(locations)
+    for traj_df, stops, dist in trips:
+        job = JobModel(
+                start_location = {'lat': stops['start'].lat, 'lng': stops['start'].lng},
+                end_location = {'lat': stops['stop'].lat, 'lng': stops['stop'].lng},
+                user_id = shift.user_id,
+                shift_id = shift.id,
+                )
+
+        match_obj = get_route_distance_and_geometry(traj_df)
+        bb = match_obj['geom_obj'][1]
+        geometries = match_obj['geom_obj'][0]
+
+        bounding_box = {'minLat': bb[1],
+                        'minLng': bb[0],
+                        'maxLat': bb[3],
+                        'maxLng': bb[2]}
+        matched = {'geometries': geometries, 'bounding_box': bounding_box}
+        job.snapped_geometry = matched
+        job.mileage = match_obj['distance']
+        db.session.add(job)
+    db.session.commit()
 
 class AddLocationsToShift(Mutation):
     """Adds a list of locations to a given shift"""
@@ -381,8 +411,7 @@ class CreateJob(Mutation):
         employer = EmployerNames.INSTACART
         job = JobModel(
             shift_id=shift.id,
-            lng=start_location.lng,
-            lat=start_location.lat,
+            start_location=start_location,
             user_id=shift.user_id,
             employer=employer
         )

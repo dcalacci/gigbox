@@ -11,10 +11,11 @@ import jwt
 from api import create_app
 from api.controllers.errors import custom_errors
 from api.controllers.auth.utils import create_jwt, decode_jwt, get_otp
-from api.models import User, initialize_db
-from api.models import conn as models_conn
+from api.models import User
+from api.models import engine as models_conn
 from tests.utils import create_tables
-from unittest import mock
+from flask_sqlalchemy import SQLAlchemy
+from unittest import mock, errors
 
 
 def create_expired_token(phone):

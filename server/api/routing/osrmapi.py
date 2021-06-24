@@ -23,6 +23,7 @@ def match(coordinates):
     """
     coord_str = requests.utils.quote(
         ';'.join([f'{c["lng"]},{c["lat"]}' for c in coordinates]))
+    print("Match API coordinate string: {}".format(coord_str))
     # We don't include timestamps because they aren't really needed
     payload = {
         "geometries": "geojson",
@@ -36,7 +37,7 @@ def get_match_distance(res):
     """
     # convert to mileage
     if 'matchings' in res:
-        return res['matchings']['distance'] * 0.0006213712
+        return res['matchings'][0]['distance'] * 0.0006213712
     return 0
 
 def get_match_geometry(res):

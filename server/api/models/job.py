@@ -41,8 +41,18 @@ class Job(db.Model):
     tip = db.Column(db.Float, nullable=True)
     employer = db.Column(db.Enum(EmployerNames), nullable=True)
 
-    def __init__(self, lng, lat, shift_id, user_id, employer):
-        self.start_location = from_shape(geometry.Point(lng, lat))
+    def __init__(self, 
+            start_location, 
+            shift_id, 
+            user_id, 
+            end_location=None, 
+            employer=None):
+
+        self.start_location = from_shape(geometry.Point(start_location['lng'], 
+            start_location['lat']))
+        if end_location is not None:
+            self.end_location = from_shape(geometry.Point(end_location['lng'], 
+                end_location['lat']))
         self.shift_id = shift_id
         self.user_id = user_id
         self.employer = employer
