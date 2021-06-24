@@ -14,15 +14,17 @@ retries = Retry(total=5,
 
 s.mount('http://', HTTPAdapter(max_retries=retries))
 
-# OSRM_URI = "http://osrm:5000"
 OSRM_URI = os.environ['OSRM_URI']
 
 def match(coordinates):
+    """Submits map match request to our osrm api
+
+    coordinates: a list of {lat, lng} dicts
+    """
     coord_str = requests.utils.quote(
         ';'.join([f'{c["lng"]},{c["lat"]}' for c in coordinates]))
-    # timestamp_str = requests.utils.quote(';'.join([f'{int(c["timestamp"].timestamp())}' for c in
-    #                                                coordinates]))
-    payload = {  # 'timestamps': timestamp_str,
+    # We don't include timestamps because they aren't really needed
+    payload = {
         "geometries": "geojson",
         "tidy": "true"}
     MATCH_URI = f'{OSRM_URI}/match/v1/car/{coord_str}'
@@ -30,25 +32,17 @@ def match(coordinates):
 
 
 def get_match_distance(res):
-    """gets route distance from a list of Location objects
     """
+    """
+    # convert to mileage
     if 'matchings' in res:
-        distances = [m['distance'] for m in res['matchings']]
-        geometries = [m['geometry']['coordinates'] for m in res['matchings']]
-        total_distance = sum(distances)
-        mileage = total_distance * 0.0006213712
-        return mileage
+        return res['matchings']['distance'] * 0.0006213712
     return 0
 
 def get_match_geometry(res):
-    # print("matchings:", res.json()['matchings'])
-    # print("tracepoints:", res.json()['tracepoints'])
-    # res_json = json.loads(res)
-    print("Match result:", res)
     if 'matchings' in res:
-        geometries = [m['geometry']['coordinates'] for m in res['matchings']]
-
-        geometries = list(itertools.chain(*geometries))
+        # first is always the highest-confidence match from OSRM
+        geometries = res['matchings'][0]['geometry']['coordinates']
 
         def bounding_box(points):
             x_coordinates, y_coordinates = zip(*points)
@@ -56,26 +50,3 @@ def get_match_geometry(res):
 
         return (geometries, bounding_box(geometries))
     return False
-
-
-def get_route_distance_and_geometry(locations):
-    try:
-        res = get_match_for_locations(locations)
-    except ConnectionError as e:
-        return {'status': 'error',
-                'message': 'Connection error.'}
-
-    if res['code'] == 'TooBig':
-        return {'status': 'error',
-                'message': 'trace too large'}
-    elif 'matchings' not in res:
-        return {'status': 'error',
-                'message': 'failed to match route'}
-    else:
-        distance = get_match_distance(res)
-        geom_obj = get_match_geometry(res)
-        return {"status": "ok",
-                "distance": distance,
-                "geom_obj": geom_obj}
-
-
