@@ -192,6 +192,7 @@ def updateShiftMileageAndGeometry(shift, info):
     match_obj = get_route_distance_and_geometry(locs)
     if 'geom_obj' not in match_obj or not match_obj['geom_obj']:
         current_app.logger.error(f'Failed to match a route to shift...')
+        current_app.logger.error(match_obj)
         return shift
 
     distance = match_obj['distance']
