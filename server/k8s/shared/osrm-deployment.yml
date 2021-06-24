@@ -34,8 +34,7 @@ spec:
           image: osrm/osrm-backend:v5.24.0
           resources:
               requests:
-                  memory: 40G
-                  cpu: 2
+                  memory: 45G
 
           ports:
               - containerPort: 5000
