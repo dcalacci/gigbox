@@ -104,15 +104,20 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
     const [locationModalVisible, setLocationModalVisible] = useState<boolean>(false);
     const queryClient = useQueryClient();
 
+
     useEffect(() => {
         const checkPermissions = async () => {
             const hasPermissions = await hasNeededPermissions();
-            console.log('button:', locationConsent);
-            console.log('has permissions:', hasPermissions);
             if (locationConsent !== hasPermissions) {
                 setLocationConsent(hasPermissions);
             }
+
+            if (locationModalVisible && hasPermissions) {
+                console.log("modal is visible but we have permissions. Closing modal.")
+                setLocationModalVisible(false)
+            }
         };
+
         if (locationConsent !== false) {
             checkPermissions();
         }

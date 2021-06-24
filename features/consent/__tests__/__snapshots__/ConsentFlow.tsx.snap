@@ -1,0 +1,704 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<ConsentFlow/> should ask for location permissions if we have none 1`] = `
+<RCTSafeAreaView
+  emulateUnlessSupported={true}
+  style={
+    Object {
+      "marginTop": 40,
+      "paddingBottom": 40,
+    }
+  }
+>
+  <RCTScrollView
+    style={
+      Object {
+        "backgroundColor": "rgba(243, 244, 246, 1)",
+      }
+    }
+  >
+    <View>
+      <View
+        style={
+          Object {
+            "paddingBottom": 8,
+            "paddingLeft": 8,
+            "paddingRight": 8,
+            "paddingTop": 8,
+          }
+        }
+      >
+        <Text
+          style={
+            Array [
+              Object {
+                "color": "rgba(16, 185, 129, 1)",
+                "fontSize": 30,
+                "fontWeight": "700",
+                "lineHeight": 36,
+              },
+            ]
+          }
+        >
+          By using gigbox, you consent to being part of an MIT research study.
+        </Text>
+        <Text
+          style={
+            Object {
+              "fontSize": 18,
+              "lineHeight": 28,
+            }
+          }
+        >
+          Because this app is also a research project, you need to consent to being part of the study to use it.
+        </Text>
+      </View>
+      <View
+        style={
+          Object {
+            "flexDirection": "column",
+            "paddingBottom": 20,
+            "paddingLeft": 20,
+            "paddingRight": 20,
+            "paddingTop": 20,
+          }
+        }
+      >
+        <View
+          style={
+            Object {
+              "flexDirection": "row",
+              "marginLeft": -12,
+              "paddingBottom": 20,
+            }
+          }
+        >
+          <Text
+            style={
+              Object {
+                "color": "rgba(16, 185, 129, 1)",
+                "fontSize": 24,
+                "fontWeight": "700",
+                "lineHeight": 32,
+                "paddingRight": 4,
+              }
+            }
+          >
+            1/5
+          </Text>
+          <Text
+            style={
+              Object {
+                "fontSize": 24,
+                "fontWeight": "700",
+                "lineHeight": 32,
+              }
+            }
+          >
+            Summary and Procedures
+          </Text>
+        </View>
+        <Text
+          style={
+            Object {
+              "color": "rgba(16, 185, 129, 1)",
+              "fontSize": 20,
+              "fontWeight": "700",
+              "lineHeight": 28,
+              "paddingBottom": 8,
+              "textDecorationLine": "underline",
+            }
+          }
+        >
+          What are the study goals? 🎯
+        </Text>
+        <Text
+          style={
+            Object {
+              "fontSize": 16,
+              "lineHeight": 24,
+            }
+          }
+        >
+          By participating in this study, you will help estimate the effective wages of app-based workers like yourself, and help researchers make better tools for workers to track wages, time, and expenses. You will also help uncover any pay discrepancies people of different backgrounds might make from gig work, and help measure how safe gig work is for workers. To do this, the app uses your location, screenshots you take of your work apps, and your survey responses.
+        </Text>
+        <Text
+          style={
+            Object {
+              "color": "rgba(16, 185, 129, 1)",
+              "fontSize": 20,
+              "fontWeight": "700",
+              "lineHeight": 28,
+              "paddingBottom": 8,
+              "paddingTop": 20,
+              "textDecorationLine": "underline",
+            }
+          }
+        >
+          Procedures: what you need to do
+        </Text>
+        <Text
+          style={
+            Object {
+              "fontSize": 16,
+              "lineHeight": 24,
+            }
+          }
+        >
+          If you volunteer to be part of this study, we’d ask you to:
+        </Text>
+        <Text
+          style={
+            Object {
+              "fontSize": 16,
+              "fontWeight": "700",
+              "lineHeight": 24,
+              "paddingBottom": 8,
+              "paddingLeft": 8,
+              "paddingRight": 8,
+              "paddingTop": 8,
+            }
+          }
+        >
+          Use gigbox during your normal working day to track jobs so we can help measure your pay and expenses
+        </Text>
+        <Text
+          style={
+            Object {
+              "fontSize": 16,
+              "fontWeight": "700",
+              "lineHeight": 24,
+              "paddingBottom": 8,
+              "paddingLeft": 8,
+              "paddingRight": 8,
+              "paddingTop": 8,
+            }
+          }
+        >
+          Answer a series of survey questions to help measure potential pay differences between people of different backgrounds
+        </Text>
+        <Text
+          style={
+            Object {
+              "fontSize": 16,
+              "lineHeight": 24,
+            }
+          }
+        >
+          Your participation is completely voluntary, and you’re free to choose if you’d like to be in it. You can choose to withdraw at any time without any consequences.
+        </Text>
+      </View>
+      <View
+        style={
+          Object {
+            "flexDirection": "column",
+            "paddingBottom": 20,
+            "paddingLeft": 20,
+            "paddingRight": 20,
+            "paddingTop": 20,
+          }
+        }
+      >
+        <View
+          style={
+            Object {
+              "flexDirection": "row",
+              "marginLeft": -12,
+              "paddingBottom": 20,
+            }
+          }
+        >
+          <Text
+            style={
+              Object {
+                "color": "rgba(16, 185, 129, 1)",
+                "fontSize": 24,
+                "fontWeight": "700",
+                "lineHeight": 32,
+                "paddingRight": 4,
+              }
+            }
+          >
+            2/5
+          </Text>
+          <Text
+            style={
+              Object {
+                "fontSize": 24,
+                "fontWeight": "700",
+                "lineHeight": 32,
+              }
+            }
+          >
+            Privacy & Data 🔐
+          </Text>
+        </View>
+        <Text
+          style={
+            Object {
+              "fontSize": 16,
+              "lineHeight": 24,
+              "paddingBottom": 8,
+              "paddingTop": 8,
+            }
+          }
+        >
+          The only people who will know that you are a research subject are members of the research team which might include outside collaborators not affiliated with MIT. No information about you, or provided by you during the research will be disclosed to others without your written permission, except: if necessary to protect your rights or welfare, or if required by law. In addition, your information may be reviewed by authorized MIT representatives to ensure compliance with MIT policies and procedures.
+        </Text>
+        <Text
+          style={
+            Object {
+              "fontSize": 16,
+              "lineHeight": 24,
+              "paddingBottom": 8,
+              "paddingTop": 8,
+            }
+          }
+        >
+          When the results of the research are published or discussed in conferences, no information will be included that would reveal your identity. If photographs, videos, or audio-tape recordings of you will be used for educational purposes, your identity will be protected or disguised.
+        </Text>
+        <Text
+          style={
+            Object {
+              "color": "rgba(16, 185, 129, 1)",
+              "fontSize": 20,
+              "fontWeight": "700",
+              "lineHeight": 28,
+              "paddingBottom": 8,
+              "paddingTop": 20,
+              "textDecorationLine": "underline",
+            }
+          }
+        >
+          Data about you
+        </Text>
+        <Text
+          style={
+            Object {
+              "fontSize": 16,
+              "lineHeight": 24,
+              "paddingBottom": 8,
+              "paddingTop": 8,
+            }
+          }
+        >
+          Three kinds of data will be collected through your device.
+          <Text
+            style={
+              Object {
+                "fontWeight": "700",
+              }
+            }
+          >
+             
+            Any data that is collected will either be stored on your phone, or on secure servers at MIT, unless you explicitly consent to your data being used for other projects or by other researchers.
+          </Text>
+        </Text>
+        <Text
+          style={
+            Object {
+              "color": "rgba(16, 185, 129, 1)",
+              "fontSize": 18,
+              "fontWeight": "700",
+              "lineHeight": 28,
+              "paddingBottom": 8,
+              "paddingTop": 20,
+            }
+          }
+        >
+          All of your data will be associated with an anonymous ID - not traceable to your name, phone number, or any other identifier.
+        </Text>
+        <Modal
+          animationType="slide"
+          hardwareAccelerated={false}
+          presentationStyle="formSheet"
+          transparent={false}
+          visible={false}
+        >
+          <View
+            style={
+              Object {
+                "display": "flex",
+                "flexDirection": "column",
+                "height": "100%",
+                "paddingBottom": 20,
+                "paddingLeft": 20,
+                "paddingRight": 20,
+                "paddingTop": 20,
+              }
+            }
+          >
+            <Text
+              style={
+                Object {
+                  "fontSize": 30,
+                  "fontWeight": "700",
+                  "lineHeight": 36,
+                  "paddingBottom": 8,
+                  "paddingLeft": 8,
+                  "paddingRight": 8,
+                  "paddingTop": 8,
+                  "textDecorationLine": "underline",
+                }
+              }
+            >
+              Location Settings
+            </Text>
+            <Text
+              style={
+                Object {
+                  "fontSize": 18,
+                  "lineHeight": 28,
+                  "paddingBottom": 8,
+                  "paddingLeft": 8,
+                  "paddingRight": 8,
+                  "paddingTop": 8,
+                }
+              }
+            >
+              Gigbox needs 'always on' location tracking to work properly. We'll never share your location with anyone. here's how to enable it:
+            </Text>
+            <Text
+              style={
+                Object {
+                  "fontSize": 18,
+                  "lineHeight": 28,
+                  "paddingBottom": 8,
+                  "paddingLeft": 8,
+                  "paddingRight": 8,
+                  "paddingTop": 8,
+                }
+              }
+            >
+              1. Tap button below to open Gigbox settings
+            </Text>
+            <Text
+              style={
+                Object {
+                  "fontSize": 18,
+                  "lineHeight": 28,
+                  "paddingBottom": 8,
+                  "paddingLeft": 8,
+                  "paddingRight": 8,
+                  "paddingTop": 8,
+                }
+              }
+            >
+              2. Tap "Location"
+            </Text>
+            <Text
+              style={
+                Object {
+                  "fontSize": 18,
+                  "lineHeight": 28,
+                  "paddingBottom": 8,
+                  "paddingLeft": 8,
+                  "paddingRight": 8,
+                  "paddingTop": 8,
+                }
+              }
+            >
+              3. Choose "Always" and enable Precise Location
+            </Text>
+            <View
+              accessible={true}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                Object {
+                  "alignSelf": "center",
+                  "backgroundColor": "rgba(31, 41, 55, 1)",
+                  "borderBottomLeftRadius": 8,
+                  "borderBottomRightRadius": 8,
+                  "borderTopLeftRadius": 8,
+                  "borderTopRightRadius": 8,
+                  "marginBottom": 8,
+                  "marginLeft": 8,
+                  "marginRight": 8,
+                  "marginTop": 8,
+                  "width": "83.333333%",
+                }
+              }
+            >
+              <Text
+                style={
+                  Object {
+                    "alignSelf": "center",
+                    "color": "rgba(255, 255, 255, 1)",
+                    "fontSize": 18,
+                    "fontWeight": "700",
+                    "lineHeight": 28,
+                    "paddingBottom": 8,
+                    "paddingLeft": 8,
+                    "paddingRight": 8,
+                    "paddingTop": 8,
+                    "textDecorationLine": "underline",
+                  }
+                }
+              >
+                Open Settings
+              </Text>
+            </View>
+            <View
+              accessible={true}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                Object {
+                  "alignSelf": "center",
+                  "backgroundColor": "rgba(248, 113, 113, 1)",
+                  "borderBottomLeftRadius": 8,
+                  "borderBottomRightRadius": 8,
+                  "borderTopLeftRadius": 8,
+                  "borderTopRightRadius": 8,
+                  "marginBottom": 8,
+                  "marginLeft": 8,
+                  "marginRight": 8,
+                  "marginTop": 8,
+                  "width": "83.333333%",
+                }
+              }
+            >
+              <Text
+                style={
+                  Object {
+                    "alignSelf": "center",
+                    "color": "rgba(255, 255, 255, 1)",
+                    "fontSize": 18,
+                    "fontWeight": "700",
+                    "lineHeight": 28,
+                    "paddingBottom": 8,
+                    "paddingLeft": 8,
+                    "paddingRight": 8,
+                    "paddingTop": 8,
+                    "textDecorationLine": "underline",
+                  }
+                }
+              >
+                Close
+              </Text>
+            </View>
+          </View>
+        </Modal>
+        <Text
+          style={
+            Object {
+              "color": "rgba(16, 185, 129, 1)",
+              "fontSize": 18,
+              "fontWeight": "700",
+              "lineHeight": 28,
+              "paddingBottom": 8,
+              "paddingTop": 20,
+            }
+          }
+        >
+           1. Your Location + accelerometer 📍
+        </Text>
+        <Text
+          style={
+            Object {
+              "fontSize": 16,
+              "lineHeight": 24,
+              "paddingBottom": 8,
+              "paddingTop": 8,
+            }
+          }
+        >
+          We’ll keep track of your location + accelerometer readings in the background while you use the app, to track how far you travel for jobs, how much you’re standing, sitting, and walking while on the job, and to help make job tracking more accurate in the future.
+        </Text>
+        <View
+          style={
+            Object {
+              "backgroundColor": "rgba(255, 255, 255, 1)",
+              "borderBottomLeftRadius": 8,
+              "borderBottomRightRadius": 8,
+              "borderTopLeftRadius": 8,
+              "borderTopRightRadius": 8,
+              "marginBottom": 8,
+              "marginLeft": 8,
+              "marginRight": 8,
+              "marginTop": 8,
+              "paddingBottom": 8,
+              "paddingLeft": 8,
+              "paddingRight": 8,
+              "paddingTop": 8,
+            }
+          }
+        >
+          <Text
+            style={
+              Object {
+                "fontSize": 18,
+                "lineHeight": 28,
+                "paddingBottom": 8,
+                "paddingTop": 8,
+                "textAlign": "center",
+                "textDecorationLine": "underline",
+              }
+            }
+          >
+            Do you consent to your location being tracked to estimate your pay, expenses, and to improve job tracking?
+          </Text>
+          <View
+            style={
+              Object {
+                "alignContent": "space-around",
+                "flexDirection": "row",
+                "flexGrow": 1,
+                "paddingBottom": 8,
+                "paddingLeft": 8,
+                "paddingRight": 8,
+                "paddingTop": 8,
+                "width": "100%",
+              }
+            }
+          >
+            <View
+              accessible={true}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                Array [
+                  Object {
+                    "borderBottomLeftRadius": 8,
+                    "borderBottomRightRadius": 8,
+                    "borderTopLeftRadius": 8,
+                    "borderTopRightRadius": 8,
+                    "flexGrow": 1,
+                    "marginBottom": 8,
+                    "marginLeft": 8,
+                    "marginRight": 8,
+                    "marginTop": 8,
+                    "paddingBottom": 8,
+                    "paddingLeft": 8,
+                    "paddingRight": 8,
+                    "paddingTop": 8,
+                  },
+                  Object {
+                    "borderBottomColor": "rgba(31, 41, 55, 1)",
+                    "borderBottomWidth": 2,
+                    "borderLeftColor": "rgba(31, 41, 55, 1)",
+                    "borderLeftWidth": 2,
+                    "borderRightColor": "rgba(31, 41, 55, 1)",
+                    "borderRightWidth": 2,
+                    "borderTopColor": "rgba(31, 41, 55, 1)",
+                    "borderTopWidth": 2,
+                  },
+                ]
+              }
+              testID="location-data-consent-no"
+            >
+              <Text
+                style={
+                  Array [
+                    Object {
+                      "color": "rgba(255, 255, 255, 1)",
+                      "fontSize": 18,
+                      "fontWeight": "700",
+                      "lineHeight": 28,
+                      "textAlign": "center",
+                    },
+                    Object {
+                      "color": "rgba(107, 114, 128, 1)",
+                    },
+                  ]
+                }
+              >
+                <Text />
+                No
+              </Text>
+            </View>
+            <View
+              accessible={true}
+              focusable={true}
+              onBlur={[Function]}
+              onClick={[Function]}
+              onFocus={[Function]}
+              onResponderGrant={[Function]}
+              onResponderMove={[Function]}
+              onResponderRelease={[Function]}
+              onResponderTerminate={[Function]}
+              onResponderTerminationRequest={[Function]}
+              onStartShouldSetResponder={[Function]}
+              style={
+                Array [
+                  Object {
+                    "borderBottomLeftRadius": 8,
+                    "borderBottomRightRadius": 8,
+                    "borderTopLeftRadius": 8,
+                    "borderTopRightRadius": 8,
+                    "flexGrow": 1,
+                    "marginBottom": 8,
+                    "marginLeft": 8,
+                    "marginRight": 8,
+                    "marginTop": 8,
+                    "paddingBottom": 8,
+                    "paddingLeft": 8,
+                    "paddingRight": 8,
+                    "paddingTop": 8,
+                  },
+                  Object {
+                    "borderBottomColor": "rgba(16, 185, 129, 1)",
+                    "borderBottomWidth": 2,
+                    "borderLeftColor": "rgba(16, 185, 129, 1)",
+                    "borderLeftWidth": 2,
+                    "borderRightColor": "rgba(16, 185, 129, 1)",
+                    "borderRightWidth": 2,
+                    "borderTopColor": "rgba(16, 185, 129, 1)",
+                    "borderTopWidth": 2,
+                  },
+                ]
+              }
+              testID="location-data-consent-yes"
+            >
+              <Text
+                style={
+                  Array [
+                    Object {
+                      "color": "rgba(255, 255, 255, 1)",
+                      "fontSize": 18,
+                      "fontWeight": "700",
+                      "lineHeight": 28,
+                      "textAlign": "center",
+                    },
+                    Object {
+                      "color": "rgba(16, 185, 129, 1)",
+                    },
+                  ]
+                }
+              >
+                <Text />
+                Yes
+              </Text>
+            </View>
+          </View>
+        </View>
+      </View>
+    </View>
+  </RCTScrollView>
+</RCTSafeAreaView>
+`;

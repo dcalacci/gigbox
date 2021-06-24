@@ -72,10 +72,8 @@ export default function TrackingBar() {
             return { previousShift };
         },
         onError: (err, newShift, context) => {
-            // queryClient.setQueryData('activeShift', context.previousShift);
             queryClient.invalidateQueries('activeShift');
             log.error(`Problem ending shift: ${err}`);
-            // toast?.show(err)
             err.response.errors.map((e) => Toast.show(e.message));
         },
     });
@@ -107,20 +105,6 @@ export default function TrackingBar() {
         },
     });
 
-    const uploadScreenshot = useMutation(addScreenshotToShift, {
-        onSuccess: (data, variables, context) => {
-            log.info('Submitted screenshot!', data, variables, context);
-            console.log(data);
-        },
-        onError: (err, problem, context) => {
-            log.error('Had a problem:', err, problem);
-            console.log(err);
-        },
-        onSettled: () => {
-            log.info('Settled adding screenshot.');
-        },
-    });
-
     if (activeShift.isLoading) {
         log.info('Tracking bar loading...');
     }
@@ -149,85 +133,12 @@ export default function TrackingBar() {
     });
 
     const [mediaListener, setMediaListener] = useState<any | null>(null);
+
     // Processes new screenshots while tracking bar is on
     useEffect(() => {
         if (activeShift.status != 'success' || !activeShift.data?.active) {
             return;
-        } else if (mediaListener == null) {
-            log.info('trying to add media listener...');
-            console.log(mediaListener);
-            const listener = MediaLibrary.addListener(async (obj) => {
-                log.info('Adding listener...');
-                //TODO: if user takes a screenshot of an app, but they're not in an active shift,
-                // ask them if they would like to start a shift.
-
-                // return / break if user is not actively tracking a shift
-                if (activeShift.status != 'success' || activeShift.data.active) {
-                    return;
-                }
-
-                if (Device.osName === 'iOS') {
-                    log.info('Trying to retrieve screenshots from iOS...');
-                    if ('insertedAssets' in obj) {
-                        const shift_id = activeShift.data.id;
-
-                        var screenshots = obj.insertedAssets.filter(
-                            (a) =>
-                                a.mediaSubtypes != undefined &&
-                                a.mediaSubtypes.includes('screenshot')
-                        );
-                        log.info('Shift found, processing a screenshot for shift ', shift_id);
-
-                        const info = await MediaLibrary.getAssetInfoAsync(s);
-                        screenshots.map((s: Asset) =>
-                            uploadScreenshot.mutate({
-                                screenshotLocalUri: info.localUri,
-                                modificationTime: info.modificationTime,
-                                shiftId: shift_id,
-                                jobId: undefined,
-                            })
-                        );
-                    }
-                } else {
-                    log.info('Trying to retrieve screenshots from android..');
-                    try {
-                        const screenshotAlbum = await MediaLibrary.getAlbumAsync('Screenshots');
-                        MediaLibrary.getAssetsAsync({
-                            album: screenshotAlbum,
-                            mediaType: [MediaLibrary.MediaType.photo],
-                            // you'd think it would be creationTime, but screenshots have a
-                            // creationTime of 0 on android it seems
-                            sortBy: [[MediaLibrary.SortBy.modificationTime, false]],
-                        }).then(async (screenshots) => {
-                            console.log('screenshots:', screenshots.assets);
-                            const shift_id = activeShift.data.id;
-                            const info = await MediaLibrary.getAssetInfoAsync(
-                                screenshots.assets[0]
-                            );
-                            uploadScreenshot.mutate({
-                                screenshotLocalUri: info.localUri,
-                                modificationTime: info.modificationTime,
-                                shiftId: shift_id,
-                                jobId: undefined,
-                            });
-                        });
-                        // const scrAlbum = await MediaLibrary.getAlbumAsync('Screenshots')
-                        // console.log('album', scrAlbum)
-                    } catch (e) {
-                        log.error('Could not retrieve screenshots:', e);
-                    }
-                }
-            });
-            log.info('Setting media listener local state...');
-            setMediaListener(listener);
-            return () => {
-                if (mediaListener !== null) {
-                    log.info('Removing medialistener from local state...');
-                    mediaListener.remove();
-                    setMediaListener(null);
-                }
-            };
-        }
+        } 
     });
 
     const onTogglePress = () => {

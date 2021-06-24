@@ -109,7 +109,7 @@ export const askPermissions = async () => {
 export const startGettingBackgroundLocation = async () => {
     await askPermissions();
     Loc.startLocationUpdatesAsync('gigbox.mileageTracker', {
-        accuracy: Loc.Accuracy.BestForNavigation,
+        accuracy: Loc.Accuracy.Highest,
         timeInterval: 2000,
         distanceInterval: 15,
         activityType: Loc.ActivityType.AutomotiveNavigation,
