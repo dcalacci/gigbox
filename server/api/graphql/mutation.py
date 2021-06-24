@@ -147,14 +147,6 @@ class EndShift(Mutation):
         # calculate final mileage for this shift
         shift = updateShiftMileageAndGeometry(shift, info)
 
-        if (shift.road_snapped_miles is None or shift.road_snapped_miles < c.MIN_SHIFT_MILEAGE):
-            shift.end_time = end_time
-            shift.active = False
-            db.session.delete(shift)
-            db.session.commit()
-            raise ShiftInvalidError(
-                "Shift not tracked - it was under 1 mile long.")
-
         shift.end_time = end_time
         shift.active = False
         db.session.add(shift)
