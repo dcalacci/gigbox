@@ -96,7 +96,6 @@ class CreateShift(Mutation):
     shift = Field(lambda: ShiftNode, description="Shift that was created")
 
     # For optional fields in graphene mutations, see:
-    # https://github.com/graphql-python/graphene/issues/769#issuecomment-397596754
     class Arguments:
         start_time = String(required=False)
         end_time = String(required=False)
@@ -140,7 +139,6 @@ class EndShift(Mutation):
         if (end_time - shift.start_time).seconds < c.MIN_SHIFT_DURATION:
             shift.end_time = end_time
             shift.active = False
-            shift = endAnyActiveJobs(shift, info)
             db.session.delete(shift)
             db.session.commit()
             raise ShiftInvalidError(
@@ -152,13 +150,11 @@ class EndShift(Mutation):
         if (shift.road_snapped_miles is None or shift.road_snapped_miles < c.MIN_SHIFT_MILEAGE):
             shift.end_time = end_time
             shift.active = False
-            shift = endAnyActiveJobs(shift, info)
             db.session.delete(shift)
             db.session.commit()
             raise ShiftInvalidError(
                 "Shift not tracked - it was under 1 mile long.")
 
-        shift = endAnyActiveJobs(shift, info)
         shift.end_time = end_time
         shift.active = False
         db.session.add(shift)
@@ -211,15 +207,6 @@ def updateShiftMileageAndGeometry(shift, info):
     return shift
 
 
-def endAnyActiveJobs(shift, info):
-    for j in shift.jobs:
-        if (j.end_time is None):
-            print("Found an active job. Ending...")
-            j.end_time = datetime.now()
-            j.end_location = shift.locations[-1].geom
-    return shift
-
-
 class AddLocationsToShift(Mutation):
     """Adds a list of locations to a given shift"""
 
@@ -251,10 +238,6 @@ class AddLocationsToShift(Mutation):
                 )
             )
 
-        active_job = JobModel.query.filter_by(
-            user_id=g.user,
-            end_time=None,
-            shift_id=shift_id).first()
         # Every 5 locations added, update the distance on the shift by doing
         # map matching
         n_locations = len(shift.locations)
@@ -262,15 +245,10 @@ class AddLocationsToShift(Mutation):
             current_app.logger.info(
                 "Updating mileage & calculated route on shift...")
             shift = updateShiftMileageAndGeometry(shift, info)
-
-            if (active_job):
-                # update job mileage and geometry, too. Seems cheap to do (just one more api match call)
-                active_job = get_job_mileage_and_geometry(
-                    info, active_job, shift)
-                db.session.add(active_job)
         db.session.add(shift)
         db.session.commit()
 
+        # return last location
         return AddLocationsToShift(location=shift.locations[-1], ok=True)
 
 

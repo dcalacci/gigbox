@@ -38,12 +38,6 @@ class Shift(db.Model):
 
     __table_args__ = (Index("index", "id", "start_time"),)
 
-    # I looked for a way to enforce the idea that only one shift per user ID could
-    # be active at a time, but didn't figure out a way to enforce it in sqlalchemy...
-    # an example:
-    # CREATE UNIQUE INDEX "user_email" ON emails(user_id) WHERE is_active=true
-    # index_shiftconstraint = db.Index("user_id", unique=True)
-
     def __repr__(self):
         return (
             f"Shift from {self.start_time} to {self.end_time} for user {self.user_id}"
