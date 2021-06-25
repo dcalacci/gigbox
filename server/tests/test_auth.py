@@ -8,6 +8,7 @@ import datetime
 from flask import current_app
 import jwt
 
+from .utils import ApiTestCase
 from api import create_app, db
 from api.controllers.errors import custom_errors
 from api.controllers.auth.utils import create_jwt, decode_jwt, get_otp
@@ -26,18 +27,6 @@ def create_expired_token(phone):
     }
     return jwt.encode(payload, current_app.config['SECRET_KEY'], algorithm="HS256").decode("utf-8")
 
-
-class ApiTestCase(unittest.TestCase):
-
-    def setUp(self):
-        os.environ['ENV'] = 'TESTING'
-        self.app = create_app()
-        self.client = self.app.test_client()
-
-        with self.app.app_context():
-            db.session.close()
-            db.drop_all()
-            db.create_all()
 
 class TokenTestCase(ApiTestCase):
 
