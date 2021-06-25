@@ -10,7 +10,7 @@ import Ellipsis from '../../components/Ellipsis';
 import { log } from '../../utils';
 import * as ImagePicker from 'expo-image-picker';
 
-import { useToast } from 'react-native-fast-toast';
+import Toast from 'react-native-root-toast';
 
 const ScreenshotUploader = ({
     modalVisible,
@@ -25,7 +25,6 @@ const ScreenshotUploader = ({
 }) => {
     const [imageUri, setImageUri] = useState<string>();
     const [parsedText, setParsedText] = useState<string>('');
-    const toast = useToast();
     const queryClient = useQueryClient();
 
     useEffect(() => {
@@ -80,7 +79,7 @@ const ScreenshotUploader = ({
             }
         },
         onError: (err) => {
-            toast?.show('Error deleting image. Try again.');
+            Toast.show("Error deleting image. Try again?");
         },
     });
 

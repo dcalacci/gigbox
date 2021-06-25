@@ -1,0 +1,701 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`<PhoneEntry/> disables submit button if phone number is not correctly formatted 1`] = `
+<RNCSafeAreaView
+  style={
+    Object {
+      "paddingLeft": 40,
+      "paddingRight": 40,
+    }
+  }
+>
+  <RNCSafeAreaView>
+    <Text
+      style={
+        Object {
+          "color": "rgba(16, 185, 129, 1)",
+          "fontSize": 30,
+          "fontWeight": "700",
+          "lineHeight": 36,
+        }
+      }
+    >
+      Login to Gigbox
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(16, 185, 129, 1)",
+          "fontSize": 18,
+          "fontWeight": "700",
+          "lineHeight": 28,
+        }
+      }
+    >
+      Your phone number is never saved and is only used to log you in
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(0, 0, 0, 1)",
+          "fontSize": 20,
+          "fontWeight": "600",
+          "lineHeight": 28,
+          "paddingTop": 80,
+        }
+      }
+    >
+      Get your One-Time Passcode
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(156, 163, 175, 1)",
+          "fontSize": 14,
+          "fontWeight": "600",
+          "lineHeight": 20,
+          "paddingBottom": 8,
+        }
+      }
+    >
+      Enter your phone number below:
+    </Text>
+    <TextInput
+      allowFontScaling={true}
+      autoCompleteType="tel"
+      autoFocus={true}
+      keyboardType="phone-pad"
+      onChangeText={[Function]}
+      placeholder="(555) 555-5555"
+      rejectResponderTermination={true}
+      style={
+        Array [
+          Object {
+            "alignItems": "center",
+            "borderBottomLeftRadius": 6,
+            "borderBottomRightRadius": 6,
+            "borderBottomWidth": 4,
+            "borderLeftWidth": 4,
+            "borderRightWidth": 4,
+            "borderTopLeftRadius": 6,
+            "borderTopRightRadius": 6,
+            "borderTopWidth": 4,
+            "paddingBottom": 8,
+            "paddingLeft": 8,
+            "paddingRight": 8,
+            "paddingTop": 8,
+          },
+          null,
+        ]
+      }
+      testID="phone-input"
+      underlineColorAndroid="transparent"
+      value=""
+    />
+    <View
+      accessible={true}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        Array [
+          Object {
+            "alignItems": "center",
+            "borderBottomLeftRadius": 6,
+            "borderBottomRightRadius": 6,
+            "borderTopLeftRadius": 6,
+            "borderTopRightRadius": 6,
+            "marginTop": 24,
+            "paddingBottom": 8,
+            "paddingTop": 8,
+            "width": "100%",
+          },
+          Object {
+            "backgroundColor": "rgba(75, 85, 99, 1)",
+          },
+        ]
+      }
+      testID="request-code-button"
+    >
+      <Text
+        style={
+          Object {
+            "color": "rgba(255, 255, 255, 1)",
+            "fontWeight": "600",
+          }
+        }
+        testID="request-code-button-text"
+      >
+        Enter a Valid Number
+      </Text>
+    </View>
+  </RNCSafeAreaView>
+</RNCSafeAreaView>
+`;
+
+exports[`<PhoneEntry/> enables submit button if phone number is correctly formatted 1`] = `
+<RNCSafeAreaView
+  style={
+    Object {
+      "paddingLeft": 40,
+      "paddingRight": 40,
+    }
+  }
+>
+  <RNCSafeAreaView>
+    <Text
+      style={
+        Object {
+          "color": "rgba(16, 185, 129, 1)",
+          "fontSize": 30,
+          "fontWeight": "700",
+          "lineHeight": 36,
+        }
+      }
+    >
+      Login to Gigbox
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(16, 185, 129, 1)",
+          "fontSize": 18,
+          "fontWeight": "700",
+          "lineHeight": 28,
+        }
+      }
+    >
+      Your phone number is never saved and is only used to log you in
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(0, 0, 0, 1)",
+          "fontSize": 20,
+          "fontWeight": "600",
+          "lineHeight": 28,
+          "paddingTop": 80,
+        }
+      }
+    >
+      Get your One-Time Passcode
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(156, 163, 175, 1)",
+          "fontSize": 14,
+          "fontWeight": "600",
+          "lineHeight": 20,
+          "paddingBottom": 8,
+        }
+      }
+    >
+      Enter your phone number below:
+    </Text>
+    <TextInput
+      allowFontScaling={true}
+      autoCompleteType="tel"
+      autoFocus={true}
+      keyboardType="phone-pad"
+      onChangeText={[Function]}
+      placeholder="(555) 555-5555"
+      rejectResponderTermination={true}
+      style={
+        Array [
+          Object {
+            "alignItems": "center",
+            "borderBottomLeftRadius": 6,
+            "borderBottomRightRadius": 6,
+            "borderBottomWidth": 4,
+            "borderLeftWidth": 4,
+            "borderRightWidth": 4,
+            "borderTopLeftRadius": 6,
+            "borderTopRightRadius": 6,
+            "borderTopWidth": 4,
+            "paddingBottom": 8,
+            "paddingLeft": 8,
+            "paddingRight": 8,
+            "paddingTop": 8,
+          },
+          null,
+        ]
+      }
+      testID="phone-input"
+      underlineColorAndroid="transparent"
+      value=""
+    />
+    <View
+      accessible={true}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        Array [
+          Object {
+            "alignItems": "center",
+            "borderBottomLeftRadius": 6,
+            "borderBottomRightRadius": 6,
+            "borderTopLeftRadius": 6,
+            "borderTopRightRadius": 6,
+            "marginTop": 24,
+            "paddingBottom": 8,
+            "paddingTop": 8,
+            "width": "100%",
+          },
+          Object {
+            "backgroundColor": "rgba(75, 85, 99, 1)",
+          },
+        ]
+      }
+      testID="request-code-button"
+    >
+      <Text
+        style={
+          Object {
+            "color": "rgba(255, 255, 255, 1)",
+            "fontWeight": "600",
+          }
+        }
+        testID="request-code-button-text"
+      >
+        Enter a Valid Number
+      </Text>
+    </View>
+  </RNCSafeAreaView>
+</RNCSafeAreaView>
+`;
+
+exports[`<PhoneEntry/> formats phone number corectly when entered 1`] = `
+<RNCSafeAreaView
+  style={
+    Object {
+      "paddingLeft": 40,
+      "paddingRight": 40,
+    }
+  }
+>
+  <RNCSafeAreaView>
+    <Text
+      style={
+        Object {
+          "color": "rgba(16, 185, 129, 1)",
+          "fontSize": 30,
+          "fontWeight": "700",
+          "lineHeight": 36,
+        }
+      }
+    >
+      Login to Gigbox
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(16, 185, 129, 1)",
+          "fontSize": 18,
+          "fontWeight": "700",
+          "lineHeight": 28,
+        }
+      }
+    >
+      Your phone number is never saved and is only used to log you in
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(0, 0, 0, 1)",
+          "fontSize": 20,
+          "fontWeight": "600",
+          "lineHeight": 28,
+          "paddingTop": 80,
+        }
+      }
+    >
+      Get your One-Time Passcode
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(156, 163, 175, 1)",
+          "fontSize": 14,
+          "fontWeight": "600",
+          "lineHeight": 20,
+          "paddingBottom": 8,
+        }
+      }
+    >
+      Enter your phone number below:
+    </Text>
+    <TextInput
+      allowFontScaling={true}
+      autoCompleteType="tel"
+      autoFocus={true}
+      keyboardType="phone-pad"
+      onChangeText={[Function]}
+      placeholder="(555) 555-5555"
+      rejectResponderTermination={true}
+      style={
+        Array [
+          Object {
+            "alignItems": "center",
+            "borderBottomLeftRadius": 6,
+            "borderBottomRightRadius": 6,
+            "borderBottomWidth": 4,
+            "borderLeftWidth": 4,
+            "borderRightWidth": 4,
+            "borderTopLeftRadius": 6,
+            "borderTopRightRadius": 6,
+            "borderTopWidth": 4,
+            "paddingBottom": 8,
+            "paddingLeft": 8,
+            "paddingRight": 8,
+            "paddingTop": 8,
+          },
+          null,
+        ]
+      }
+      testID="phone-input"
+      underlineColorAndroid="transparent"
+      value=""
+    />
+    <View
+      accessible={true}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        Array [
+          Object {
+            "alignItems": "center",
+            "borderBottomLeftRadius": 6,
+            "borderBottomRightRadius": 6,
+            "borderTopLeftRadius": 6,
+            "borderTopRightRadius": 6,
+            "marginTop": 24,
+            "paddingBottom": 8,
+            "paddingTop": 8,
+            "width": "100%",
+          },
+          Object {
+            "backgroundColor": "rgba(75, 85, 99, 1)",
+          },
+        ]
+      }
+      testID="request-code-button"
+    >
+      <Text
+        style={
+          Object {
+            "color": "rgba(255, 255, 255, 1)",
+            "fontWeight": "600",
+          }
+        }
+        testID="request-code-button-text"
+      >
+        Enter a Valid Number
+      </Text>
+    </View>
+  </RNCSafeAreaView>
+</RNCSafeAreaView>
+`;
+
+exports[`<PhoneEntry/> moves to verify otp screen if phone is submitted 1`] = `
+<RNCSafeAreaView
+  style={
+    Object {
+      "paddingLeft": 40,
+      "paddingRight": 40,
+    }
+  }
+>
+  <RNCSafeAreaView>
+    <Text
+      style={
+        Object {
+          "color": "rgba(16, 185, 129, 1)",
+          "fontSize": 30,
+          "fontWeight": "700",
+          "lineHeight": 36,
+        }
+      }
+    >
+      Login to Gigbox
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(16, 185, 129, 1)",
+          "fontSize": 18,
+          "fontWeight": "700",
+          "lineHeight": 28,
+        }
+      }
+    >
+      Your phone number is never saved and is only used to log you in
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(0, 0, 0, 1)",
+          "fontSize": 20,
+          "fontWeight": "600",
+          "lineHeight": 28,
+          "paddingTop": 80,
+        }
+      }
+    >
+      Get your One-Time Passcode
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(156, 163, 175, 1)",
+          "fontSize": 14,
+          "fontWeight": "600",
+          "lineHeight": 20,
+          "paddingBottom": 8,
+        }
+      }
+    >
+      Enter your phone number below:
+    </Text>
+    <TextInput
+      allowFontScaling={true}
+      autoCompleteType="tel"
+      autoFocus={true}
+      keyboardType="phone-pad"
+      onChangeText={[Function]}
+      placeholder="(555) 555-5555"
+      rejectResponderTermination={true}
+      style={
+        Array [
+          Object {
+            "alignItems": "center",
+            "borderBottomLeftRadius": 6,
+            "borderBottomRightRadius": 6,
+            "borderBottomWidth": 4,
+            "borderLeftWidth": 4,
+            "borderRightWidth": 4,
+            "borderTopLeftRadius": 6,
+            "borderTopRightRadius": 6,
+            "borderTopWidth": 4,
+            "paddingBottom": 8,
+            "paddingLeft": 8,
+            "paddingRight": 8,
+            "paddingTop": 8,
+          },
+          null,
+        ]
+      }
+      testID="phone-input"
+      underlineColorAndroid="transparent"
+      value=""
+    />
+    <View
+      accessible={true}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        Array [
+          Object {
+            "alignItems": "center",
+            "borderBottomLeftRadius": 6,
+            "borderBottomRightRadius": 6,
+            "borderTopLeftRadius": 6,
+            "borderTopRightRadius": 6,
+            "marginTop": 24,
+            "paddingBottom": 8,
+            "paddingTop": 8,
+            "width": "100%",
+          },
+          Object {
+            "backgroundColor": "rgba(75, 85, 99, 1)",
+          },
+        ]
+      }
+      testID="request-code-button"
+    >
+      <Text
+        style={
+          Object {
+            "color": "rgba(255, 255, 255, 1)",
+            "fontWeight": "600",
+          }
+        }
+        testID="request-code-button-text"
+      >
+        Enter a Valid Number
+      </Text>
+    </View>
+  </RNCSafeAreaView>
+</RNCSafeAreaView>
+`;
+
+exports[`<PhoneEntry/> moves to verify otp screen if phone is submitted 2`] = `
+<RNCSafeAreaView
+  style={
+    Object {
+      "paddingLeft": 40,
+      "paddingRight": 40,
+    }
+  }
+>
+  <RNCSafeAreaView>
+    <Text
+      style={
+        Object {
+          "color": "rgba(16, 185, 129, 1)",
+          "fontSize": 30,
+          "fontWeight": "700",
+          "lineHeight": 36,
+        }
+      }
+    >
+      Login to Gigbox
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(16, 185, 129, 1)",
+          "fontSize": 18,
+          "fontWeight": "700",
+          "lineHeight": 28,
+        }
+      }
+    >
+      Your phone number is never saved and is only used to log you in
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(0, 0, 0, 1)",
+          "fontSize": 20,
+          "fontWeight": "600",
+          "lineHeight": 28,
+          "paddingTop": 80,
+        }
+      }
+    >
+      Get your One-Time Passcode
+    </Text>
+    <Text
+      style={
+        Object {
+          "color": "rgba(156, 163, 175, 1)",
+          "fontSize": 14,
+          "fontWeight": "600",
+          "lineHeight": 20,
+          "paddingBottom": 8,
+        }
+      }
+    >
+      Enter your phone number below:
+    </Text>
+    <TextInput
+      allowFontScaling={true}
+      autoCompleteType="tel"
+      autoFocus={true}
+      keyboardType="phone-pad"
+      onChangeText={[Function]}
+      placeholder="(555) 555-5555"
+      rejectResponderTermination={true}
+      style={
+        Array [
+          Object {
+            "alignItems": "center",
+            "borderBottomLeftRadius": 6,
+            "borderBottomRightRadius": 6,
+            "borderBottomWidth": 4,
+            "borderLeftWidth": 4,
+            "borderRightWidth": 4,
+            "borderTopLeftRadius": 6,
+            "borderTopRightRadius": 6,
+            "borderTopWidth": 4,
+            "paddingBottom": 8,
+            "paddingLeft": 8,
+            "paddingRight": 8,
+            "paddingTop": 8,
+          },
+          null,
+        ]
+      }
+      testID="phone-input"
+      underlineColorAndroid="transparent"
+      value="(732) 563-0288"
+    />
+    <View
+      accessible={true}
+      focusable={true}
+      onBlur={[Function]}
+      onClick={[Function]}
+      onFocus={[Function]}
+      onResponderGrant={[Function]}
+      onResponderMove={[Function]}
+      onResponderRelease={[Function]}
+      onResponderTerminate={[Function]}
+      onResponderTerminationRequest={[Function]}
+      onStartShouldSetResponder={[Function]}
+      style={
+        Array [
+          Object {
+            "alignItems": "center",
+            "borderBottomLeftRadius": 6,
+            "borderBottomRightRadius": 6,
+            "borderTopLeftRadius": 6,
+            "borderTopRightRadius": 6,
+            "marginTop": 24,
+            "paddingBottom": 8,
+            "paddingTop": 8,
+            "width": "100%",
+          },
+          Object {
+            "backgroundColor": "rgba(16, 185, 129, 1)",
+          },
+        ]
+      }
+      testID="request-code-button"
+    >
+      <Text
+        style={
+          Object {
+            "color": "rgba(255, 255, 255, 1)",
+            "fontWeight": "600",
+          }
+        }
+        testID="request-code-button-text"
+      >
+        Request Code
+      </Text>
+    </View>
+  </RNCSafeAreaView>
+</RNCSafeAreaView>
+`;

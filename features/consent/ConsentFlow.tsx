@@ -9,18 +9,29 @@ import {
     TextInput,
     StyleSheet,
 } from 'react-native';
+
+import {
+    requestForegroundPermissionsAsync,
+    requestBackgroundPermissionsAsync,
+    getBackgroundPermissionsAsync,
+    getForegroundPermissionsAsync,
+} from 'expo-location';
 import { StatusBar } from 'expo-status-bar';
 import { tailwind } from 'tailwind';
 import { useQueryClient, useMutation, useQuery } from 'react-query';
+import Toast from 'react-native-root-toast';
 import * as Permissions from 'expo-permissions';
 import * as Haptics from 'expo-haptics';
-import { askPermissions } from '../../tasks';
+import { askPermissions, hasNeededPermissions, getAllLocationPermissions } from '../../tasks';
 import BinarySurveyQuestion from './BinarySurveyQuestion';
 import { submitConsent } from './api';
 import { Extras } from './Extras';
 import { Signature } from './Signature';
+import { LocationSettingsModal } from './LocationSettingsModal';
 
 export const DataConsentSection = ({
+    yesButtonTestID,
+    noButtonTestID,
     sectionTitle,
     sectionText,
     questionText,
@@ -29,6 +40,8 @@ export const DataConsentSection = ({
     value,
     visible,
 }: {
+    yesButtonTestID: string;
+    noButtonTestID: string;
     sectionTitle: string;
     sectionText: string;
     questionText: string;
@@ -38,6 +51,7 @@ export const DataConsentSection = ({
     visible: boolean;
 }) => {
     if (visible) {
+        console.log('button val:', value);
         return (
             <>
                 <Text style={tailwind('text-lg font-bold text-green-500 pt-5 pb-2')}>
@@ -46,6 +60,8 @@ export const DataConsentSection = ({
                 <Text style={tailwind('text-base pt-2 pb-2')}>{sectionText}</Text>
 
                 <BinarySurveyQuestion
+                    yesButtonTestID={yesButtonTestID}
+                    noButtonTestID={noButtonTestID}
                     questionText={questionText}
                     declineText={declineText}
                     onPress={onConsent}
@@ -85,7 +101,28 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
     const [phone, setPhone] = useState<string>('');
     const [email, setEmail] = useState<string>('');
     const [sigText, setSigText] = useState<string>('');
+    const [locationModalVisible, setLocationModalVisible] = useState<boolean>(false);
     const queryClient = useQueryClient();
+
+
+    useEffect(() => {
+        const checkPermissions = async () => {
+            const hasPermissions = await hasNeededPermissions();
+            if (locationConsent !== hasPermissions) {
+                setLocationConsent(hasPermissions);
+            }
+
+            if (locationModalVisible && hasPermissions) {
+                console.log("modal is visible but we have permissions. Closing modal.")
+                setLocationModalVisible(false)
+            }
+        };
+
+        if (locationConsent !== false) {
+            checkPermissions();
+        }
+    });
+
     const finishConsent = useMutation(submitConsent, {
         onSuccess: (data) => {
             console.log('woohoo, submitted consent:', data);
@@ -131,7 +168,7 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
     } else {
         return (
             <SafeAreaView style={tailwind('pb-10 mt-10')}>
-                <StatusBar style='dark'/>
+                <StatusBar style="dark" />
                 <ScrollView style={tailwind('bg-gray-100')}>
                     <View style={tailwind('p-2')}>
                         <Text style={[tailwind('text-3xl font-bold text-green-500')]}>
@@ -235,7 +272,14 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
                             to your name, phone number, or any other identifier.
                         </Text>
 
+                        <LocationSettingsModal
+                            visible={locationModalVisible}
+                            setVisible={setLocationModalVisible}
+                        />
+
                         <DataConsentSection
+                            yesButtonTestID="location-data-consent-yes"
+                            noButtonTestID="location-data-consent-no"
                             sectionTitle={' 1. Your Location + accelerometer 📍'}
                             sectionText={
                                 'We’ll keep track of your location + accelerometer readings in the background while you use the app, to track how far you travel for jobs, how much you’re standing, sitting, and walking while on the job, and to help make job tracking more accurate in the future.'
@@ -246,10 +290,41 @@ export const ConsentFlow = ({ onConsentFinish }: { onConsentFinish: () => void }
                             declineText={
                                 "You can't use gigbox without consenting to your location data being used."
                             }
-                            onConsent={(yes: boolean) => {
-                                console.log('Location consent:', yes);
-                                askPermissions();
-                                setLocationConsent(yes);
+                            onConsent={async (yes: boolean) => {
+                                if (yes) {
+                                    console.log('Asking for permissions...');
+                                    const gotPermissions = await askPermissions();
+                                    console.log('Got permissions:', gotPermissions);
+                                    setLocationConsent(gotPermissions);
+                                } else {
+                                    // they pressed 'no'
+                                    setLocationConsent(false);
+                                }
+
+                                if (!locationConsent) {
+                                    const {
+                                        fgPermissionResponse,
+                                        bgPermissionResponse,
+                                    } = await getAllLocationPermissions();
+
+                                    if (fgPermissionResponse.status !== 'granted') {
+                                        if (fgPermissionResponse.canAskAgain) {
+                                            const gotPermissions = await askPermissions();
+                                        } else {
+                                            console.log('Showing location modal...');
+                                            setLocationModalVisible(true);
+                                        }
+                                    }
+
+                                    if (bgPermissionResponse.status !== 'granted') {
+                                        if (bgPermissionResponse.canAskAgain) {
+                                            const gotPermissions = await askPermissions();
+                                        } else {
+                                            console.log('Showing location modal...');
+                                            setLocationModalVisible(true);
+                                        }
+                                    }
+                                }
                             }}
                             value={locationConsent}
                             visible={true}

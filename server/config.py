@@ -21,7 +21,7 @@ class DevelopmentConfig(Config):
     DATABASE_NAME = "gigbox-dev"
     DEBUG = True
     MIN_SHIFT_MILEAGE = 0
-    MIN_SHIFT_DURATION = 0
+    MIN_SHIFT_DURATION = 5*60
     SQLALCHEMY_DATABASE_URI = "postgresql://" + os.environ["POSTGRES_USER"] + ":"  \
                               + os.environ["POSTGRES_PASSWORD"] + "@" \
                               + os.environ["DB_HOST"] + ":" \
@@ -66,10 +66,13 @@ def get_environment_config_str():
 def get_environment_config():
     print("ENV:", os.environ['ENV'])
     if Config.ENV == "TESTING":
+        print("Testing env...")
         return TestingConfig()
     elif Config.ENV == "DEVELOPMENT":
+        print("Development env...")
         return DevelopmentConfig()
     elif Config.ENV == "PRODUCTION":
+        print("Production env...")
         return ProductionConfig()
     else:
         raise ValueError("Did not recognize environment. Exiting...")

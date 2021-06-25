@@ -99,6 +99,10 @@ class VerifyOtp(Resource):
                     'status': 200,
                     'message': 'Success'}
 
+class Heartbeat(Resource):
+    @login_required
+    def get(self):
+        return "Connected"
 
 class LoggedIn(Resource):
     @login_required

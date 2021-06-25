@@ -6,7 +6,7 @@ export default {
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     primaryColor: '#2BBC8A',
-    scheme: 'myapp',
+    scheme: 'gigbox',
     userInterfaceStyle: 'automatic',
     extra: {
         devApiUrl: process.env.DEV_API_URL,

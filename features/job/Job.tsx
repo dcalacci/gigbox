@@ -21,7 +21,8 @@ import ScreenshotUploader from './ScreenshotPicker';
 import { log } from '../../utils';
 import { updateJobValue, deleteImage } from './api';
 import { EmployerBox } from '../clock/EmployerSelector';
-import { useToast } from 'react-native-fast-toast';
+
+import Toast from 'react-native-root-toast';
 
 // Scroll view of screenshots
 export const Screenshots = ({
@@ -31,7 +32,6 @@ export const Screenshots = ({
     screenshots: Screenshot[];
     onPressAddScreenshots: () => void;
 }) => {
-    const toast = useToast();
     const [imageViewVisible, setImageViewVisible] = useState<boolean>(false);
     const [selectedImage, setSelectedImage] = useState<Screenshot>();
     const queryClient = useQueryClient()
@@ -39,16 +39,16 @@ export const Screenshots = ({
         onSuccess: (d) => {
             log.info('Deleted image:', d);
             if (d.deleteImage.ok) {
-                toast?.show('Deleted image.');
+                Toast.show('Deleted Image.')
                 setImageViewVisible(false)
                 setSelectedImage(undefined)
                 queryClient.invalidateQueries('filteredJobs');
             } else {
-                toast?.show(d.deleteImage.message);
+                Toast.show(d.deleteImage.message)
             }
         },
         onError: (err) => {
-            toast?.show('Error deleting image. Try again.');
+            Toast.show('Error deleting image. Try again.');
         },
     });
     const uploadScreenshotView = () => (

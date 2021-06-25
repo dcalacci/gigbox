@@ -27,11 +27,13 @@ def create_app():
     # set optional bootswatch theme
     app.config['FLASK_ADMIN_SWATCH'] = 'cerulean'
     app.config.from_object(get_environment_config_str())
+    app.logger.info("Loaded config...")
 
     # This engine just used to query for list of databases
 
     # Query for existing databases
     # existing_databases = engine.execute("SHOW DATABASES;")
+    app.logger.info("Checking database at ", app.config['SQLALCHEMY_DATABASE_URI'])
     if not database_exists(app.config['SQLALCHEMY_DATABASE_URI']):
         create_database(app.config['SQLALCHEMY_DATABASE_URI'])
         app.logger.debug("database created...")
@@ -103,6 +105,7 @@ def create_app():
     api.add_resource(auth.GetOtp, '/auth/get_otp')
     api.add_resource(auth.VerifyOtp, '/auth/verify_otp')
     api.add_resource(auth.LoggedIn, '/auth/login')
+    api.add_resource(auth.Heartbeat, '/auth/heartbeat')
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
     if (app.config['ENV'] == "DEVELOPMENT"):

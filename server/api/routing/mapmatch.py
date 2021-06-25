@@ -1,95 +1,51 @@
-import requests
-from requests.exceptions import ConnectionError
 from flask import current_app
 from api.graphql.object import Location
 from api.models import Location as LocationModel
 from geoalchemy2.shape import to_shape
-from urllib3.util.retry import Retry
-from requests.adapters import HTTPAdapter
-import os
-import itertools
+from .osrmapi import get_match_distance, get_match_geometry, match
 
-# retry and backoff a 0.1, 0.2, ... 0.5 on retry
-s = requests.Session()
-retries = Retry(total=5,
-                backoff_factor=0.1,
-                status_forcelist=[ 500, 502, 503, 504 ])
+def clean_trajectory(locs):
+    """ Returns a trajectory dataframe from an array of Location database objects that has
+    been compressed and filtered.
+    """
+    import skmob
+    from skmob.preprocessing import compression, filtering, detection
+    data = locs_to_df(locs)
 
-s.mount('http://', HTTPAdapter(max_retries=retries))
-
-# OSRM_URI = "http://osrm:5000"
-OSRM_URI = os.environ['OSRM_URI']
-
-def match(coordinates):
-    coord_str = requests.utils.quote(
-        ';'.join([f'{c["lng"]},{c["lat"]}' for c in coordinates]))
-    # timestamp_str = requests.utils.quote(';'.join([f'{int(c["timestamp"].timestamp())}' for c in
-    #                                                coordinates]))
-    payload = {  # 'timestamps': timestamp_str,
-        "geometries": "geojson",
-        "tidy": "true"}
-    MATCH_URI = f'{OSRM_URI}/match/v1/car/{coord_str}'
-    return s.post(MATCH_URI, params=payload)
-
+    # filter and compress our location dataset
+    tdf = skmob.TrajDataFrame(data, datetime='time')
+    ftdf = filtering.filter(tdf, include_loops=True, speed_kmh=30, max_speed_kmh=1000.)
+    print("filtered {} locs from trajectory of length {}".format(len(tdf) - len(ftdf), len(tdf)))
+    ctdf = compression.compress(ftdf, spatial_radius_km=0.1)
+    print("compressed trajectory is length {}".format(len(ctdf)))
+    return ctdf
 
 def get_match_for_locations(locations):
-    coords = [{'lat': to_shape(s.geom).y,
-               'lng': to_shape(s.geom).x
-               # 'timestamp': s.timestamp ## remove -- not needed for mileage and route matching
-               } for s in locations]
+    # I put clean_trajectory here because it's cheap to store more 
+    # location data and processing it is not too expensive.
+    traj_df = clean_trajectory(locations)
+    coords = traj_df[['lat', 'lng']].to_dict(orient='records')
+    print(coords)
+    print("Sending {} coords to match api...".format(len(coords)))
+    res = match(coords).json()
+    return res
 
-    return match(coords).json()
-
-
-def get_match_distance(res):
-    """gets route distance from a list of Location objects
-    """
-    if 'matchings' in res:
-        distances = [m['distance'] for m in res['matchings']]
-        geometries = [m['geometry']['coordinates'] for m in res['matchings']]
-        total_distance = sum(distances)
-        mileage = total_distance * 0.0006213712
-        return mileage
-    return 0
-
-# def rdp_with_index(points, indices, epsilon):
-#     """rdp with returned point indices
-#     """
-#     dmax, index = 0.0, 0
-#     for i in range(1, len(points) - 1):
-#         d = point_line_distance(points[i], points[0], points[-1])
-#         if d > dmax:
-#             dmax, index = d, i
-#     if dmax >= epsilon:
-#         first_points, first_indices = rdp_with_index(points[:index+1], indices[:index+1], epsilon)
-#         second_points, second_indices = rdp_with_index(points[index:], indices[index:], epsilon)
-#         results = first_points[:-1] + second_points
-#         results_indices = first_indices[:-1] + second_indices
-#     else:
-#         results, results_indices = [points[0], points[-1]], [indices[0], indices[-1]]
-#     return results, results_indices
-
-def get_match_geometry(res):
-    # print("matchings:", res.json()['matchings'])
-    # print("tracepoints:", res.json()['tracepoints'])
-    # res_json = json.loads(res)
-    print("Match result:", res)
-    if 'matchings' in res:
-        geometries = [m['geometry']['coordinates'] for m in res['matchings']]
-
-        geometries = list(itertools.chain(*geometries))
-
-        def bounding_box(points):
-            x_coordinates, y_coordinates = zip(*points)
-            return [min(x_coordinates), min(y_coordinates), max(x_coordinates), max(y_coordinates)]
-
-        return (geometries, bounding_box(geometries))
-    return False
+def get_match_for_trajectory(traj_df):
+    coords = traj_df[['lat', 'lng']].to_dict(orient='records')
+    res = match(coords).json()
+    return res
 
 
-def get_route_distance_and_geometry(locations):
+###############
+
+def get_route_distance_and_geometry(locs_or_traj):
+    import skmob
     try:
-        res = get_match_for_locations(locations)
+        if (type(locs_or_traj) == skmob.core.trajectorydataframe.TrajDataFrame):
+            res = get_match_for_trajectory(locs_or_traj)
+        else:
+            print("getting match for", len(locs_or_traj), "locations...")
+            res = get_match_for_locations(locs_or_traj)
     except ConnectionError as e:
         return {'status': 'error',
                 'message': 'Connection error.'}
@@ -107,28 +63,131 @@ def get_route_distance_and_geometry(locations):
                 "distance": distance,
                 "geom_obj": geom_obj}
 
+############
 
-def get_shift_distance(shift, info):
-    locs = Location.get_query(info=info).filter(
-        LocationModel.shift_id == shift.id).order_by(LocationModel.timestamp.asc())
-    current_app.logger.info("Retrieving locations for shift ")
-    # current_app.logger.info("Found locs...")
-    res = get_match_for_locations(locs)
-    return get_match_distance(res)
+def get_trajectory(locations):
+    from geoalchemy2.shape import to_shape
+    import numpy as np
+    """locations: Location model objects"""
+    records = []
+    for l in locations:
+        coords = to_shape(l.geom)
+        records.append([coords.y, coords.x, int(l.timestamp.timestamp())])
+    # sort by timestamp
+    records = sorted(records, key=lambda r: r[2])
+    return np.array(records)
+
+def locs_to_df(locs):
+    """ Returns a trajectory dataframe that represents the trajectory created from an array
+    of Location databse objects.
+    """
+    import pandas as pd
+    import numpy as np
+    traj = get_trajectory(locs)
+
+    data = pd.DataFrame(np.vstack((traj.T)).T)
+    data.columns = ['lat', 'lng', 'time']
+    data.time = data.time.astype('datetime64[s]')
+    return data
+
+def clean_trajectory(locs):
+    """ Returns a trajectory dataframe from an array of Location database objects that has
+    been compressed and filtered.
+    """
+    import skmob
+    from skmob.preprocessing import compression, filtering, detection
+    data = locs_to_df(locs)
+
+    # filter and compress our location dataset
+    tdf = skmob.TrajDataFrame(data, datetime='time')
+    ftdf = filtering.filter(tdf, include_loops=True, speed_kmh=30, max_speed_kmh=1000.)
+    print("filtered {} locs from trajectory of length {}".format(len(tdf) - len(ftdf), len(tdf)))
+    ctdf = compression.compress(ftdf, spatial_radius_km=0.1)
+    print("compressed trajectory is length {}".format(len(ctdf)))
+    return ctdf
+
+############ Stops and trips
+
+def clean_and_get_stops(locations):
+    import skmob
+    from skmob.preprocessing import detection
+    ctdf = clean_trajectory(locations)
+
+    stdf = detection.stops(ctdf, minutes_for_a_stop=2, no_data_for_minutes=120)
+    return (ctdf, stdf)
 
 
-def get_shift_geometry(shift, info):
-    # print("Shift locations:", shift.locations)
-    current_app.logger.info("Retrieving shift geometry...")
-    locs = sorted(shift.locations, key=lambda l: l.timestamp)
+def _merge_short_trips(trips, trip_bookends, min_distance_mi=0.5):
+    from api.routing.osrmapi import get_match_distance
+    import pandas as pd
+    matches = [get_match_for_trajectory(trip) for n, trip in enumerate(trips)]
+    dists = [get_match_distance(m) for m in matches]
+    merged_trips = []
+    for n, d in enumerate(dists):
+        # if last merged trip has same endpoint as this one, skip this one; it's been merged
+        if n > 0 and (merged_trips[-1][1]['stop']['datetime'] == trip_bookends[n]['stop']['datetime']):
+            continue
+        elif d <= min_distance_mi and n > 0:
+            newtrip = pd.concat([trips[n-1], trips[n]])
+            newtrip_bookends = {'start': trip_bookends[n-1]['start'], 'stop': trip_bookends[n]['stop']}
+            merged_trips = merged_trips[:-1] # remove last entry
+            merged_trips.append((newtrip, newtrip_bookends, d + dists[n-1])) # replace it
+        elif d <= min_distance_mi and n == 0:
+            newtrip = pd.concat([trips[n], trips[n+1]])
+            newtrip_bookends = {'start': trip_bookends[n]['start'], 'stop': trip_bookends[n+1]['stop']}
+            merged_trips.append((newtrip, newtrip_bookends, d + dists[n+1]))
+        else:
+            merged_trips.append((trips[n], trip_bookends[n], d))
+    return merged_trips
 
-    # locs = Location.get_query(info=info).filter(
-    #     LocationModel.shift_id == shift.id).order_by(LocationModel.timestamp.asc())
-    if len(locs) == 0:
-        return False
-    current_app.logger.info(
-        "Retrieving locations for shift {}".format(shift.id))
-    # current_app.logger.info("Found locs...")
-    res = get_match_for_locations(locs)
-    return get_match_geometry(res)
-    return False
+def split_into_trips(traj_df, stop_df, min_trip_dist_mi=0.6):
+    """Returns a list of (traj_df, [{'start', 'stop}]) tuples
+    """
+    trips = []
+    trip_bookends = []
+    
+    start = traj_df.iloc[0]
+    start['leaving_datetime'] = start.datetime
+    end = traj_df.iloc[-1]
+    end['leaving_datetime'] = end.datetime
+    
+    for n, dt in enumerate(stop_df.datetime):
+        print(n)
+        if n == 0:
+            first_trip = traj_df[(traj_df.datetime < dt) & (traj_df.datetime > start.datetime)]
+            trips.append(first_trip)
+            trip_bookends.append({'start': start, 'stop': stop_df.iloc[n]})
+        else:
+            trip = traj_df[(traj_df.datetime < dt) & (traj_df.datetime > stop_df.iloc[n-1].leaving_datetime)]
+            trips.append(trip)
+            trip_bookends.append({'start': stop_df.iloc[n-1], 'stop': stop_df.iloc[n]})
+    ## add final trip
+    final_trip = traj_df[(traj_df.datetime > stop_df.iloc[-1].leaving_datetime)]
+    trip_bookends.append({'start': stop_df.iloc[-1], 'stop': end})
+    trips.append(final_trip)
+
+    merged_trips = _merge_short_trips(trips, trip_bookends, min_trip_dist_mi)
+    return merged_trips
+
+
+def get_trips_from_locations(locations, 
+        min_trip_dist_mi=0.6, 
+        minutes_for_stop=2,
+        no_data_for_minutes=120):
+    """ Returns trips in a 3-tuple, each a list of:
+    - trajectory_df
+    - {'stop', 'start'} (lat, lng, datetime series)
+    - distance (mi)
+    """
+    import skmob
+    from skmob.preprocessing import detection
+    traj_df = clean_trajectory(locations)
+
+    stop_df = detection.stops(traj_df,
+            minutes_for_a_stop=minutes_for_stop,
+            no_data_for_minutes=no_data_for_minutes)
+
+    return split_into_trips(
+            traj_df, 
+            stop_df,
+            min_trip_dist_mi=min_trip_dist_mi)

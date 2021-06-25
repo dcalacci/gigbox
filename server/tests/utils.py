@@ -1,22 +1,62 @@
-import importlib
-import inspect
+import os
+import unittest
+import pytest
 
-from termcolor import cprint
+from flask import current_app, request
+from graphene.test import Client
+from api import create_app, db
+from api.schema import schema 
+from api.controllers.auth.utils import create_jwt
+from api.controllers.auth.utils import create_jwt, decode_jwt, get_otp
 
+class ApiTestCase(unittest.TestCase):
 
-def create_tables(conn, r, DB_NAME):
-    try:
-        # Create the application tables if they do not exist
-        lib = importlib.import_module('api.models')
-        for cls in inspect.getmembers(lib, inspect.isclass):
-            for base in cls[1].__bases__:
-                if base.__name__ == "RethinkDBModel":
-                    table_name = getattr(cls[1], '_table')
-                    index_name = getattr(cls[1], '_index')
-                    r.db(DB_NAME).table_create(table_name).run(conn)
-                    r.db(DB_NAME).table(table_name).indexCreate(index_name)
-                    cprint("Created table '{}'...".format(table_name), 'green', attrs=['bold'])
-        print("Created tables for testing")
-    except Exception as e:
-        cprint("An error occured --> {}".format(e.message), 'red', attrs=['bold'])
+    def setUp(self):
+        os.environ['ENV'] = 'TESTING'
+        self.app = create_app()
+        self.client = self.app.test_client()
+        self.gqlClient = Client(schema)
 
+        with self.app.app_context():
+            db.session.close()
+            db.drop_all()
+            db.create_all()
+
+@pytest.fixture
+def app():
+    return create_app()
+
+@pytest.fixture
+def client(app):
+    return app.test_client()
+
+@pytest.fixture
+def gqlClient():
+    return Client(schema)
+
+@pytest.fixture
+def token(app, client):
+    with app.app_context():
+        otp = get_otp(current_app.config['TESTING_TO_NUMBER'])
+        res = client.post('/api/v1/auth/verify_otp',
+                                 data={'phone': current_app.config['TESTING_TO_NUMBER'],
+                                       'otp': otp})
+        obj = res.get_json()
+        return obj['token']
+
+@pytest.fixture
+def active_shift(app, token, gqlClient):
+    with app.test_request_context():
+        request.headers = {'authorization': token}
+        query = '''mutation {createShift(active: true) { shift { id startTime active }}}
+        '''
+        res = gqlClient.execute(query, context_value=request)
+        print("query result:", res)
+        assert res['data']['createShift']['shift']['active']
+        shift_id = res['data']['createShift']['shift']
+        return shift_id
+
+@pytest.fixture
+def locs():
+    import pandas as pd
+    return pd.read_csv("tests/locs.csv", index_col=0, parse_dates=['time'])

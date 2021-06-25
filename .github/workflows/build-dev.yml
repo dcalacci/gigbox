@@ -10,6 +10,7 @@ on:
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 env: 
   DEV_API_URL: ${{ secrets.DEV_API_URL }}
+  GOOGLE_API_KEY: ${{ secrets.GOOGLE_API_KEY}}
   ENV: DEVELOPMENT
 jobs:
   build-and-release-expo-dev-channel:

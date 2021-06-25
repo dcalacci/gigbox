@@ -20,7 +20,7 @@ import { setLoggedIn, setUser } from './features/auth/authSlice';
 import { RootState } from 'store/index';
 import * as SplashScreen from 'expo-splash-screen';
 import { EnsureLoggedIn } from './features/EnsureLoggedIn';
-
+import { RootSiblingParent } from 'react-native-root-siblings';
 const queryClient = new QueryClient();
 
 const { manifest } = Constants;
@@ -54,7 +54,7 @@ export default function App() {
             <StatusBar style="dark" />
             <Provider store={store}>
                 <QueryClientProvider client={queryClient}>
-                    <ToastProvider placement="top" offset={50}>
+                    <RootSiblingParent>
                         <SafeAreaProvider>
                             <EnsureLoggedIn>
                                 <PersistGate loading={null} persistor={persistor}>
@@ -63,7 +63,7 @@ export default function App() {
                                 </PersistGate>
                             </EnsureLoggedIn>
                         </SafeAreaProvider>
-                    </ToastProvider>
+                    </RootSiblingParent>
                 </QueryClientProvider>
             </Provider>
         </>

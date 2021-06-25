@@ -11,9 +11,7 @@ import {
 } from 'react-native';
 import { tailwind } from 'tailwind';
 import { useQueryClient, useMutation, useQuery } from 'react-query';
-import * as Permissions from 'expo-permissions';
 import * as Haptics from 'expo-haptics';
-import { askPermissions } from '../../tasks';
 import BinarySurveyQuestion from './BinarySurveyQuestion';
 import { submitConsent, submitIntroSurvey } from './api';
 import { Extras } from './Extras';

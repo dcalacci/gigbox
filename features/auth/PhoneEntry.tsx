@@ -3,7 +3,7 @@ import { TextInput, Text, Pressable } from 'react-native';
 import { useSelector, useDispatch } from 'react-redux';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { tailwind } from 'tailwind';
-import { useToast } from 'react-native-fast-toast';
+import Toast from 'react-native-root-toast';
 import { AsYouType, parsePhoneNumber } from 'libphonenumber-js';
 import { RootState } from '../../store/index';
 import { requestOtp, loginWithOtp, reset, clearErrorMessage } from './otpSlice';
@@ -21,12 +21,11 @@ const PhoneEntry: React.FC = (props) => {
     const submittedPhone = useSelector((state: RootState): string => state.otp.phone);
 
     const ayt = new AsYouType('US');
-    const toast = useToast();
 
     useEffect(() => {
         if (errormsg != '')
             //TODO: figure out how to type this
-            toast?.show(errormsg);
+            Toast.show(errormsg);
         dispatch(clearErrorMessage());
     }, [errormsg]);
 
@@ -75,6 +74,7 @@ const PhoneEntry: React.FC = (props) => {
                         autoFocus={true}
                     ></TextInput>
                     <Pressable
+                        testID="verify-code-button"
                         style={tailwind('items-center rounded-md py-2 w-full mt-6 bg-green-500')}
                         onPress={() => {
                             queryClient.refetchQueries('loggedIn');
@@ -86,8 +86,8 @@ const PhoneEntry: React.FC = (props) => {
                     <Pressable
                         style={tailwind('items-center rounded-md py-2 w-full mt-6 bg-gray-800')}
                         onPress={() => {
-                            toast?.show(`Sending code to ${submittedPhone}`)
-                            dispatch(requestOtp(submittedPhone))
+                            Toast.show(`Sending code to ${submittedPhone}`);
+                            dispatch(requestOtp(submittedPhone));
                         }}
                     >
                         <Text style={tailwind('text-white font-semibold')}>Re-Send Passcode</Text>
@@ -117,6 +117,7 @@ const PhoneEntry: React.FC = (props) => {
                         Enter your phone number below:
                     </Text>
                     <TextInput
+                        testID="phone-input"
                         style={[
                             tailwind('items-center py-2 px-2 rounded-md border-4'),
                             tokenSent ? tailwind('border-green-500') : null,
@@ -130,17 +131,23 @@ const PhoneEntry: React.FC = (props) => {
                         autoFocus={true}
                     ></TextInput>
                     <Pressable
+                        testID="request-code-button"
                         style={[
                             tailwind('items-center rounded-md py-2 w-full mt-6'),
                             phoneIsValid ? tailwind('bg-green-500') : tailwind('bg-gray-600'),
                         ]}
                         disabled={!phoneIsValid}
-                        onPress={() =>  {
-                            toast?.show(`Sending code to ${phone}`)
-                            dispatch(requestOtp(phone))}
-                        }
+                        onPress={() => {
+                            Toast.show(`Sending code to ${phone}`);
+                            dispatch(requestOtp(phone));
+                        }}
                     >
-                        <Text style={tailwind('text-white font-semibold')}>Request Code</Text>
+                        <Text
+                            testID="request-code-button-text"
+                            style={tailwind('text-white font-semibold')}
+                        >
+                            {!phoneIsValid ? 'Enter a Valid Number' : 'Request Code'}
+                        </Text>
                     </Pressable>
                 </SafeAreaView>
             )}

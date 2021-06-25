@@ -18,9 +18,6 @@ from api.controllers.auth.decorators import login_required
 from api.graphql.object import RangeOptionsNode, QuestionNode, AnswerNode, SurveyNode, User, Location, WeeklySummary, ShiftNode, JobNode, Trips, Route, BoundingBox, Screenshot, FilterableAuthConnectionField, JobConnection, ShiftConnection
 from api.models import User as UserModel, Shift as ShiftModel, Job as JobModel, Location as LocationModel, Screenshot as ScreenshotModel, Geometry_WKT
 
-from api.routing.mapmatch import get_shift_distance, get_shift_geometry
-
-
 # A good way of hacking together role authorization would be this, from here:
 # https://github.com/graphql-python/graphene-sqlalchemy/issues/137#issuecomment-582727580
 # Instead, we just use the SQLAlchemyConnectionField as an interface, and add a filter for user_id
@@ -141,10 +138,3 @@ class Query(graphene.ObjectType):
             mean_tips=mean_tip if not np.isnan(mean_tip) else 0.,
             total_pay=total_pay,
             total_tips=total_tips)
-
-    @login_required
-    def resolve_getTrips(self, info, objectId):
-        shift_id = from_global_id(objectId)[1]
-        shift = ShiftNode.get_query(info=info).get(shift_id)
-        distance = get_shift_distance(shift, info)
-        return Trips(miles=distance)
