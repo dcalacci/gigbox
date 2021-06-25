@@ -8,14 +8,12 @@ import datetime
 from flask import current_app
 import jwt
 
-from api import create_app
+from api import create_app, db
 from api.controllers.errors import custom_errors
 from api.controllers.auth.utils import create_jwt, decode_jwt, get_otp
 from api.models import User
 from api.models import engine as models_conn
-from tests.utils import create_tables
-from flask_sqlalchemy import SQLAlchemy
-from unittest import mock, errors
+from unittest import mock
 
 
 def create_expired_token(phone):
@@ -32,32 +30,21 @@ def create_expired_token(phone):
 class ApiTestCase(unittest.TestCase):
 
     def setUp(self):
-        self.app = create_app('testing')
-        self.client = self.app.test_client
-        self.db = SqlAlchemy()
-        self.conn = self.r.connect()
-        # Create testing database if it doesnt exist
-        if self.app.config['DATABASE_NAME'] not in self.r.db_list().run(self.conn):
-            try:
-                self.r.db_create(
-                    self.app.config['DATABASE_NAME']).run(self.conn)
-                create_tables(self.conn, self.r,
-                              self.app.config['DATABASE_NAME'])
-            except errors.ReqlRuntimeError as e:
-                self.app.logger.debug("Database already exists")
-        self.conn.use(self.app.config['DATABASE_NAME'])
-        models_conn.use(self.app.config['DATABASE_NAME'])
+        os.environ['ENV'] = 'TESTING'
+        self.app = create_app()
+        self.client = self.app.test_client()
 
-    def tearDown(self):
-        self.conn.close(noreply_wait=False)
-
+        with self.app.app_context():
+            db.session.close()
+            db.drop_all()
+            db.create_all()
 
 class TokenTestCase(ApiTestCase):
 
     def test_400_with_no_authorization_header(self):
         """tests 400 error for a request with no authorization header
         """
-        res = self.client().get("/api/v1/auth/test_get",
+        res = self.client.get("/api/v1/auth/heartbeat",
                                 headers={'not_authorization': 'not_a_token'})
         self.assertEqual(res.status_code, 400)
         self.assertIn(custom_errors['InvalidTokenError']
@@ -66,7 +53,7 @@ class TokenTestCase(ApiTestCase):
     def test_400_with_invalid_token(self):
         """tests that an invalid token returns 400
         """
-        res = self.client().get('/api/v1/auth/test_get',
+        res = self.client.get('/api/v1/auth/heartbeat',
                                 headers={'authorization': 'not-a-token'})
         self.assertEqual(res.status_code, 400)
         self.assertIn(custom_errors['InvalidTokenError']
@@ -77,7 +64,7 @@ class TokenTestCase(ApiTestCase):
         """
         with self.app.app_context():
             token = create_jwt("5555555555")
-        res = self.client().get('/api/v1/auth/test_get',
+        res = self.client.get('/api/v1/auth/heartbeat',
                                 headers={'authorization': token})
         self.assertEqual(res.status_code, 400)
         self.assertIn(custom_errors['InvalidTokenError']
@@ -88,7 +75,7 @@ class TokenTestCase(ApiTestCase):
         """
         with self.app.app_context():
             token = create_expired_token('5555555555')
-        res = self.client().get('/api/v1/auth/test_get',
+        res = self.client.get('/api/v1/auth/heartbeat',
                                 headers={'authorization': token})
         self.assertEqual(res.status_code, 400)
         self.assertIn(custom_errors['ExpiredTokenError']
@@ -104,7 +91,7 @@ class OTPTestCase(ApiTestCase):
             expected_sid = "SID1"
             mock_send_text.return_value.sid = expected_sid
 
-            res = self.client().post('/api/v1/auth/otp',
+            res = self.client.post('/api/v1/auth/get_otp',
                                      data={'phone': current_app.config['TESTING_TO_NUMBER']})
             self.assertEqual(res.get_json()['message_sid'], expected_sid)
             # ensures that our send_text function is called with the right arguments
@@ -117,7 +104,7 @@ class OTPTestCase(ApiTestCase):
     def test_otp_raises_error_if_cant_send(self):
         """API errors if an OTP is asked for by a number that is invalid"""
         with self.app.app_context():
-            res = self.client().post('/api/v1/auth/otp',
+            res = self.client.post('/api/v1/auth/get_otp',
                                      data={'phone': 'not-a-phone-number'})
             self.assertEqual(res.status_code, 500)
             self.assertIn(custom_errors['OTPSendError']
@@ -127,12 +114,12 @@ class OTPTestCase(ApiTestCase):
         """A call to the verify_otp endpoint should create a new user if they didn't exist before and the OTP is correct.
         """
         with self.app.app_context():
-            self.r.table(User._table).delete().run(self.conn)
             otp = get_otp(current_app.config['TESTING_TO_NUMBER'])
-            res = self.client().post('/api/v1/auth/verify_otp',
+            res = self.client.post('/api/v1/auth/verify_otp',
                                      data={'phone': current_app.config['TESTING_TO_NUMBER'],
                                            'otp': otp})
             obj = res.get_json()
+            print(obj)
             # request should come back authenticated
             self.assertEqual(obj['authenticated'], True)
             # user should have been created, not found
@@ -141,37 +128,17 @@ class OTPTestCase(ApiTestCase):
             # user ID returned by API is same as the one decoded from the token
             self.assertEqual(obj['user_id'], id)
             # created user ID in database is same as decoded ID in token
-            self.assertEqual(User.get(obj['user_id'])['id'], id)
+            self.assertEqual(User.query.get(obj['user_id']).id, id)
 
     def test_verify_otp_400_if_invalid_otp(self):
         """Verify_otp should return a 400 code if the passcode submitted is incorrect"""
         with self.app.app_context():
-            res = self.client().post("/api/v1/auth/verify_otp",
+            res = self.client.post("/api/v1/auth/verify_otp",
                                      data={'phone': current_app.config['TESTING_TO_NUMBER'],
                                            'otp': 'fake-otp'})
         self.assertEqual(res.status_code, 400)
         self.assertIn(custom_errors['OTPInvalidError']
                       ['message'], res.get_json()['message'])
-
-    def test_verify_otp_logs_in_if_existing_user(self):
-        """verify_otp should indicate that a user wasn't created if they aready exist"""
-        with self.app.app_context():
-            otp = get_otp(current_app.config['TESTING_TO_NUMBER'])
-            res = self.client().post("/api/v1/auth/verify_otp",
-                                     data={'phone': current_app.config['TESTING_TO_NUMBER'],
-                                           'otp': otp})
-
-            obj = res.get_json()
-            self.assertEqual(res.status_code, 200)
-            # request should come back authenticated
-            self.assertEqual(obj['authenticated'], True)
-            # user should have been FOUND, not created
-            self.assertEqual(obj['userCreated'], False)
-            id = decode_jwt(obj['token'])['payload']
-            # user ID returned by API is same as the one decoded from the token
-            self.assertEqual(obj['user_id'], id)
-            # created user ID in database is same as decoded ID in token
-            self.assertEqual(User.get(obj['user_id'])['id'], id)
 
 
 if __name__ == "__main__":
