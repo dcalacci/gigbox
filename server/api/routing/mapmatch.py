@@ -4,30 +4,6 @@ from api.models import Location as LocationModel
 from geoalchemy2.shape import to_shape
 from .osrmapi import get_match_distance, get_match_geometry, match
 
-def get_trajectory(locations):
-    from geoalchemy2.shape import to_shape
-    import numpy as np
-    """locations: Location model objects"""
-    records = []
-    for l in locations:
-        coords = to_shape(l.geom)
-        records.append([coords.y, coords.x, int(l.timestamp.timestamp())])
-    records = sorted(records, key=lambda r: r[2])
-    return np.array(records)
-
-def locs_to_df(locs):
-    """ Returns a trajectory dataframe that represents the trajectory created from an array
-    of Location databse objects.
-    """
-    import pandas as pd
-    import numpy as np
-    traj = get_trajectory(locs)
-
-    data = pd.DataFrame(np.vstack((traj.T)).T)
-    data.columns = ['lat', 'lng', 'time']
-    data.time = data.time.astype('datetime64[s]')
-    return data
-
 def clean_trajectory(locs):
     """ Returns a trajectory dataframe from an array of Location database objects that has
     been compressed and filtered.
@@ -89,6 +65,49 @@ def get_route_distance_and_geometry(locs_or_traj):
 
 ############
 
+def get_trajectory(locations):
+    from geoalchemy2.shape import to_shape
+    import numpy as np
+    """locations: Location model objects"""
+    records = []
+    for l in locations:
+        coords = to_shape(l.geom)
+        records.append([coords.y, coords.x, int(l.timestamp.timestamp())])
+    # sort by timestamp
+    records = sorted(records, key=lambda r: r[2])
+    return np.array(records)
+
+def locs_to_df(locs):
+    """ Returns a trajectory dataframe that represents the trajectory created from an array
+    of Location databse objects.
+    """
+    import pandas as pd
+    import numpy as np
+    traj = get_trajectory(locs)
+
+    data = pd.DataFrame(np.vstack((traj.T)).T)
+    data.columns = ['lat', 'lng', 'time']
+    data.time = data.time.astype('datetime64[s]')
+    return data
+
+def clean_trajectory(locs):
+    """ Returns a trajectory dataframe from an array of Location database objects that has
+    been compressed and filtered.
+    """
+    import skmob
+    from skmob.preprocessing import compression, filtering, detection
+    data = locs_to_df(locs)
+
+    # filter and compress our location dataset
+    tdf = skmob.TrajDataFrame(data, datetime='time')
+    ftdf = filtering.filter(tdf, include_loops=True, speed_kmh=30, max_speed_kmh=1000.)
+    print("filtered {} locs from trajectory of length {}".format(len(tdf) - len(ftdf), len(tdf)))
+    ctdf = compression.compress(ftdf, spatial_radius_km=0.1)
+    print("compressed trajectory is length {}".format(len(ctdf)))
+    return ctdf
+
+############ Stops and trips
+
 def clean_and_get_stops(locations):
     import skmob
     from skmob.preprocessing import detection
@@ -98,7 +117,7 @@ def clean_and_get_stops(locations):
     return (ctdf, stdf)
 
 
-def _merge_short_trips(trips, trip_bookends, min_distance_mi=0.6):
+def _merge_short_trips(trips, trip_bookends, min_distance_mi=0.5):
     from api.routing.osrmapi import get_match_distance
     import pandas as pd
     matches = [get_match_for_trajectory(trip) for n, trip in enumerate(trips)]
@@ -115,28 +134,41 @@ def _merge_short_trips(trips, trip_bookends, min_distance_mi=0.6):
             merged_trips.append((newtrip, newtrip_bookends, d + dists[n-1])) # replace it
         elif d <= min_distance_mi and n == 0:
             newtrip = pd.concat([trips[n], trips[n+1]])
-            trip_bookends = {'start': trip_bookends[n]['start'], 'stop': trip_bookends[n+1]['stop']}
+            newtrip_bookends = {'start': trip_bookends[n]['start'], 'stop': trip_bookends[n+1]['stop']}
             merged_trips.append((newtrip, newtrip_bookends, d + dists[n+1]))
         else:
             merged_trips.append((trips[n], trip_bookends[n], d))
     return merged_trips
 
 def split_into_trips(traj_df, stop_df, min_trip_dist_mi=0.6):
+    """Returns a list of (traj_df, [{'start', 'stop}]) tuples
+    """
     trips = []
     trip_bookends = []
-
-    for n, dt in enumerate(stop_df.datetime[1:]):
-        if (n > 0):
-            traj = traj_df[(traj_df.datetime < dt) & (traj_df.datetime > stop_df.iloc[n].leaving_datetime)]
+    
+    start = traj_df.iloc[0]
+    start['leaving_datetime'] = start.datetime
+    end = traj_df.iloc[-1]
+    end['leaving_datetime'] = end.datetime
+    
+    for n, dt in enumerate(stop_df.datetime):
+        print(n)
+        if n == 0:
+            first_trip = traj_df[(traj_df.datetime < dt) & (traj_df.datetime > start.datetime)]
+            trips.append(first_trip)
+            trip_bookends.append({'start': start, 'stop': stop_df.iloc[n]})
         else:
-            traj = traj_df[traj_df.datetime < dt]
-        trip_bookends.append({'start': stop_df.iloc[n-1], 'stop': stop_df.iloc[n]})
-        trips.append(traj)
+            trip = traj_df[(traj_df.datetime < dt) & (traj_df.datetime > stop_df.iloc[n-1].leaving_datetime)]
+            trips.append(trip)
+            trip_bookends.append({'start': stop_df.iloc[n-1], 'stop': stop_df.iloc[n]})
+    ## add final trip
+    final_trip = traj_df[(traj_df.datetime > stop_df.iloc[-1].leaving_datetime)]
+    trip_bookends.append({'start': stop_df.iloc[-1], 'stop': end})
+    trips.append(final_trip)
 
     merged_trips = _merge_short_trips(trips, trip_bookends, min_trip_dist_mi)
-
-    # (trip, stops, dist)
     return merged_trips
+
 
 def get_trips_from_locations(locations, 
         min_trip_dist_mi=0.6, 

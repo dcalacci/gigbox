@@ -143,19 +143,17 @@ class EndShift(Mutation):
             db.session.commit()
             raise ShiftInvalidError(
                 "Shift not tracked - it was under 5 minutes.")
+        else:
+            # calculate final mileage for this shift
+            shift = updateShiftMileageAndGeometry(shift, info)
+            createJobsFromLocations(shift, shift.locations, info)
 
-        # calculate final mileage for this shift
-        shift = updateShiftMileageAndGeometry(shift, info)
+            shift.end_time = end_time
+            shift.active = False
+            db.session.add(shift)
+            db.session.commit()
 
-        createJobsFromLocations(shift, shift.locations, info)
-
-        # create jobs from the shift
-        shift.end_time = end_time
-        shift.active = False
-        db.session.add(shift)
-        db.session.commit()
-
-        return EndShift(shift=shift)
+            return EndShift(shift=shift)
 
 class DeleteShift(Mutation):
     class Arguments:
@@ -226,6 +224,8 @@ def createJobsFromLocations(shift, locations, info):
         matched = {'geometries': geometries, 'bounding_box': bounding_box}
         job.snapped_geometry = matched
         job.mileage = match_obj['distance']
+        job.end_time = stops['stop'].leaving_datetime
+        job.start_time = stops['start'].datetime
         db.session.add(job)
     db.session.commit()
 

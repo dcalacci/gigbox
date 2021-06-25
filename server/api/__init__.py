@@ -105,6 +105,7 @@ def create_app():
     api.add_resource(auth.GetOtp, '/auth/get_otp')
     api.add_resource(auth.VerifyOtp, '/auth/verify_otp')
     api.add_resource(auth.LoggedIn, '/auth/login')
+    api.add_resource(auth.Heartbeat, '/auth/heartbeat')
     app.register_blueprint(api_bp, url_prefix="/api/v1")
 
     if (app.config['ENV'] == "DEVELOPMENT"):
