@@ -36,6 +36,7 @@ def gqlClient():
 
 @pytest.fixture
 def token(app, client):
+    """returns a valid token for testing requests"""
     with app.app_context():
         otp = get_otp(current_app.config['TESTING_TO_NUMBER'])
         res = client.post('/api/v1/auth/verify_otp',
@@ -46,6 +47,7 @@ def token(app, client):
 
 @pytest.fixture
 def active_shift(app, token, gqlClient):
+    """returns the currently active shift if it exists"""
     with app.test_request_context():
         request.headers = {'authorization': token}
         query = '''mutation {createShift(active: true) { shift { id startTime active }}}
@@ -53,10 +55,11 @@ def active_shift(app, token, gqlClient):
         res = gqlClient.execute(query, context_value=request)
         print("query result:", res)
         assert res['data']['createShift']['shift']['active']
-        shift_id = res['data']['createShift']['shift']
-        return shift_id
+        shift = res['data']['createShift']['shift']
+        return shift
 
 @pytest.fixture
 def locs():
+    """test locations, collected from some simulations and driving by Dan"""
     import pandas as pd
     return pd.read_csv("tests/locs.csv", index_col=0, parse_dates=['time'])
