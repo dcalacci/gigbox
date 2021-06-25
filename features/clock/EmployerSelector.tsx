@@ -51,7 +51,7 @@ export const EmployerBox = ({
                     selected ? tailwind('text-white') : null,
                 ]}
             >
-                {employer.charAt(0)}
+                {employer ? employer.charAt(0) : "?"}
             </Text>
         </Pressable>
     );

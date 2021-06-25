@@ -183,16 +183,6 @@ export default function TrackingBar() {
         const [toolTipVisible, setToolTipVisible] = useState<boolean>(false);
         const [employerTtVisible, setEmployerTtVisible] = useState<boolean>(false);
 
-        const weeklySummary = useQuery(['nJobs'], fetchWeeklySummary, {
-            onSuccess: (data) => {
-                console.log("successful. setting tooltips:", data)
-                if (data.numShifts == 0) {
-                    setToolTipVisible(true);
-                    setEmployerTtVisible(true);
-                }
-            },
-            select: (d) => d.getWeeklySummary
-        });
         return (
             <Tooltip
                 isVisible={toolTipVisible}
@@ -246,7 +236,6 @@ export default function TrackingBar() {
                             />
                         </Tooltip>
                     ) : null}
-                    {shift.active && shift.employers ? <JobTracker shift={shift} /> : null}
                 </View>
             </Tooltip>
         );
