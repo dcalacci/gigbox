@@ -2,7 +2,7 @@ export default {
     name: 'Gigbox',
     slug: 'gigbox',
     description: 'Free, open-source work tracker designed with & for gig workers.',
-    version: '1.0.1',
+    version: '1.0.4',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     primaryColor: '#2BBC8A',
@@ -28,8 +28,10 @@ export default {
                 'Gigbox needs access to your photos to automatically recognize screenshots of gig apps to help track your jobs.',
             NSLocationWhenInUseUsageDescription:
                 'Gigbox needs access to your location to track your mileage and job activity.',
+            NSLocationAlwaysAndWhenInUseUsageDescription:
+                "'Always On' lets Gigbox measure your mileage and track jobs even when it's in the background.",
             NSLocationAlwaysUsageDescription:
-                "'Alway On' will let Gigbox access your location while you're tracking jobs, even when Gigbox is in the background.",
+                "'Always On' lets Gigbox measure your mileage and track jobs even when it's in the background.",
             UIBackgroundModes: ['location'],
         },
         bundleIdentifier: 'mit.media.hd.gigbox',
