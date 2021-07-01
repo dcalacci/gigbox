@@ -14,9 +14,9 @@ def clean_trajectory(locs):
 
     # filter and compress our location dataset
     tdf = skmob.TrajDataFrame(data, datetime='time')
-    ftdf = filtering.filter(tdf, include_loops=True, speed_kmh=30, max_speed_kmh=1000.)
+    ftdf = filtering.filter(tdf, max_speed_kmh=500.)
     print("filtered {} locs from trajectory of length {}".format(len(tdf) - len(ftdf), len(tdf)))
-    ctdf = compression.compress(ftdf, spatial_radius_km=0.1)
+    ctdf = compression.compress(tdf, spatial_radius_km=0.1)
     print("compressed trajectory is length {}".format(len(ctdf)))
     return ctdf
 
@@ -25,7 +25,6 @@ def get_match_for_locations(locations):
     # location data and processing it is not too expensive.
     traj_df = clean_trajectory(locations)
     coords = traj_df[['lat', 'lng']].to_dict(orient='records')
-    print(coords)
     print("Sending {} coords to match api...".format(len(coords)))
     res = match(coords).json()
     return res
@@ -72,7 +71,7 @@ def get_trajectory(locations):
     records = []
     for l in locations:
         coords = to_shape(l.geom)
-        records.append([coords.y, coords.x, int(l.timestamp.timestamp())])
+        records.append([coords.y, coords.x, int(l.timestamp.timestamp() * 1000)])
     # sort by timestamp
     records = sorted(records, key=lambda r: r[2])
     return np.array(records)
@@ -90,21 +89,6 @@ def locs_to_df(locs):
     data.time = data.time.astype('datetime64[s]')
     return data
 
-def clean_trajectory(locs):
-    """ Returns a trajectory dataframe from an array of Location database objects that has
-    been compressed and filtered.
-    """
-    import skmob
-    from skmob.preprocessing import compression, filtering, detection
-    data = locs_to_df(locs)
-
-    # filter and compress our location dataset
-    tdf = skmob.TrajDataFrame(data, datetime='time')
-    ftdf = filtering.filter(tdf, include_loops=True, speed_kmh=30, max_speed_kmh=1000.)
-    print("filtered {} locs from trajectory of length {}".format(len(tdf) - len(ftdf), len(tdf)))
-    ctdf = compression.compress(ftdf, spatial_radius_km=0.1)
-    print("compressed trajectory is length {}".format(len(ctdf)))
-    return ctdf
 
 ############ Stops and trips
 

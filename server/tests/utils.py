@@ -3,6 +3,7 @@ import unittest
 import pytest
 
 from flask import current_app, request
+from datetime import datetime, timedelta
 from graphene.test import Client
 from api import create_app, db
 from api.schema import schema 
@@ -50,9 +51,17 @@ def active_shift(app, token, gqlClient):
     """returns the currently active shift if it exists"""
     with app.test_request_context():
         request.headers = {'authorization': token}
-        query = '''mutation {createShift(active: true) { shift { id startTime active }}}
+        query = '''mutation CreateShift($Active: Boolean!, $StartTime: String) {
+        createShift(active: $Active, startTime: $StartTime) {
+        shift { id startTime active }
+        }
+        }
         '''
-        res = gqlClient.execute(query, context_value=request)
+        vars = {
+                'StartTime': (datetime.now() - timedelta(hours = 5)).strftime('%Y-%m-%d %H:%M:%S'),
+                'Active': True
+                }
+        res = gqlClient.execute(query, context_value=request, variables=vars)
         print("query result:", res)
         assert res['data']['createShift']['shift']['active']
         shift = res['data']['createShift']['shift']

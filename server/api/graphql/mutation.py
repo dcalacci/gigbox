@@ -9,7 +9,7 @@ import base64
 import binascii
 import graphene
 from shutil import copy
-from sqlalchemy import inspect
+from sqlalchemy import inspect, and_
 from graphene import (
     Mutation,
     Float,
@@ -125,7 +125,7 @@ class EndShift(Mutation):
     shift = Field(lambda: ShiftNode, description="Shift that is being ended")
 
     class Arguments:
-        shift_id = String(required=True, description="ID of the shift to end")
+        shift_id = ID(required=True, description="ID of the shift to end")
 
     @login_required
     def mutate(self, info, shift_id):
@@ -144,9 +144,13 @@ class EndShift(Mutation):
             raise ShiftInvalidError(
                 "Shift not tracked - it was under 5 minutes.")
         else:
-            # calculate final mileage for this shift
-            shift = updateShiftMileageAndGeometry(shift, info)
-            createJobsFromLocations(shift, shift.locations, info)
+            # calculate final mileage for this shift and create jobs
+            if (len(shift.locations) > 10):
+                try:
+                    shift = updateShiftMileageAndGeometry(shift, info)
+                    createJobsFromLocations(shift, shift.locations, info)
+                except:
+                    current_app.logger.error("Couldn't create jobs or update mileage from a shift's locations")
 
             shift.end_time = end_time
             shift.active = False
@@ -154,6 +158,43 @@ class EndShift(Mutation):
             db.session.commit()
 
             return EndShift(shift=shift)
+
+class ExtractJobsFromShift(Mutation):
+    """Extract trips from a shift.
+
+    If the trips / jobs already exist, they are not created.
+
+    We test if a trip / job already exists by comparing the times. 
+    We can only have one trip during a certain time period. 
+    If one already exists, it takes precedence. 
+    """
+
+    jobs = Field(lambda: List(JobNode), description="Jobs added")
+
+    class Arguments:
+        shift_id = ID(required=True, description="ID of the shift to extract jobs from")
+
+    @login_required
+    def mutate(self, info, shift_id):
+        shift_id = from_global_id(shift_id)[1]
+        shift = (db.session.query(ShiftModel).filter_by(id=shift_id, user_id=g.user).first())
+        jobs = extractJobsFromLocations(shift, shift.locations, info)
+
+        ## don't add any that overlap with existing jobs
+        added = []
+        overlaps = [list(JobModel.query.filter(and_(
+                JobModel.shift_id == shift.id,
+                JobModel.start_time <= j.end_time, 
+                JobModel.end_time >= j.start_time))) for j in jobs]
+        for n, j in enumerate(jobs):
+            if not overlaps[n]:
+                db.session.add(j)
+                added.append(j)
+            else:
+                print("overlap:", [(j.start_time, j.end_time) for j in overlaps[n]])
+        db.session.commit()
+        return ExtractJobsFromShift(added)
+
 
 class DeleteShift(Mutation):
     class Arguments:
@@ -199,12 +240,12 @@ def updateShiftMileageAndGeometry(shift, info):
     current_app.logger.info(f'matched route added to shift...')
     return shift
 
-
-def createJobsFromLocations(shift, locations, info):
-    """ Create job objects in our database from a list of locations and a shift 
+def extractJobsFromLocations(shift, locations, info):
+    """ Create job objects from a list of locations and a shift 
     """
     from api.routing.mapmatch import get_trips_from_locations, get_match_for_trajectory
     trips = get_trips_from_locations(locations)
+    jobs = []
     for traj_df, stops, dist in trips:
         job = JobModel(
                 start_location = {'lat': stops['start'].lat, 'lng': stops['start'].lng},
@@ -226,7 +267,13 @@ def createJobsFromLocations(shift, locations, info):
         job.mileage = match_obj['distance']
         job.end_time = stops['stop'].leaving_datetime
         job.start_time = stops['start'].datetime
-        db.session.add(job)
+        jobs.append(job)
+    return jobs
+
+def createJobsFromLocations(shift, locations, info):
+    jobs = extractJobsFromLocations(shift, locations, info)
+    for j in jobs:
+        db.session.add(j)
     db.session.commit()
 
 class AddLocationsToShift(Mutation):
@@ -787,6 +834,7 @@ class Mutation(ObjectType):
     createUser = CreateUser.Field()
     createShift = CreateShift.Field()
     endShift = EndShift.Field()
+    extractJobsFromShift = ExtractJobsFromShift.Field()
     deleteShift = DeleteShift.Field()
     createJob = CreateJob.Field()
     setJobTotalPay = SetJobTotalPay.Field()

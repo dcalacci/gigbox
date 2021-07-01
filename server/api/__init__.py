@@ -33,7 +33,7 @@ def create_app():
 
     # Query for existing databases
     # existing_databases = engine.execute("SHOW DATABASES;")
-    app.logger.info("Checking database at ", app.config['SQLALCHEMY_DATABASE_URI'])
+    app.logger.info("Checking database at {}".format(app.config['SQLALCHEMY_DATABASE_URI']))
     if not database_exists(app.config['SQLALCHEMY_DATABASE_URI']):
         create_database(app.config['SQLALCHEMY_DATABASE_URI'])
         app.logger.debug("database created...")
