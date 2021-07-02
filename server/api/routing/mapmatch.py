@@ -71,7 +71,7 @@ def get_trajectory(locations):
     records = []
     for l in locations:
         coords = to_shape(l.geom)
-        records.append([coords.y, coords.x, int(l.timestamp.timestamp() * 1000)])
+        records.append([coords.y, coords.x, int(l.timestamp.timestamp())])
     # sort by timestamp
     records = sorted(records, key=lambda r: r[2])
     return np.array(records)

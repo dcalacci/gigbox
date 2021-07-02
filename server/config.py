@@ -18,7 +18,7 @@ class Config(object):
 
 class DevelopmentConfig(Config):
     ENV = "DEVELOPMENT"
-    DATABASE_NAME = "gigbox-dev"
+    DATABASE_NAME = "gigbox-development"
     DEBUG = True
     MIN_SHIFT_MILEAGE = 0
     MIN_SHIFT_DURATION = 5*60
