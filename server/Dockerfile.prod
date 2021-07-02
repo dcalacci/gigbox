@@ -1,6 +1,4 @@
-FROM tiangolo/uwsgi-nginx-flask:python3.8
-# IF YOU CHANGE THIS IMAGE
-# make sure the UID/GID mapping in 2-cluster-configure-efs.sh is consistent
+FROM tiangolo/uwsgi-nginx-flask:python3.7
 
 
 ENV PYTHONPATH /usr/lib/python3/dist-packages
