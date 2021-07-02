@@ -22,11 +22,12 @@ import { InitialSurvey } from '../features/consent/InitialSurvey';
 import { Onboarding } from '../features/onboarding/Onboarding';
 import { User } from '../types';
 import * as SplashScreen from 'expo-splash-screen';
-import { SurveyForm } from '../features/surveys/Survey'
+import { SurveyForm } from '../features/surveys/Survey';
+import TripsScreen from '../features/trips/TripsScreen';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
-export default function BottomTabNavigator({ }) {
+export default function BottomTabNavigator({}) {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState): User | null => state.auth.user);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
@@ -95,6 +96,15 @@ export default function BottomTabNavigator({ }) {
                     />
                     <BottomTab.Screen
                         name="Trips"
+                        component={TripsScreen}
+                        options={{
+                            tabBarIcon: ({ color }) => (
+                                <TabBarIcon name="receipt-outline" color={color} />
+                            ),
+                        }}
+                    />
+                                        <BottomTab.Screen
+                        name="Shifts"
                         component={ShiftsScreen}
                         options={{
                             tabBarIcon: ({ color }) => (
@@ -102,6 +112,7 @@ export default function BottomTabNavigator({ }) {
                             ),
                         }}
                     />
+
                     <BottomTab.Screen
                         name="Jobs"
                         component={JobsScreen}
@@ -129,7 +140,9 @@ export default function BottomTabNavigator({ }) {
 // You can explore the built-in icon families and icons on the web at:
 // https://icons.expo.fyi/
 function TabBarIcon(props: { name: string; color: string }) {
-    return <Ionicons size={30} style={{ marginBottom: -3 }} color={props.color} name={props.name}/>;
+    return (
+        <Ionicons size={30} style={{ marginBottom: -3 }} color={props.color} name={props.name} />
+    );
 }
 
 // Each tab has its own navigation stack, you can read more about this pattern here:
@@ -147,12 +160,13 @@ function HomeRoot() {
                     headerStyle: tailwind('bg-white'),
                 }}
             />
-            <HomeStack.Screen 
-            name="Survey" 
-            component={SurveyForm} 
-            options={{
-                headerBackTitle: 'Home'
-            }}/>
+            <HomeStack.Screen
+                name="Survey"
+                component={SurveyForm}
+                options={{
+                    headerBackTitle: 'Home',
+                }}
+            />
         </HomeStack.Navigator>
     );
 }

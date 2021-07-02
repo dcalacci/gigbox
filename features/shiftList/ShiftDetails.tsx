@@ -8,6 +8,7 @@ import TripMap from './TripMap';
 import { log } from '../../utils';
 
 import { deleteShift } from './api';
+import { extractJobsFromShift } from '../trips/hooks';
 
 export const ShiftTrips = ({
     routeParams,
@@ -20,6 +21,11 @@ export const ShiftTrips = ({
 }) => {
     const [jobs, setJobs] = useState<[{ node: Job }]>();
     const [deleteModalVisible, setDeleteModalVisible] = useState<boolean>(false);
+    const extractJobs = useMutation(extractJobsFromShift, {
+        onSuccess: (d) => {
+            console.log("extracted jobs:", d)
+        }
+    })
     const queryClient = useQueryClient();
     const deleteShiftById = useMutation(deleteShift, {
         onSuccess: (d) => {
@@ -104,6 +110,13 @@ export const ShiftTrips = ({
                 >
                     <Text style={tailwind('text-lg font-bold p-1 text-white')}>Delete Shift</Text>
                 </Pressable>
+                <Pressable
+                    onPress={() => extractJobs.mutate(shift.id)}
+                    style={[tailwind('border-red-500 bg-red-500 border-2 rounded-lg items-center')]}
+                >
+                    <Text style={tailwind('text-lg font-bold p-1 text-white')}>Refresh Jobs</Text>
+                </Pressable>
+
             </View>
         </>
     );

@@ -1,23 +1,41 @@
+import { StackNavigationProp } from '@react-navigation/stack';
 import { StringValueNode } from 'graphql/language/ast';
 import { LatLng } from 'react-native-maps';
+import { JobFilter } from './features/job/JobList';
 
 export type RootStackParamList = {
-    Root: undefined;
+    Home: undefined;
+    Jobs: {
+        filters: JobFilter
+    }
     NotFound: undefined;
 };
 
 export type BottomTabParamList = {
-    TabOne: undefined;
-    TabTwo: undefined;
+    Home: undefined;
+    Trips: undefined;
+    Jobs: undefined;
+    Settings: undefined
 };
 
-export type TabOneParamList = {
-    TabOneScreen: undefined;
+export type HomeParamList = {
+    Home: undefined;
+    Survey: {
+        surveys: {node: Survey}
+    },
 };
 
 export type TabTwoParamList = {
     TabTwoScreen: undefined;
 };
+
+export type HomeScreenNavigationProp = StackNavigationProp<
+  RootStackParamList,
+  'Home'
+>;
+
+export type TripsScreenNavigationProp = StackNavigationProp<RootStackParamList, "Trips">;
+
 
 export type BoundingBox = {
     minLat: number;
