@@ -242,8 +242,8 @@ def test_extracts_jobs_if_not_already_exist(app, token, locs, active_shift, gqlC
         print("extract result:", res)
         assert len(res['data']['extractJobsFromShift']['jobs']) == 3
 
-
-
+        res2 = extract_jobs_from_shift(token, active_shift, gqlClient)
+        assert len(res2['data']['extractJobsFromShift']['jobs']) == 0
 
 
 if __name__ == "__main__":
