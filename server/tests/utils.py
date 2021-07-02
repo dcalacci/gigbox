@@ -72,3 +72,9 @@ def locs():
     """test locations, collected from some simulations and driving by Dan"""
     import pandas as pd
     return pd.read_csv("tests/locs.csv", index_col=0, parse_dates=['time'])
+
+@pytest.fixture
+def exodus_locs():
+    """test locations from a one-trip drive to Exodus"""
+    import pandas as pd
+    return pd.read_csv("tests/exodus.csv", index_col=0, parse_dates=['time'])

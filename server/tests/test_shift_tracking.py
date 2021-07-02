@@ -9,7 +9,7 @@ import jwt
 import pandas as pd
 from datetime import datetime, timedelta
 from flask import current_app, request
-from .utils import ApiTestCase, app, client, gqlClient, token, locs, active_shift
+from .utils import ApiTestCase, app, client, gqlClient, token, locs, exodus_locs, active_shift
 
 from api import create_app, db
 from api.controllers.errors import custom_errors
@@ -78,9 +78,12 @@ class TestShiftCreation(ApiTestCase):
             self.shift_id = res['data']['createShift']['shift']['id']
 
 
-def add_locations_to_shift(token, locs, active_shift, gqlClient, start_n_mins_after_shift=10):
+def add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient,
+        start_n_mins_after_shift=10, trip='default'):
     """Adds locs to shift active_shift. Adds in same order and time, but begins records
     `start_n_mins_after_shift` after the shift started.
+    
+    if trip is 'exodus', loads exodus test trip locations
     """
     request.headers = {'authorization': token}
     query = '''mutation AddLocations($ShiftId: ID!, $Locations: [LocationInput]!) {
@@ -93,6 +96,8 @@ def add_locations_to_shift(token, locs, active_shift, gqlClient, start_n_mins_af
     }
 }
     '''
+    if trip == 'exodus':
+        locs = exodus_locs
     ## add all locations not just first!
     locations = locs.to_dict(orient='records')
     locs_to_add = []
@@ -180,18 +185,18 @@ def extract_jobs_from_shift(token, active_shift, gqlClient):
 
 
 
-def test_adding_locations_to_shift_is_ok_and_returns_geometry(app, token, locs, active_shift, gqlClient):
+def test_adding_locations_to_shift_is_ok_and_returns_geometry(app, token, locs, exodus_locs, active_shift, gqlClient):
     with app.test_request_context():
-        res = add_locations_to_shift(token, locs, active_shift, gqlClient)
+        res = add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient)
         # geom is POINT(lng, lat)
         assert res['data']['addLocationsToShift']['location']['geom'] is not None
         assert res['data']['addLocationsToShift']['ok']
 
 
-def test_extracts_three_jobs_from_example_shift(app, token, locs, active_shift, gqlClient):
+def test_extracts_three_jobs_from_example_shift(app, token, locs, exodus_locs, active_shift, gqlClient):
     import numpy as np
     with app.test_request_context():
-        _ = add_locations_to_shift(token, locs, active_shift, gqlClient)
+        _ = add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient)
         res = end_shift(token, active_shift, gqlClient)
 
         print("endshift result:", res)
@@ -218,15 +223,15 @@ def test_extracts_three_jobs_from_example_shift(app, token, locs, active_shift, 
         # mileage less than or equal
         assert np.sum(miles) <= res['data']['endShift']['shift']['roadSnappedMiles']
 
-def test_doesnt_extract_already_extracted_jobs(app, token, locs, active_shift, gqlClient):
+def test_doesnt_extract_already_extracted_jobs(app, token, exodus_locs, locs, active_shift, gqlClient):
     with app.test_request_context():
-        _ = add_locations_to_shift(token, locs, active_shift, gqlClient)
+        _ = add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient)
         _ = end_shift(token, active_shift, gqlClient)
         res = extract_jobs_from_shift(token, active_shift, gqlClient)
         print("extract result:", res)
         assert len(res['data']['extractJobsFromShift']['jobs']) == 0
 
-def test_extracts_jobs_if_not_already_exist(app, token, locs, active_shift, gqlClient):
+def test_extracts_jobs_if_not_already_exist(app, token, exodus_locs, locs, active_shift, gqlClient):
     with app.test_request_context():
         # locs = locs.to_dict(orient='records')
         # Confirm the shift doesn't have any jobs
@@ -236,7 +241,7 @@ def test_extracts_jobs_if_not_already_exist(app, token, locs, active_shift, gqlC
         # locs.time = pd.to_datetime(locs.time)
         # locs.time = locs.time + timedelta(hours=3)
 
-        _ = add_locations_to_shift(token, locs, active_shift, gqlClient,
+        _ = add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient,
                 start_n_mins_after_shift=120)
         res = extract_jobs_from_shift(token, active_shift, gqlClient)
         print("extract result:", res)
@@ -244,6 +249,40 @@ def test_extracts_jobs_if_not_already_exist(app, token, locs, active_shift, gqlC
 
         res2 = extract_jobs_from_shift(token, active_shift, gqlClient)
         assert len(res2['data']['extractJobsFromShift']['jobs']) == 0
+
+def test_extracts_two_trips_and_mileage_from_exodus_test_trip(app, token, locs, exodus_locs, active_shift, gqlClient):
+    import numpy as np
+    with app.test_request_context():
+        _ = add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient, trip='exodus')
+        res = end_shift(token, active_shift, gqlClient)
+
+        print("endshift result:", res)
+        assert not res['data']['endShift']['shift']['active']
+        assert len(res['data']['endShift']['shift']['jobs']['edges']) == 2
+        jobs = res['data']['endShift']['shift']['jobs']['edges']
+        endTimes = [j['node']['endTime'] for j in jobs]
+        startTimes = [j['node']['startTime'] for j in jobs]
+        miles = [j['node']['mileage'] for j in jobs]
+
+
+        # all end times less than shift end
+        assert np.all([e <= res['data']['endShift']['shift']['endTime'] for e in endTimes])
+
+        # all end times greater than shift start
+        assert np.all([e >= res['data']['endShift']['shift']['startTime'] for e in endTimes])
+
+        # all start times less than shift end
+        assert np.all([s <= res['data']['endShift']['shift']['endTime'] for s in startTimes])
+
+        # all start times greater than shift start
+        assert np.all([s >= res['data']['endShift']['shift']['startTime'] for s in startTimes])
+
+        # mileage less than or equal
+        assert np.sum(miles) <= res['data']['endShift']['shift']['roadSnappedMiles']
+
+        # mileage on this trip in total should be about 5.1 miles
+        assert (np.sum(miles) - 5.1) < 0.2
+
 
 
 if __name__ == "__main__":
