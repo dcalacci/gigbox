@@ -8,12 +8,12 @@ def clean_trajectory(locs):
     """ Returns a trajectory dataframe from an array of Location database objects that has
     been compressed and filtered.
     """
-    import skmob
+    from skmob import TrajDataFrame
     from skmob.preprocessing import compression, filtering, detection
     data = locs_to_df(locs)
 
     # filter and compress our location dataset
-    tdf = skmob.TrajDataFrame(data, datetime='time')
+    tdf = TrajDataFrame(data, datetime='time')
     ftdf = filtering.filter(tdf, max_speed_kmh=500.)
     print("filtered {} locs from trajectory of length {}".format(len(tdf) - len(ftdf), len(tdf)))
     ctdf = compression.compress(tdf, spatial_radius_km=0.1)
@@ -38,9 +38,9 @@ def get_match_for_trajectory(traj_df):
 ###############
 
 def get_route_distance_and_geometry(locs_or_traj):
-    import skmob
+    from skmob.core import trajectorydataframe
     try:
-        if (type(locs_or_traj) == skmob.core.trajectorydataframe.TrajDataFrame):
+        if (type(locs_or_traj) == trajectorydataframe.TrajDataFrame):
             res = get_match_for_trajectory(locs_or_traj)
         else:
             print("getting match for", len(locs_or_traj), "locations...")
@@ -93,7 +93,6 @@ def locs_to_df(locs):
 ############ Stops and trips
 
 def clean_and_get_stops(locations):
-    import skmob
     from skmob.preprocessing import detection
     ctdf = clean_trajectory(locations)
 
@@ -163,7 +162,6 @@ def get_trips_from_locations(locations,
     - {'stop', 'start'} (lat, lng, datetime series)
     - distance (mi)
     """
-    import skmob
     from skmob.preprocessing import detection
     traj_df = clean_trajectory(locations)
 
