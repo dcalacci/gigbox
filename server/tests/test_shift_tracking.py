@@ -123,7 +123,7 @@ def add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient,
 
     # turn into timestamp
     for l in locs_to_add:
-        l['timestamp'] = l['timestamp'].timestamp()
+        l['timestamp'] = l['timestamp'].timestamp() * 1000
 
     vars = {
             'ShiftId': active_shift['id'],
@@ -281,7 +281,7 @@ def test_extracts_two_trips_and_mileage_from_exodus_test_trip(app, token, locs, 
         assert np.sum(miles) <= res['data']['endShift']['shift']['roadSnappedMiles']
 
         # mileage on this trip in total should be about 5.1 miles
-        assert (np.sum(miles) - 5.1) < 0.2
+        assert (np.sum(miles) - 5.1) < 1
 
 
 

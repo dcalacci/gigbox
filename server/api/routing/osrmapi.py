@@ -37,13 +37,16 @@ def get_match_distance(res):
     """
     # convert to mileage
     if 'matchings' in res:
-        return res['matchings'][0]['distance'] * 0.0006213712
+        distances = [m['distance'] for m in res['matchings']]
+        total_distance = sum(distances)
+        mileage = total_distance * 0.0006213712
+        return mileage
     return 0
 
 def get_match_geometry(res):
     if 'matchings' in res:
-        # first is always the highest-confidence match from OSRM
-        geometries = res['matchings'][0]['geometry']['coordinates']
+        geometries = [m['geometry']['coordinates'] for m in res['matchings']]
+        geometries = list(itertools.chain(*geometries))
 
         def bounding_box(points):
             x_coordinates, y_coordinates = zip(*points)

@@ -16,7 +16,7 @@ def clean_trajectory(locs):
     tdf = TrajDataFrame(data, datetime='time')
     ftdf = filtering.filter(tdf, max_speed_kmh=500.)
     print("filtered {} locs from trajectory of length {}".format(len(tdf) - len(ftdf), len(tdf)))
-    ctdf = compression.compress(tdf, spatial_radius_km=0.1)
+    ctdf = compression.compress(tdf, spatial_radius_km=0.05)
     print("compressed trajectory is length {}".format(len(ctdf)))
     return ctdf
 
@@ -39,20 +39,23 @@ def get_match_for_trajectory(traj_df):
 
 def get_route_distance_and_geometry(locs_or_traj):
     from skmob.core import trajectorydataframe
+
+    print("getting match for", len(locs_or_traj), "locations...")
     try:
         if (type(locs_or_traj) == trajectorydataframe.TrajDataFrame):
             res = get_match_for_trajectory(locs_or_traj)
         else:
-            print("getting match for", len(locs_or_traj), "locations...")
             res = get_match_for_locations(locs_or_traj)
     except ConnectionError as e:
         return {'status': 'error',
                 'message': 'Connection error.'}
 
     if res['code'] == 'TooBig':
+        current_app.logger.error('Trace too large')
         return {'status': 'error',
                 'message': 'trace too large'}
     elif 'matchings' not in res:
+        current_app.logger.error("Failed to match route")
         return {'status': 'error',
                 'message': 'failed to match route'}
     else:
@@ -123,7 +126,7 @@ def _merge_short_trips(trips, trip_bookends, min_distance_mi=0.5):
             merged_trips.append((trips[n], trip_bookends[n], d))
     return merged_trips
 
-def split_into_trips(traj_df, stop_df, min_trip_dist_mi=0.6):
+def split_into_trips(traj_df, stop_df, min_trip_dist_mi=0.5):
     """Returns a list of (traj_df, [{'start', 'stop}]) tuples
     """
     trips = []
@@ -133,28 +136,36 @@ def split_into_trips(traj_df, stop_df, min_trip_dist_mi=0.6):
     start['leaving_datetime'] = start.datetime
     end = traj_df.iloc[-1]
     end['leaving_datetime'] = end.datetime
+
+    print("total number of stops: {}".format(len(stop_df)))
     
     for n, dt in enumerate(stop_df.datetime):
-        print(n)
         if n == 0:
-            first_trip = traj_df[(traj_df.datetime < dt) & (traj_df.datetime > start.datetime)]
+            first_trip = traj_df[(traj_df.datetime <= dt) & (traj_df.datetime >= start.datetime)]
             trips.append(first_trip)
             trip_bookends.append({'start': start, 'stop': stop_df.iloc[n]})
         else:
-            trip = traj_df[(traj_df.datetime < dt) & (traj_df.datetime > stop_df.iloc[n-1].leaving_datetime)]
+            trip = traj_df[(traj_df.datetime <= dt) & (traj_df.datetime >= stop_df.iloc[n-1].datetime)]
             trips.append(trip)
             trip_bookends.append({'start': stop_df.iloc[n-1], 'stop': stop_df.iloc[n]})
-    ## add final trip
-    final_trip = traj_df[(traj_df.datetime > stop_df.iloc[-1].leaving_datetime)]
-    trip_bookends.append({'start': stop_df.iloc[-1], 'stop': end})
-    trips.append(final_trip)
 
-    merged_trips = _merge_short_trips(trips, trip_bookends, min_trip_dist_mi)
-    return merged_trips
+    if (len(stop_df) > 0):
+        ## add final trip
+        final_trip = traj_df[(traj_df.datetime >= stop_df.iloc[-1].datetime)]
+        trip_bookends.append({'start': stop_df.iloc[-1], 'stop': end})
+        trips.append(final_trip)
+
+    if len(trips) > 0 and len(trip_bookends) > 0:
+        merged_trips = _merge_short_trips(trips, trip_bookends, min_trip_dist_mi)
+        current_app.logger.info("Merged trips df:")
+        current_app.logger.info(merged_trips)
+        return merged_trips
+    else:
+        return list(zip(trips, trip_bookends))
 
 
 def get_trips_from_locations(locations, 
-        min_trip_dist_mi=0.6, 
+        min_trip_dist_mi=0.2, 
         minutes_for_stop=2,
         no_data_for_minutes=120):
     """ Returns trips in a 3-tuple, each a list of:
@@ -163,11 +174,12 @@ def get_trips_from_locations(locations,
     - distance (mi)
     """
     from skmob.preprocessing import detection
+    current_app.logger.info("Extracting trips from {} locations".format(len(locations)))
     traj_df = clean_trajectory(locations)
 
     stop_df = detection.stops(traj_df,
-            minutes_for_a_stop=minutes_for_stop,
-            no_data_for_minutes=no_data_for_minutes)
+                minutes_for_a_stop=minutes_for_stop,
+                no_data_for_minutes=no_data_for_minutes)
 
     return split_into_trips(
             traj_df, 
