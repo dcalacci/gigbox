@@ -1,6 +1,7 @@
 import React, { FunctionComponent } from 'react';
 import { Pressable, Text, ScrollView, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { tailwind } from 'tailwind';
 import { useQuery } from 'react-query';
 import TrackingBar from '../features/clock/TrackingBar';
@@ -10,11 +11,11 @@ import {
     getFilteredJobs,
 } from '../features/job/api';
 import { useNumTrackedShifts } from '../features/clock/api';
-import { useLinkProps } from '@react-navigation/native';
-import { Job } from '../types';
+import { Job, RootStackParamList, HomeScreenNavigationProp } from '../types';
 import moment from 'moment';
 
-export default function TabOneScreen({ navigation }) {
+
+export default function HomeScreen({ navigation }: {navigation: HomeScreenNavigationProp}) {
     // const numTrackedJobsStatus = useNumTrackedJobsToday();
     const numJobsTodayNeedEntry = useQuery(
         [
@@ -55,10 +56,10 @@ export default function TabOneScreen({ navigation }) {
                     <Pressable
                         style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}
                         onPress={() =>
-                            navigation.navigate('Jobs List', {
+                            navigation.navigate('Jobs', {
                                 filters: {
-                                    startDate: moment().startOf('day').format(),
-                                    endDate: moment().endOf('day').format(),
+                                    startDate: moment().startOf('day'),
+                                    endDate: moment().endOf('day'),
                                 },
                             })
                         }
@@ -75,11 +76,11 @@ export default function TabOneScreen({ navigation }) {
                     <Pressable
                         style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}
                         onPress={() =>
-                            navigation.navigate('Jobs List', {
+                            navigation.navigate('Jobs', {
                                 filters: {
                                     needsEntry: true,
-                                    startDate: moment().startOf('day').format(),
-                                    endDate: moment().endOf('day').format(),
+                                    startDate: moment().startOf('day'),
+                                    endDate: moment().endOf('day'),
                                 },
                             })
                         }
@@ -103,7 +104,7 @@ export default function TabOneScreen({ navigation }) {
                     <View style={tailwind('border-b border-gray-200 ml-5 mr-5')}></View>
                 </Pressable>
 
-                <WeeklyCard navigation={navigation} />
+                <WeeklyCard />
             </ScrollView>
         </View>
     );

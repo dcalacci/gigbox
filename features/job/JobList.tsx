@@ -29,14 +29,14 @@ export enum SortArgs {
 }
 
 export interface JobFilter {
-    startDate: Moment | null;
-    endDate: Moment | null;
-    needsEntry: boolean;
-    saved: boolean;
-    minTotalPay: number | undefined;
-    minTip: number | undefined;
-    minMileage: number | undefined;
-    sort: SortArgs | undefined;
+    startDate?: Moment | null;
+    endDate?: Moment | null;
+    needsEntry?: boolean;
+    saved?: boolean;
+    minTotalPay?: number | undefined;
+    minTip?: number | undefined;
+    minMileage?: number | undefined;
+    sort?: SortArgs | undefined;
 }
 
 const defaultFilter: JobFilter = {

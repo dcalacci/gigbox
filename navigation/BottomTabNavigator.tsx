@@ -2,39 +2,31 @@ import { Ionicons } from '@expo/vector-icons';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import { useSelector } from 'react-redux';
-import React, { useCallback, useEffect } from 'react';
+import React, { useEffect } from 'react';
 
 import Colors from '../constants/Colors';
-import TabOneScreen from '../screens/TabOneScreen';
+import HomeScreen from '../screens/HomeScreen';
 import ShiftsScreen from '../screens/ShiftsScreen';
 import JobsScreen from '../screens/JobsScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import { RootState } from '../store/index';
-import { Consent, BottomTabParamList, TabOneParamList, TabTwoParamList } from '../types';
+import { BottomTabParamList, HomeParamList } from '../types';
 import tailwind from 'tailwind-rn';
-import { StackActions } from '@react-navigation/routers';
-import { SafeAreaView, View, Text, Settings } from 'react-native';
+import { SafeAreaView, View } from 'react-native';
 
-import { useQuery } from 'react-query';
-import { logIn, LogInResponse } from '../features/auth/api';
-import { setOnboarded, setLoggedIn, setUser } from '../features/auth/authSlice';
+import { setOnboarded } from '../features/auth/authSlice';
 import { useDispatch } from 'react-redux';
 import PhoneEntry from '../features/auth/PhoneEntry';
 import { ConsentFlow } from '../features/consent/ConsentFlow';
-import { Signature } from '../features/consent/Signature';
-import { Extras } from '../features/consent/Extras';
-import { getUserInfo } from '../features/consent/api';
 import { InitialSurvey } from '../features/consent/InitialSurvey';
 import { Onboarding } from '../features/onboarding/Onboarding';
-import { StatusBar } from 'expo-status-bar';
 import { User } from '../types';
 import * as SplashScreen from 'expo-splash-screen';
-import { useScrollToTop } from '@react-navigation/native';
 import { SurveyForm } from '../features/surveys/Survey'
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
-export default function BottomTabNavigator({ navigation }) {
+export default function BottomTabNavigator({ }) {
     const dispatch = useDispatch();
     const user = useSelector((state: RootState): User | null => state.auth.user);
     const isAuthenticated = useSelector((state: RootState): boolean => state.auth.authenticated);
@@ -42,6 +34,7 @@ export default function BottomTabNavigator({ navigation }) {
 
     useEffect(() => {
         async function maybeShowSplash() {
+            // if "user" isn't defined, then we should show our splash screen
             if (!user) {
                 console.log('preventing splash screen hide...');
                 await SplashScreen.preventAutoHideAsync();
@@ -50,7 +43,6 @@ export default function BottomTabNavigator({ navigation }) {
                 await SplashScreen.hideAsync();
             }
         }
-
         maybeShowSplash();
     }, []);
 
@@ -94,7 +86,7 @@ export default function BottomTabNavigator({ navigation }) {
                 <>
                     <BottomTab.Screen
                         name="Home"
-                        component={HomeScreen}
+                        component={HomeRoot}
                         options={{
                             tabBarIcon: ({ color }) => (
                                 <TabBarIcon name="caret-forward-circle-outline" color={color} />
@@ -102,7 +94,7 @@ export default function BottomTabNavigator({ navigation }) {
                         }}
                     />
                     <BottomTab.Screen
-                        name="Shifts"
+                        name="Trips"
                         component={ShiftsScreen}
                         options={{
                             tabBarIcon: ({ color }) => (
@@ -111,7 +103,7 @@ export default function BottomTabNavigator({ navigation }) {
                         }}
                     />
                     <BottomTab.Screen
-                        name="Jobs List"
+                        name="Jobs"
                         component={JobsScreen}
                         options={{
                             tabBarIcon: ({ color }) => (
@@ -137,26 +129,26 @@ export default function BottomTabNavigator({ navigation }) {
 // You can explore the built-in icon families and icons on the web at:
 // https://icons.expo.fyi/
 function TabBarIcon(props: { name: string; color: string }) {
-    return <Ionicons size={30} style={{ marginBottom: -3 }} {...props} />;
+    return <Ionicons size={30} style={{ marginBottom: -3 }} color={props.color} name={props.name}/>;
 }
 
 // Each tab has its own navigation stack, you can read more about this pattern here:
 // https://reactnavigation.org/docs/tab-based-navigation#a-stack-navigator-for-each-tab
-const HomeStack = createStackNavigator<TabOneParamList>();
+const HomeStack = createStackNavigator<HomeParamList>();
 
-function HomeScreen() {
+function HomeRoot() {
     return (
         <HomeStack.Navigator>
             <HomeStack.Screen
-                name="TabOneScreen"
-                component={TabOneScreen}
+                name="Home"
+                component={HomeScreen}
                 options={{
                     headerTitle: 'Home',
                     headerStyle: tailwind('bg-white'),
                 }}
             />
             <HomeStack.Screen 
-            name="Survey Form" 
+            name="Survey" 
             component={SurveyForm} 
             options={{
                 headerBackTitle: 'Home'
