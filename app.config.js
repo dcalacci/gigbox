@@ -2,7 +2,7 @@ export default {
     name: 'Gigbox',
     slug: 'gigbox',
     description: 'Free, open-source work tracker designed with & for gig workers.',
-    version: '1.0.4',
+    version: '1.0.5',
     orientation: 'portrait',
     icon: './assets/images/icon.png',
     primaryColor: '#2BBC8A',
