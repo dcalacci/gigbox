@@ -193,7 +193,7 @@ def test_adding_locations_to_shift_is_ok_and_returns_geometry(app, token, locs, 
         assert res['data']['addLocationsToShift']['ok']
 
 
-def test_extracts_three_jobs_from_example_shift(app, token, locs, exodus_locs, active_shift, gqlClient):
+def test_extracts_one_jobs_from_example_shift(app, token, locs, exodus_locs, active_shift, gqlClient):
     import numpy as np
     with app.test_request_context():
         _ = add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient)
@@ -201,7 +201,7 @@ def test_extracts_three_jobs_from_example_shift(app, token, locs, exodus_locs, a
 
         print("endshift result:", res)
         assert not res['data']['endShift']['shift']['active']
-        assert len(res['data']['endShift']['shift']['jobs']['edges']) == 3
+        assert len(res['data']['endShift']['shift']['jobs']['edges']) == 1
         jobs = res['data']['endShift']['shift']['jobs']['edges']
         endTimes = [j['node']['endTime'] for j in jobs]
         startTimes = [j['node']['startTime'] for j in jobs]
@@ -245,7 +245,7 @@ def test_extracts_jobs_if_not_already_exist(app, token, exodus_locs, locs, activ
                 start_n_mins_after_shift=120)
         res = extract_jobs_from_shift(token, active_shift, gqlClient)
         print("extract result:", res)
-        assert len(res['data']['extractJobsFromShift']['jobs']) == 3
+        assert len(res['data']['extractJobsFromShift']['jobs']) == 1
 
         res2 = extract_jobs_from_shift(token, active_shift, gqlClient)
         assert len(res2['data']['extractJobsFromShift']['jobs']) == 0
@@ -275,6 +275,7 @@ def test_extracts_two_trips_and_mileage_from_exodus_test_trip(app, token, locs, 
         assert np.all([s <= res['data']['endShift']['shift']['endTime'] for s in startTimes])
 
         # all start times greater than shift start
+
         assert np.all([s >= res['data']['endShift']['shift']['startTime'] for s in startTimes])
 
         # mileage less than or equal

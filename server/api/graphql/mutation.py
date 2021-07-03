@@ -146,11 +146,8 @@ class EndShift(Mutation):
         else:
             # calculate final mileage for this shift and create jobs
             if (len(shift.locations) > 10):
-                try:
-                    shift = updateShiftMileageAndGeometry(shift, info)
-                    createJobsFromLocations(shift, shift.locations, info)
-                except:
-                    current_app.logger.error("Couldn't create jobs or update mileage from a shift's locations")
+                shift = updateShiftMileageAndGeometry(shift, info)
+                createJobsFromLocations(shift, shift.locations, info)
 
             shift.end_time = end_time
             shift.active = False
@@ -246,6 +243,10 @@ def extractJobsFromLocations(shift, locations, info):
     from api.routing.mapmatch import get_trips_from_locations, get_match_for_trajectory
     trips = get_trips_from_locations(locations)
     jobs = []
+
+    print("TRIPS:", trips)
+    if len(trips) == 0:
+        return jobs
     for traj_df, stops, dist in trips:
         job = JobModel(
                 start_location = {'lat': stops['start'].lat, 'lng': stops['start'].lng},
