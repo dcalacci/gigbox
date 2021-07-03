@@ -13,9 +13,12 @@ export const useUncategorizedJobs = () =>  {
         saved: false,
         sort: SortArgs.START 
     }
-    return useQuery<{allJobs: { edges: {node: Job}[]}}, Error>(["jobs", filter], 
+    console.log("hook running...")
+    return useQuery<{allJobs: { edges: {node: Job}[]}}, Error>(["uncategorizedJobs", filter], 
     getFilteredJobs,
     {
+        notifyOnChangeProps: ['data'],
+        staleTime: 60,
         keepPreviousData: true,
     })
 }

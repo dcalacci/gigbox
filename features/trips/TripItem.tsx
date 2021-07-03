@@ -29,6 +29,7 @@ export const TripItem = ({ job }: { job: Job }) => {
 
     const [modalVisible, setModalVisible] = useState(false);
     useEffect(() => {
+        console.log("Updating map, geometry changed")
         if (job.snappedGeometry) {
             const { geometries, bounding_box } = JSON.parse(job.snappedGeometry);
             const locations = geometries.map((c: [number, number]) => {
@@ -146,7 +147,7 @@ export const TripItem = ({ job }: { job: Job }) => {
                     </TextInput>
                     <Text
                         style={[
-                            tailwind('text flex-grow font-bold pt-2 mr-4'),
+                            tailwind('flex-grow font-bold pt-2 mr-4'),
                             displayValue == undefined
                                 ? tailwind('text-black')
                                 : tailwind('font-bold'),
@@ -199,27 +200,6 @@ export const TripItem = ({ job }: { job: Job }) => {
         </View>
     );
 
-    const TripActions = () => (
-        <View style={tailwind('flex-row m-2')}>
-            <Pressable
-                style={tailwind('flex flex-grow')}
-                onPress={() => {
-                    console.log('Pressed confirm job');
-                }}
-            >
-                <Text>Confirm Job</Text>
-            </Pressable>
-            <Pressable
-                style={tailwind('flex flex-grow')}
-                onPress={() => {
-                    console.log('Pressed confirm job');
-                }}
-            >
-                <Text>Merge</Text>
-            </Pressable>
-        </View>
-    );
-
     return (
         <View
             style={[
@@ -262,7 +242,6 @@ export const TripItem = ({ job }: { job: Job }) => {
                         </View>
                     </View>
                 </View>
-                <TripActions/>
             </View>
         </View>
     );

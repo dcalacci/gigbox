@@ -80,7 +80,7 @@ export type WeeklySummary = {
 export type Job = {
     id: string;
     startTime: Date;
-    endTime: Date | undefined;
+    endTime: Date;
     startLocation: LatLng | string;
     endLocation: LatLng | string;
     mileage: number;
