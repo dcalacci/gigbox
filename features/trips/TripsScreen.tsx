@@ -8,6 +8,7 @@ import {
     Pressable,
     ViewStyle,
     LayoutAnimation,
+    ScrollView,
 } from 'react-native';
 
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from 'react-query';
@@ -22,8 +23,6 @@ import { Job, TripsScreenNavigationProp } from '@/types';
 import { createStackNavigator } from '@react-navigation/stack';
 import { TripItem } from './TripItem';
 import { StyleProp } from 'react-native';
-import { JobFilter, SortArgs } from '../job/JobList';
-import { getFilteredJobs } from '../job/api';
 import { useEffect } from 'react';
 
 const TripsStack = createStackNavigator();
@@ -46,26 +45,81 @@ export default function TripsScreen({ navigation }: { navigation: TripsScreenNav
     );
 }
 
-const TripListHeader = ({ isMerging, onPress }: { isMerging: boolean; onPress: () => void }) => {
+const TripScreenHeader = ({ isMerging, onPress }: { isMerging: boolean; onPress: () => void }) => {
     return (
-        <View style={tailwind('flex-row p-2 mt-5 justify-between')}>
-            <Text style={[tailwind('text-4xl font-bold')]}>Trips</Text>
+        <View style={tailwind('flex-col w-full')}>
+            <View style={tailwind('flex-row p-2 mt-5 justify-between')}>
+                <Text style={[tailwind('text-4xl font-bold')]}>Trips</Text>
+                {isMerging ? (
+                    <Pressable
+                        onPress={onPress}
+                        style={[tailwind('flex-row rounded-lg p-2 border items-center')]}
+                    >
+                        <Text style={tailwind('text-black font-bold')}>Done</Text>
+                    </Pressable>
+                ) : (
+                    <Pressable
+                        onPress={onPress}
+                        style={[tailwind('flex-row rounded-lg p-2 bg-black items-center')]}
+                    >
+                        <Text style={tailwind('text-white font-bold')}>Merge</Text>
+                        <Ionicons name="git-merge" color="white" size={16} />
+                    </Pressable>
+                )}
+            </View>
+        </View>
+    );
+};
+
+const TripListHeader = ({
+    cancelMerge,
+    isMerging,
+    selectedJobs,
+    isVisible,
+}: {
+    cancelMerge: () => void;
+    isMerging: boolean;
+    selectedJobs: String[];
+    isVisible: boolean;
+}) => {
+    return (
+        <View style={tailwind('flex-col w-full bg-gray-100')}>
             {isMerging ? (
-                <Pressable
-                    onPress={onPress}
-                    style={[tailwind('flex-row rounded-lg p-2 border items-center')]}
-                >
-                    <Text style={tailwind('text-black font-bold')}>Done</Text>
-                </Pressable>
-            ) : (
-                <Pressable
-                    onPress={onPress}
-                    style={[tailwind('flex-row rounded-lg p-2 bg-black items-center')]}
-                >
-                    <Text style={tailwind('text-white font-bold')}>Merge</Text>
-                    <Ionicons name="git-merge" color="white" size={16} />
-                </Pressable>
-            )}
+                <View style={tailwind('flex-col rounded-lg bg-white m-5 p-2 items-center')}>
+                    {isVisible ? (
+                        <>
+                            <Text style={tailwind('font-bold text-lg')}>
+                                Merge these {selectedJobs.length} trips?
+                            </Text>
+                            <Text style={tailwind('text-black p-1')}>
+                                You'll make one 3 hour long trip, from 10:13 AM to 10:58 AM.
+                            </Text>
+                            <View style={tailwind('flex-row items-center')}>
+                                <Pressable
+                                    onPress={cancelMerge}
+                                    style={tailwind('border rounded-lg p-1 pl-2 pr-2 m-2 ')}
+                                >
+                                    <Text style={tailwind('text-black text-lg font-bold')}>
+                                        Cancel
+                                    </Text>
+                                </Pressable>
+                                <Pressable
+                                    onPress={() => {
+                                        console.log('Merging');
+                                    }}
+                                    style={tailwind('bg-black rounded-lg p-1 pl-2 pr-2 m-2 ')}
+                                >
+                                    <Text style={tailwind('text-white text-lg font-bold')}>
+                                        Merge
+                                    </Text>
+                                </Pressable>
+                            </View>
+                        </>
+                    ) : (
+                        <Text style={tailwind('font-bold text-lg')}>Select trips to merge.</Text>
+                    )}
+                </View>
+            ) : null}
         </View>
     );
 };
@@ -93,13 +147,16 @@ export const TripList = () => {
         console.log('Status:', status);
         console.log('Data:', data);
     }, [status, data]);
+
     const toggleMerging = () => {
         LayoutAnimation.configureNext(LayoutAnimation.create(100, 'linear', 'opacity'));
         setIsMerging(!isMerging);
+        if (!isMerging) {
+            setSelectedJobs([]);
+        }
     };
 
     const onPressTripSelector = (jobId: String) => {
-        LayoutAnimation.configureNext(LayoutAnimation.create(100, 'linear', 'opacity'));
         const jobIsSelected = selectedJobs.indexOf(jobId) !== -1;
         if (jobIsSelected) {
             setSelectedJobs(selectedJobs.filter((id) => id != jobId));
@@ -121,9 +178,9 @@ export const TripList = () => {
 
         const Icon = () => {
             if (jobIsSelected) {
-                return <Ionicons name="radio-button-on" size={30} />;
+                return <Ionicons name="radio-button-on" size={36} />;
             } else {
-                return <Ionicons name="radio-button-off" size={30} />;
+                return <Ionicons name="radio-button-off" size={36} />;
             }
         };
 
@@ -143,12 +200,26 @@ export const TripList = () => {
     } else {
         console.log('data:', data);
         return (
-            <View style={tailwind('pt-10 flex-col bg-gray-100 h-full')}>
+            <View style={tailwind('pt-10 flex-col h-full')}>
                 <FlatList
                     ListHeaderComponent={
-                        <TripListHeader isMerging={isMerging} onPress={toggleMerging} />
+                        <>
+                            <TripScreenHeader isMerging={isMerging} onPress={toggleMerging} />
+                            <TripListHeader
+                                cancelMerge={() => {
+                                    LayoutAnimation.configureNext(
+                                        LayoutAnimation.create(100, 'linear', 'opacity')
+                                    );
+                                    setIsMerging(false);
+                                    setSelectedJobs([]);
+                                }}
+                                isMerging={isMerging}
+                                selectedJobs={selectedJobs}
+                                isVisible={selectedJobs.length > 1}
+                            />
+                        </>
                     }
-                    style={[tailwind('h-full w-full flex-auto flex-col flex-grow')]}
+                    style={[tailwind('w-full flex-auto flex-col flex-grow pl-1 pr-1')]}
                     data={data}
                     renderItem={(props) =>
                         props.item.node == null ? null : (
@@ -159,7 +230,7 @@ export const TripList = () => {
                                 {isMerging ? (
                                     <MergingRadioButton
                                         onPress={() => onPressTripSelector(props.item.node.id)}
-                                        style={tailwind('pr-1')}
+                                        style={tailwind('p-2')}
                                         jobId={props.item.node.id}
                                     />
                                 ) : null}
