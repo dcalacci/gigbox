@@ -26,10 +26,8 @@ import {
     addScreenshotToShift,
 } from './api';
 import { log } from '../../utils';
-import JobTracker from './JobTracker';
 import EmployerSelector from './EmployerSelector';
 import { Employers } from '../../types';
-import { fetchWeeklySummary } from '../weeklySummary/api';
 
 export default function TrackingBar() {
     const queryClient = useQueryClient();
@@ -51,13 +49,12 @@ export default function TrackingBar() {
         },
     });
     const endActiveShift = useMutation(endShift, {
-        onSuccess: (data, variables, context) => {
+        onSuccess: async (data, variables, context) => {
             queryClient.invalidateQueries('activeShift');
             // update weekly summary data
             queryClient.invalidateQueries('weeklySummary');
             // update shift list
             queryClient.invalidateQueries('shifts');
-            stopGettingBackgroundLocation();
             log.info('Ended shift:', data);
             queryClient.setQueryData('activeShift', data.endShift.shift);
         },
@@ -74,8 +71,17 @@ export default function TrackingBar() {
         onError: (err, newShift, context) => {
             queryClient.invalidateQueries('activeShift');
             log.error(`Problem ending shift: ${err}`);
+            log.error(err.message)
             err.response.errors.map((e) => Toast.show(e.message));
         },
+        onSettled: async (d, error) => {
+            // if the shift is inactive, stop our location updates.
+            if (d == undefined || d.endShift.shift.active == false) {
+                const res = await stopGettingBackgroundLocation()
+                log.info(`Stopped getting background location.`)
+
+            }
+        }
     });
 
     const createActiveShift = useMutation(createShift, {
