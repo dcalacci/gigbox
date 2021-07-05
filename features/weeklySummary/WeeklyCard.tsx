@@ -1,15 +1,18 @@
 import React, { FunctionComponent, useState } from 'react';
 import { Pressable, StyleSheet, Text, View, SafeAreaView } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import moment from 'moment';
 import { tailwind } from 'tailwind';
 import { useQuery } from 'react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { fetchWeeklySummary } from './api';
 import { log } from '../../utils';
-import { Job } from '../../types';
+import { HomeScreenNavigationProp, Job } from '../../types';
 import { getFilteredJobs } from '../job/api';
 
-const WeeklyCard: FunctionComponent = ({ navigation }) => {
+
+const WeeklyCard: FunctionComponent = () => {
+    const navigation = useNavigation<HomeScreenNavigationProp>();
     const weeklySummary = useQuery(['trackedJobs', 'weeklySummary'], fetchWeeklySummary);
     const jobsNeedEntryStatus = useQuery(
         [
@@ -78,10 +81,10 @@ const WeeklyCard: FunctionComponent = ({ navigation }) => {
                 <Pressable
                     style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}
                     onPress={() =>
-                        navigation.navigate('Jobs List', {
+                        navigation.navigate('Jobs', {
                             filters: {
-                                startDate: moment().startOf('week').format(),
-                                endDate: moment().endOf('day').format(),
+                                startDate: moment().startOf('week'),
+                                endDate: moment().endOf('day'),
                                 needsEntry: true,
                             },
                         })
