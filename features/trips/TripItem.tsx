@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback} from 'react';
 import {
     ScrollView,
     View,
@@ -25,7 +25,7 @@ import Toast from 'react-native-root-toast';
 
 export const TripItem = ({ job }: { job: Job }) => {
     const [region, setRegion] = useState<Region>();
-    const [locations, setLocations] = useState<LatLng>();
+    const [locations, setLocations] = useState<LatLng[]>();
 
     const [modalVisible, setModalVisible] = useState(false);
     useEffect(() => {
@@ -56,7 +56,7 @@ export const TripItem = ({ job }: { job: Job }) => {
         dataKey,
     }: {
         label: string;
-        value: number | string;
+        value: number | string | undefined;
         prefix: string;
         suffix: string;
         placeholder: string;
@@ -158,7 +158,8 @@ export const TripItem = ({ job }: { job: Job }) => {
         );
     };
 
-    const Map = () => (
+    // it's expensive to render, so we use useCallback
+    const Map = useCallback(() => (
         <TripMap interactive={false} isActive={false} tripLocations={locations} region={region}>
             {job.endLocation ? (
                 <Marker
@@ -180,7 +181,7 @@ export const TripItem = ({ job }: { job: Job }) => {
                 ></Marker>
             ) : null}
         </TripMap>
-    );
+    ), [job, locations])
 
     const RowHeader = () => (
         <View style={tailwind('flex-row p-2 justify-between')}>

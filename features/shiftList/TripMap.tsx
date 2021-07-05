@@ -9,7 +9,7 @@ interface TripMapProps {
     interactive?: boolean;
     showUserLocation?: boolean;
     region: Region | undefined;
-    children: JSX.Element
+    children: (JSX.Element | null)[]
 }
 
 const TripMap: FunctionComponent<TripMapProps> = (props: TripMapProps) => {
