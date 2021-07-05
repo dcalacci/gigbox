@@ -101,8 +101,6 @@ export const TripItem = ({ job }: { job: Job }) => {
                     key: dataKey,
                     value: val,
                 });
-                //TODO: Submit to server on mutation
-                //TODO: decimal formatting (for convenience)
             }
         };
 

@@ -1,4 +1,5 @@
 import * as React from 'react';
+import { useEffect, useState } from 'react'
 import { ScrollView, Pressable, SafeAreaView, StyleSheet, View, Text } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 
@@ -13,6 +14,8 @@ import tailwind from 'tailwind-rn';
 
 import { StatusBar } from 'expo-status-bar';
 import * as Loc from 'expo-location';
+import * as TaskManager from 'expo-task-manager'
+import { TaskManagerTask } from 'expo-task-manager'
 
 import AnimatedEllipsis from '../components/Ellipsis';
 import BinarySurveyQuestion from '../features/consent/BinarySurveyQuestion';
@@ -46,6 +49,16 @@ export default function SettingsScreen({ route }) {
             }
         },
     });
+
+    const [tasks, setTasks] = useState<TaskManagerTask[]>()
+    useEffect(() => {
+        TaskManager.getRegisteredTasksAsync()
+        .then((tasks) => {
+            console.log("registered tasks:", tasks)
+            setTasks(tasks)
+        })
+    })
+
     const LoadingScreen = () => {
         return (
             <View style={tailwind('flex flex-col content-around content-center')}>
@@ -128,6 +141,11 @@ export default function SettingsScreen({ route }) {
                             Un-Enroll & Delete Data
                         </Text>
                     </Pressable>
+                    <View style={tailwind('w-full')}>
+                        {tasks?.map((t: TaskManagerTask) => {
+                            <Text>t.taskName</Text>
+                        })}
+                    </View>
                     <Text>API: {uri}</Text>
                         <Text>Release Channel: {Constants.manifest.releaseChannel}</Text>
                 </View>

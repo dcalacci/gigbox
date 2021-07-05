@@ -20,6 +20,7 @@ export const useUncategorizedJobs = () =>  {
         notifyOnChangeProps: ['data'],
         staleTime: 60,
         keepPreviousData: true,
+        enabled: false
     })
 }
 
