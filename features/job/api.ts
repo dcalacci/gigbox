@@ -1,7 +1,7 @@
 import { gql } from 'graphql-request';
 import { getClient } from '../../utils';
 import { store } from '../../store/store';
-import { useQuery, UseQueryResult } from 'react-query';
+import { QueryKey, useQuery, UseQueryResult } from 'react-query';
 import { JobFilterList, JobFilter, SortArgs } from './JobList';
 import { Job } from '@/types';
 import moment from 'moment';
@@ -59,36 +59,36 @@ export const updateJobValue = ({
         value,
     });
 };
+export const createFilterString = (filters: JobFilter): string => {
+    let or_filters = [];
+    let and_filters = [`{mileageIsNull: false}, {endTimeIsNull: false}`];
 
-export const getFilteredJobs = ({ queryKey }) => {
-    const filters = queryKey[1];
-    const client = getClient(store);
-    const createFilterString = (filters: JobFilter): string => {
-        let or_filters = [];
-        let and_filters = [`{mileageIsNull: false}, {endTimeIsNull: false}`];
+    if (filters.needsEntry) {
+        or_filters.push(`{totalPayIsNull: true}`);
+        or_filters.push(`{tipIsNull: true}`);
+    }
 
-        if (filters.needsEntry) {
-            or_filters.push(`{totalPayIsNull: true}`);
-            or_filters.push(`{tipIsNull: true}`);
-        }
+    if (filters.saved) {
+        and_filters.push(`{totalPayIsNull: false}`);
+        and_filters.push(`{tipIsNull: false}`);
+    }
 
-        if (filters.saved) {
-            and_filters.push(`{totalPayIsNull: false}`);
-            and_filters.push(`{tipIsNull: false}`);
-        }
+    if (filters.minMileage) or_filters.push(`{mileageGte: ${filters.minMileage}}`);
 
-        if (filters.minMileage) or_filters.push(`{mileageGte: ${filters.minMileage}}`);
+    if (filters.startDate && filters.endDate) {
+        and_filters.push(`{startTimeGte: "${filters.startDate?.format()}"}`);
+        and_filters.push(`{endTimeLte: "${filters.endDate?.format()}"}`);
+    }
 
-        if (filters.startDate && filters.endDate) {
-            and_filters.push(`{startTimeGte: "${filters.startDate?.format()}"}`);
-            and_filters.push(`{endTimeLte: "${filters.endDate?.format()}"}`);
-        }
-
-        const orFilterString = or_filters.join(', ');
-        const andFilterString = and_filters.join(', ');
-        return `{and: [{or: [${orFilterString}]}, ${andFilterString},]}`;
-    };
-    const coreQuery = `
+    const orFilterString = or_filters.join(', ');
+    const andFilterString = and_filters.join(', ');
+    return `{and: [{or: [${orFilterString}]}, ${andFilterString},]}`;
+};
+export const coreJobQuery = `
+       pageInfo {
+           hasNextPage
+           endCursor
+       }, 
        edges {
                 node {
                     id
@@ -114,6 +114,10 @@ export const getFilteredJobs = ({ queryKey }) => {
             }
         `;
 
+export const getFilteredJobs = ({ queryKey }: { queryKey: QueryKey }) => {
+    const filters = queryKey[1] as JobFilter;
+    const client = getClient(store);
+
     let query;
     if (filters) {
         const filterString = createFilterString(filters);
@@ -121,12 +125,12 @@ export const getFilteredJobs = ({ queryKey }) => {
 
         query = gql`query {
                 allJobs(filters: ${filterString}, sort: START_TIME_DESC) {
-                ${coreQuery}
+                ${coreJobQuery}
          }}`;
     } else {
         query = gql`query {
                     allJobs {
-                        ${coreQuery}
+                        ${coreJobQuery}
                     }
                 }`;
     }

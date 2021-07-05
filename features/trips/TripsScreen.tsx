@@ -7,7 +7,7 @@ import {
     RefreshControl,
     Pressable,
     ViewStyle,
-    LayoutAnimation
+    LayoutAnimation,
 } from 'react-native';
 
 import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from 'react-query';
@@ -16,7 +16,7 @@ import { FlatList } from 'react-native-gesture-handler';
 import { Ionicons } from '@expo/vector-icons';
 import { log } from '../../utils';
 import { tailwind } from 'tailwind';
-import { useUncategorizedJobs } from './hooks';
+import { useUncategorizedJobs, filter } from './hooks';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { Job, TripsScreenNavigationProp } from '@/types';
 import { createStackNavigator } from '@react-navigation/stack';
@@ -24,6 +24,7 @@ import { TripItem } from './TripItem';
 import { StyleProp } from 'react-native';
 import { JobFilter, SortArgs } from '../job/JobList';
 import { getFilteredJobs } from '../job/api';
+import { useEffect } from 'react';
 
 const TripsStack = createStackNavigator();
 
@@ -70,33 +71,35 @@ const TripListHeader = ({ isMerging, onPress }: { isMerging: boolean; onPress: (
 };
 
 export const TripList = () => {
-
-    //const { status, data, error, isFetching, refetch} = useUncategorizedJobs();
-    const filter: JobFilter = {
-        needsEntry: true,
-        saved: false,
-        sort: SortArgs.START 
-    }
-    const { status, data, error, isFetching, refetch} = useQuery<{allJobs: { edges: {node: Job}[]}}, Error>(["uncategorizedJobs", filter], 
-    getFilteredJobs,
-    {
-        notifyOnChangeProps: ['data'],
-        staleTime: 60,
-        keepPreviousData: true,
-        enabled: true
-    })
+    const queryClient = useQueryClient();
+    const [refreshing, setRefreshing] = useState(false);
     const [selectedJobs, setSelectedJobs] = useState<String[]>([]);
     const [isMerging, setIsMerging] = useState<boolean>(false);
 
+    const onRefresh = () => {
+        setRefreshing(true);
+        log.info('Refreshing shift list..');
+        queryClient.invalidateQueries(['uncategorizedJobs', filter]);
+    };
+
+    // const { status, data, error, isFetching, refetch} = ,
+    const { status, data, error, fetchNextPage, hasNextPage } = useUncategorizedJobs({
+        onSettled: () => {
+            setRefreshing(false);
+        },
+    });
+
+    useEffect(() => {
+        console.log('Status:', status);
+        console.log('Data:', data);
+    }, [status, data]);
     const toggleMerging = () => {
-        LayoutAnimation.configureNext(
-            LayoutAnimation.create(100, 'linear', 'opacity'))
+        LayoutAnimation.configureNext(LayoutAnimation.create(100, 'linear', 'opacity'));
         setIsMerging(!isMerging);
     };
 
     const onPressTripSelector = (jobId: String) => {
-        LayoutAnimation.configureNext(
-            LayoutAnimation.create(100, 'linear', 'opacity'))
+        LayoutAnimation.configureNext(LayoutAnimation.create(100, 'linear', 'opacity'));
         const jobIsSelected = selectedJobs.indexOf(jobId) !== -1;
         if (jobIsSelected) {
             setSelectedJobs(selectedJobs.filter((id) => id != jobId));
@@ -131,42 +134,52 @@ export const TripList = () => {
         );
     };
 
-    const MemoTripItem = (props: {job: Job}) => {
-        return useMemo(() => {
-            console.log("job changed?")
-            return (
-            <TripItem job={props.job} key={props.job.id}/>
-            )
-        }, [props.job.id])
-    }
-    if (status == 'loading') {
+    if (status == 'loading' || data === undefined) {
         return (
             <View style={tailwind('pt-10 flex-col')}>
                 <Text style={tailwind('text-xl font-bold')}>Loading...</Text>
             </View>
         );
     } else {
+        console.log('data:', data);
         return (
             <View style={tailwind('pt-10 flex-col bg-gray-100 h-full')}>
-                <KeyboardAwareScrollView style={[tailwind('flex-col w-full pr-2 pl-2')]}>
-                    <TripListHeader isMerging={isMerging} onPress={toggleMerging} />
-                    {data?.allJobs.edges.map((j) => (
-                        <View
-                            key={j.node.id}
-                            style={tailwind('flex-row w-full m-0 p-0 items-center')}
-                        >
-                            {isMerging ? (
-                                <MergingRadioButton
-                                    onPress={() => onPressTripSelector(j.node.id)}
-                                    style={tailwind('pr-1')}
-                                    jobId={j.node.id}
-                                />
-                            ) : null}
-                            <TripItem job={j.node}/>
-                        </View>
-                    ))}
-                </KeyboardAwareScrollView>
+                <FlatList
+                    ListHeaderComponent={
+                        <TripListHeader isMerging={isMerging} onPress={toggleMerging} />
+                    }
+                    style={[tailwind('h-full w-full flex-auto flex-col flex-grow')]}
+                    data={data}
+                    renderItem={(props) =>
+                        props.item.node == null ? null : (
+                            <View
+                                key={props.item.node.id}
+                                style={tailwind('flex-row w-full m-0 p-0 items-center')}
+                            >
+                                {isMerging ? (
+                                    <MergingRadioButton
+                                        onPress={() => onPressTripSelector(props.item.node.id)}
+                                        style={tailwind('pr-1')}
+                                        jobId={props.item.node.id}
+                                    />
+                                ) : null}
+                                <TripItem job={props.item.node} />
+                            </View>
+                        )
+                    }
+                    refreshControl={
+                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                    }
+                    onEndReached={() => {
+                        console.log('reached end');
+                        if (hasNextPage) {
+                            console.log('fetching next page');
+                            fetchNextPage();
+                        }
+                    }}
+                    keyExtractor={(job) => job.node.id}
+                ></FlatList>
             </View>
         );
     }
-}
+};

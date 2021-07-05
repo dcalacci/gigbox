@@ -81,8 +81,8 @@ export type Job = {
     id: string;
     startTime: Date;
     endTime: Date;
-    startLocation: LatLng | string;
-    endLocation: LatLng | string;
+    startLocation: string;
+    endLocation: string;
     mileage: number;
     estimatedMileage: number | undefined;
     totalPay: number | undefined;
