@@ -241,7 +241,9 @@ def extractJobsFromLocations(shift, locations, info):
     """ Create job objects from a list of locations and a shift 
     """
     from api.routing.mapmatch import get_trips_from_locations, get_match_for_trajectory
-    trips = get_trips_from_locations(locations)
+
+    locs = [l for l in locations if l.timestamp >= shift.start_time and l.timestamp <= shift.end_time]
+    trips = get_trips_from_locations(locs)
     jobs = []
 
     print("TRIPS:", trips)
@@ -296,14 +298,14 @@ class AddLocationsToShift(Mutation):
         shift_id = from_global_id(shift_id)[1]
         # ensure the user owns this shift
         shift = ShiftModel.query.filter_by(id=shift_id, user_id=g.user).first()
-        # TODO: compute distance from last location. if it is within an epsilon, do not
-        # add our trace.
 
         for l in locations:
+            # turn it into seconds
+            time = datetime.fromtimestamp(float(l.timestamp) / 1000)
+            # if time is before the start time of this shift, drop it (don't add)
             shift.locations.append(
                 LocationModel(
-                    # turn it into seconds
-                    datetime.fromtimestamp(float(l.timestamp) / 1000),
+                    time,
                     l.lng,
                     l.lat,
                     shift_id,
