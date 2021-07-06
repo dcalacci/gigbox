@@ -108,14 +108,14 @@ export const askPermissions = async () => {
  */
 export const startGettingBackgroundLocation = async () => {
     await askPermissions();
-    Loc.startLocationUpdatesAsync('gigbox.mileageTracker', {
+    return Loc.startLocationUpdatesAsync('gigbox.mileageTracker', {
         accuracy: Loc.Accuracy.Highest,
         timeInterval: 2000,
         distanceInterval: 15,
         activityType: Loc.ActivityType.AutomotiveNavigation,
         deferredUpdatesDistance: 30,
         pausesUpdatesAutomatically: true,
-    }).then(() => log.info('Location task started.'));
+    })
 };
 
 /**

@@ -23,7 +23,6 @@ import {
     fetchActiveShift,
     endShift,
     createShift,
-    addScreenshotToShift,
 } from './api';
 import { log } from '../../utils';
 import EmployerSelector from './EmployerSelector';
@@ -89,7 +88,6 @@ export default function TrackingBar() {
             queryClient.invalidateQueries('activeShift');
             queryClient.invalidateQueries('shifts');
             log.info('Created new shift:', data);
-            startGettingBackgroundLocation();
         },
 
         onMutate: async (data) => {
@@ -138,22 +136,27 @@ export default function TrackingBar() {
         // registerMileageTask();
     });
 
-    const [mediaListener, setMediaListener] = useState<any | null>(null);
-
-    // Processes new screenshots while tracking bar is on
-    useEffect(() => {
-        if (activeShift.status != 'success' || !activeShift.data?.active) {
-            return;
-        } 
-    });
-
     const onTogglePress = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         if (!activeShift.data?.active) {
-            createActiveShift.mutate();
+            startGettingBackgroundLocation()
+            .then(() => {
+                createActiveShift.mutate();
+            }).catch((err) => {
+                log.error("Couldn't start tracking location")
+                log.error(err)
+                Toast.show("Couldn't start tracking location. Try again?")
+            })
         } else {
-            log.info('Ending shift ', activeShift.data.id);
-            endActiveShift.mutate(activeShift.data.id);
+            stopGettingBackgroundLocation()
+            .then(() => {
+                log.info(`Stopped getting background location.`)
+                log.info('Ending shift ', activeShift.data.id);
+                endActiveShift.mutate(activeShift.data.id);
+            }).catch((err) => {
+                log.error(`Caught an error while trying to stop background location: ${err}`)
+                Toast.show("Had a problem clocking out. Try again?")
+            })
         }
     };
 
