@@ -282,8 +282,74 @@ def test_extracts_two_trips_and_mileage_from_exodus_test_trip(app, token, locs, 
         assert np.sum(miles) <= res['data']['endShift']['shift']['roadSnappedMiles']
 
         # mileage on this trip in total should be about 5.1 miles
-        assert (np.sum(miles) - 5.1) < 1
+        assert abs(np.sum(miles) - 5.1) < 1
 
+
+def send_merge_jobs_graphql(jobIds, gqlClient, token, dry_run=False): 
+    request.headers = {'authorization': token}
+    query = '''mutation MergeJobs($JobIds: [ID]! $DryRun: Boolean) {
+        mergeJobs(jobIds: $JobIds, dryRun: $DryRun) {
+                mergedJob {
+                    id
+                    startTime
+                    endTime
+                    mileage
+                }
+                ok
+                message
+                committed
+            }
+        }
+    '''
+    vars = {
+        'JobIds': jobIds,
+        'DryRun': dry_run
+    }
+    res = gqlClient.execute(query, context_value=request, variables=vars)
+    return res
+
+def test_merges_two_trips_from_one_shift(app, token, locs, exodus_locs, active_shift, gqlClient):
+    import numpy as np
+    with app.test_request_context():
+        _ = add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient, trip='exodus')
+        res = end_shift(token, active_shift, gqlClient)
+
+        print("endshift result:", res)
+        assert not res['data']['endShift']['shift']['active']
+        assert len(res['data']['endShift']['shift']['jobs']['edges']) == 2
+        jobs = res['data']['endShift']['shift']['jobs']['edges']
+        jobIds = [j['node']['id'] for j in jobs]
+
+        res = send_merge_jobs_graphql(jobIds, gqlClient, token)
+
+        mergedJob = res['data']['mergeJobs']['mergedJob']
+        ok = res['data']['mergeJobs']['ok']
+        assert ok
+        assert res['data']['mergeJobs']['committed']
+        print("merged job:", mergedJob)
+        print("job miles:", jobs)
+        assert abs(mergedJob['mileage']- 5.1) < 1
+
+def test_does_not_commit_dry_run(app, token, locs, exodus_locs, active_shift, gqlClient):
+    import numpy as np
+    with app.test_request_context():
+        _ = add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient, trip='exodus')
+        res = end_shift(token, active_shift, gqlClient)
+
+        print("endshift result:", res)
+        assert not res['data']['endShift']['shift']['active']
+        assert len(res['data']['endShift']['shift']['jobs']['edges']) == 2
+        jobs = res['data']['endShift']['shift']['jobs']['edges']
+        jobIds = [j['node']['id'] for j in jobs]
+        res = send_merge_jobs_graphql(jobIds, gqlClient, token, dry_run=True)
+
+        mergedJob = res['data']['mergeJobs']['mergedJob']
+        ok = res['data']['mergeJobs']['ok']
+        assert ok
+        assert res['data']['mergeJobs']['committed'] == False
+        print("merged job:", mergedJob)
+        print("job miles:", jobs)
+        assert abs(mergedJob['mileage']- 5.1) < 1
 
 
 if __name__ == "__main__":

@@ -56,7 +56,8 @@ from api.models import (
     Question as QuestionModel,
     Geometry_WKT,
     EmployerNames,
-    db
+    db,
+    Session
 )
 from api.utils import generate_filename
 from api.routing.mapmatch import get_route_distance_and_geometry
@@ -242,7 +243,10 @@ def extractJobsFromLocations(shift, locations, info):
     """
     from api.routing.mapmatch import get_trips_from_locations, get_match_for_trajectory
 
-    locs = [l for l in locations if l.timestamp >= shift.start_time and l.timestamp <= shift.end_time]
+    if shift.end_time is not None:
+        locs = [l for l in locations if l.timestamp >= shift.start_time and l.timestamp <= shift.end_time]
+    else: 
+        locs = [l for l in locations if l.timestamp >= shift.start_time]
     trips = get_trips_from_locations(locs)
     jobs = []
 
@@ -472,7 +476,52 @@ class CreateJob(Mutation):
         return CreateJob(job=job, ok=True)
 
 
-def get_job_mileage_and_geometry(info, job, shift=None):
+def get_mileage_and_geometry_for_locations(locations):
+    """Computes the total mileage and a snapped-to-road geometry for a list of Location objects.
+    Uses the OSRM API as configured in mapmatch.py and osrmapi.py.
+
+    Args:
+        locations ([Location]): Locations to compute  geometry and distance from
+
+    Returns:
+        [dict]: A dict with two keys: 'geometry', and 'distance', which 
+        holds a geometry line string snapped to an OpenStreetMap road network, and 
+        that line's total mileage, respectively.
+    """
+    locs = sorted(locations, key=lambda l: l.timestamp)
+    match_obj = get_route_distance_and_geometry(locs)
+
+    if ('geom_obj' not in match_obj 
+            or not match_obj['geom_obj'] 
+            or match_obj['status'] == 'error'):
+        current_app.logger.error("Failed to match a route to job...")
+        return job
+
+    distance = match_obj['distance']
+    bb = match_obj['geom_obj'][1]
+    geometries = match_obj['geom_obj'][0]
+
+    bounding_box = {'minLat': bb[1],
+                    'minLng': bb[0],
+                    'maxLat': bb[3],
+                    'maxLng': bb[2]}
+    matched = {'geometries': geometries, 'bounding_box': bounding_box}
+    return {'geometry': matched, 'distance': match_obj['distance']}
+
+
+def get_job_mileage_and_geometry(job, shift=None):
+    """Compute the mileage and geometry for a given Job object using locations from
+    it's associated Shift.
+
+    Args:
+        job (Job): Job to compute mileage and geometry for 
+        shift (Shift, optional): Shift this job belongs to. Defaults to None. 
+        Locations are retrieved from this shift.
+
+    Returns:
+        Job: the given Job object with snapped_geometry and distance fields replaced with newly
+        computed values.
+    """
     # don't need this - the shift id here is UUID
     # shift_id = from_global_id(job.shift_id)[1]
     print("getting mileage and geometry for job:", job, job.shift_id)
@@ -486,27 +535,10 @@ def get_job_mileage_and_geometry(info, job, shift=None):
         and l.timestamp >= job.start_time
         and l.timestamp <= end_time)]
     if len(job_locations) > 2:
-        locs = sorted(job_locations, key=lambda l: l.timestamp)
-        match_obj = get_route_distance_and_geometry(locs)
-
-        if ('geom_obj' not in match_obj 
-                or not match_obj['geom_obj'] 
-                or match_obj['status'] == 'error'):
-            current_app.logger.error("Failed to match a route to job...")
-            return job
-
-        distance = match_obj['distance']
-        bb = match_obj['geom_obj'][1]
-        geometries = match_obj['geom_obj'][0]
-
-        bounding_box = {'minLat': bb[1],
-                        'minLng': bb[0],
-                        'maxLat': bb[3],
-                        'maxLng': bb[2]}
-        matched = {'geometries': geometries, 'bounding_box': bounding_box}
         current_app.logger.info('adding matched geometry to job:')
-        job.snapped_geometry = matched
-        job.mileage = match_obj['distance']
+        res = get_mileage_and_geometry_for_locations(job_locations)
+        job.snapped_geometry = res['geometry']
+        job.mileage = res['distance']
     return job
 
 
@@ -593,6 +625,123 @@ class SetJobMileage(Mutation):
         db.session.add(job)
         db.session.commit()
         return SetJobTip(job, True)
+
+
+
+def most_common_employer_or_none(jobs):
+    """Returns most common employer 
+    from a list of jobs.
+
+    Args:
+        jobs ([Job]): List of job model objects
+
+    Returns:
+        Enum: most common Employer enum in list, or None if no Job in jobs has an employer set.
+    """
+    employers = [j.employer for j in jobs if j is not None]
+    if len(employers) == 0:
+        return None
+    else:
+        most_common = max(set(employers), key=employers.count)
+        return most_common
+
+def get_all_locations_from_jobs(jobs, start_time, end_time):
+    """Return a list of Location objects collected from each job in jobs.
+
+    Pulls Location objects from each Job's associated Shift
+    
+    Location list is sorted by timestamp.
+
+    Args:
+        jobs ([Job]): List of Job objects to pull locations from
+        start_time (DateTime): Includes only locations that were recorded after this time
+        end_time (DateTime): Includes only locations that were recorded before this time. 
+
+    Returns:
+        [Location]: List of Location objects. 
+    """
+    import itertools
+    unique_shift_ids = set([job.shift_id for job in jobs])
+    shifts = [ShiftModel.query.get(shift_id) for shift_id in unique_shift_ids]
+    all_locations = itertools.chain(*[s.locations for s in shifts])
+    sorted_locs = sorted(all_locations, key=lambda l: l.timestamp)
+    job_locations = [l for l in sorted_locs if (
+        l.timestamp is not None
+        and l.timestamp >= start_time
+        and l.timestamp <= end_time)]
+    # job_loc_shapes = [to_shape(l) for l in job_locations]
+    # latLngs = [{'lat': shp.y, 'lng': shp.x} for shp in job_loc_shapes]
+    # return latLngs 
+    return job_locations
+
+class MergeJobs(Mutation):
+    ok = Field(lambda: Boolean, description="True if job merged successfully")
+    committed = Field(lambda: Boolean, description="True if Job committed to database successfully")
+    message = Field(lambda: String, description="Associated message. 'success' if operation is successful.")
+    mergedJob = Field(lambda: JobNode, description="Merged Job (if successful). Null otherwise.")
+    class Arguments: 
+        job_ids = List(ID)
+        dry_run = Boolean(required=False)
+
+    @login_required
+    def mutate(self, info, job_ids, dry_run=False):
+        """Mutation to merge a list of jobs indicated by job_ids
+
+        Args:
+            info (Graphql Context): graphql context info object
+            job_ids ([ID]): List of Job IDs, in base64 encoded ID strings, to merge. 
+            dry_run (Boolean): Merges as a "dry run" without committing or removing any jobs. 
+                used to provide a preview of a merge result
+
+        Returns a dict of the form { 'ok', 'message', 'mergedJob'}, where
+        'ok' is true if the operation succeeds, 'message' holds any error message as a string, 
+        and 'mergedJob' is None if unsuccessful, and otherwise is the JobNode of the newly created
+        merged Job if successful.
+
+        The merged Job adopts the most common Employer from the list of Jobs, and 
+        its total_pay and tip fields are the sum of the list of jobs'. A new distance
+        and geometry are computed for the job from all jobs given. 
+
+        The list of jobs can be from different shifts.
+        """
+        job_ids = [from_global_id(id)[1] for id in job_ids]
+        jobs = [JobModel.query.get(job_id) for job_id in job_ids]
+        jobs = sorted(jobs, key=lambda j: j.start_time)
+        start_loc = to_shape(jobs[0].start_location)
+        end_loc = to_shape(jobs[-1].end_location)
+        newJob = JobModel(
+            shift_id = jobs[0].shift_id,
+            user_id = g.user,
+            employer = most_common_employer_or_none(jobs),
+            start_location = {'lat': start_loc.y, 'lng': start_loc.x},
+            end_location = {'lat': end_loc.y, 'lng': end_loc.x}
+        )
+        newJob.start_time = jobs[0].start_time
+        newJob.end_time = jobs[-1].end_time
+        newJob.total_pay = np.sum([(j.total_pay or 0.) for j in jobs])
+        newJob.tip = np.sum([(j.tip or 0.) for j in jobs])
+
+        job_locations = get_all_locations_from_jobs(jobs, 
+                newJob.start_time, 
+                newJob.end_time)
+
+        res = get_mileage_and_geometry_for_locations(job_locations)
+
+        newJob.snapped_geometry = res['geometry']
+        newJob.mileage = res['distance']
+
+        if dry_run:
+            return MergeJobs(ok=True, committed=False, message="(Dry Run) Merged {} trips".format(len(jobs)), mergedJob=newJob)
+        try:
+            db.session.add(newJob)
+            for job in jobs: 
+                db.session.delete(job)
+        except:
+            db.session.rollback()
+            return MergeJobs(ok=False, committed=False, message="Couldn't merge trips...", mergedJob=None)
+        else:
+            db.session.commit()
+            return MergeJobs(ok=True, committed=True, message="Merged {} trips".format(len(jobs)), mergedJob=newJob)
 
 
 class SetShiftEmployers(Mutation):
@@ -844,6 +993,7 @@ class Mutation(ObjectType):
     setJobTip = SetJobTip.Field()
     setJobMileage = SetJobMileage.Field()
     endJob = EndJob.Field()
+    mergeJobs = MergeJobs.Field()
     setShiftEmployers = SetShiftEmployers.Field()
     addLocationsToShift = AddLocationsToShift.Field()
     addScreenshotToShift = AddScreenshotToShift.Field()

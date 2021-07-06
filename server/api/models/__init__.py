@@ -1,5 +1,6 @@
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 from geoalchemy2 import func, Geometry
 import graphene_sqlalchemy as gsqa
 import graphene
@@ -33,6 +34,7 @@ class EmployerNames(enum.Enum):
     UBEREATS = "UBEREATS"
 
 engine = create_engine(config.SQLALCHEMY_DATABASE_URI)
+Session = sessionmaker(engine)
 # have to import scalar from engine, not db....
 
 class Geometry_WKT(graphene.Scalar):

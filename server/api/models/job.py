@@ -42,14 +42,15 @@ class Job(db.Model):
     employer = db.Column(db.Enum(EmployerNames), nullable=True)
 
     def __init__(self, 
-            start_location, 
             shift_id, 
             user_id, 
+            start_location=None, 
             end_location=None, 
             employer=None):
 
-        self.start_location = from_shape(geometry.Point(start_location['lng'], 
-            start_location['lat']))
+        if start_location is not None:
+            self.start_location = from_shape(geometry.Point(start_location['lng'], 
+                start_location['lat']))
         if end_location is not None:
             self.end_location = from_shape(geometry.Point(end_location['lng'], 
                 end_location['lat']))
