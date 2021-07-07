@@ -20,6 +20,7 @@ from graphene import (
     List,
     ID,
     ObjectType,
+    Enum
 )
 from graphql_relay.node.node import from_global_id
 from shapely import geometry
@@ -211,7 +212,7 @@ class DeleteShift(Mutation):
         else:
             db.session.delete(shift)
             db.session.commit()
-            return DeleteImage(ok=True, message="Shift Deleted")
+            return DeleteShift(ok=True, message="Shift Deleted")
 
 
 def updateShiftMileageAndGeometry(shift, info):
@@ -624,9 +625,24 @@ class SetJobMileage(Mutation):
         job.mileage = value
         db.session.add(job)
         db.session.commit()
-        return SetJobTip(job, True)
+        return SetJobMileage(job, True)
 
+class SetJobEmployer(Mutation):
+    job = Field(lambda: JobNode, description="Job to update")
+    ok = Field(lambda: Boolean)
 
+    class Arguments:
+        job_id = ID(required=True)
+        value = graphene.Argument(Enum.from_enum(EmployerNames))
+
+    @login_required
+    def mutate(self, info, job_id, value):
+        job_id = from_global_id(job_id)[1]
+        job = JobModel.query.filter_by(id=job_id, user_id=g.user).first()
+        job.employer = value
+        db.session.add(job)
+        db.session.commit()
+        return SetJobEmployer(job, True)
 
 def most_common_employer_or_none(jobs):
     """Returns most common employer 
@@ -674,6 +690,24 @@ def get_all_locations_from_jobs(jobs, start_time, end_time):
     # return latLngs 
     return job_locations
 
+class DeleteJob(Mutation):
+    ok = Field(lambda: Boolean, description="True if job deleted successfully")
+    message = Field(lambda: String, description="Any error or success message")
+
+    class Arguments:
+        job_id = List(ID)
+
+    @login_required
+    def mutate(self, info, job_id):
+        job_id = from_global_id(job_id)[1]
+        job = JobModel.query.get(id=job_id)
+        if not job:
+            return DeleteJob(ok=False, message="Either that job doesn't exist or you don't have access to it.")
+        else:
+            db.session.delete(job)
+            db.session.commit()
+            return DeleteJob(ok=True, message="Job Deleted")
+
 class MergeJobs(Mutation):
     ok = Field(lambda: Boolean, description="True if job merged successfully")
     committed = Field(lambda: Boolean, description="True if Job committed to database successfully")
@@ -682,9 +716,12 @@ class MergeJobs(Mutation):
     class Arguments: 
         job_ids = List(ID)
         dry_run = Boolean(required=False)
+        total_pay = Float(required=False)
+        tip = Float(required=False)
+        employer = graphene.Argument(graphene.Enum.from_enum(EmployerNames), required=False)
 
     @login_required
-    def mutate(self, info, job_ids, dry_run=False):
+    def mutate(self, info, job_ids, total_pay=None, tip=None, employer=None, dry_run=False):
         """Mutation to merge a list of jobs indicated by job_ids
 
         Args:
@@ -692,11 +729,16 @@ class MergeJobs(Mutation):
             job_ids ([ID]): List of Job IDs, in base64 encoded ID strings, to merge. 
             dry_run (Boolean): Merges as a "dry run" without committing or removing any jobs. 
                 used to provide a preview of a merge result
+            employer (EmployerNames): Employer for this job. optional.
+            tip (Float): Tip for this job. Optional.
+            total_pay (Float): Total pay for this job. Optional.
 
         Returns a dict of the form { 'ok', 'message', 'mergedJob'}, where
         'ok' is true if the operation succeeds, 'message' holds any error message as a string, 
         and 'mergedJob' is None if unsuccessful, and otherwise is the JobNode of the newly created
         merged Job if successful.
+
+        It assigns the given total_pay, tip, and employer for the merged job, unless not given.
 
         The merged Job adopts the most common Employer from the list of Jobs, and 
         its total_pay and tip fields are the sum of the list of jobs'. A new distance
@@ -712,14 +754,14 @@ class MergeJobs(Mutation):
         newJob = JobModel(
             shift_id = jobs[0].shift_id,
             user_id = g.user,
-            employer = most_common_employer_or_none(jobs),
+            employer = (employer or most_common_employer_or_none(jobs)),
             start_location = {'lat': start_loc.y, 'lng': start_loc.x},
             end_location = {'lat': end_loc.y, 'lng': end_loc.x}
         )
         newJob.start_time = jobs[0].start_time
         newJob.end_time = jobs[-1].end_time
-        newJob.total_pay = np.sum([(j.total_pay or 0.) for j in jobs])
-        newJob.tip = np.sum([(j.tip or 0.) for j in jobs])
+        newJob.total_pay = (total_pay or np.sum([(j.total_pay or 0.) for j in jobs]))
+        newJob.tip = (tip or np.sum([(j.tip or 0.) for j in jobs]))
 
         job_locations = get_all_locations_from_jobs(jobs, 
                 newJob.start_time, 
@@ -992,8 +1034,10 @@ class Mutation(ObjectType):
     setJobTotalPay = SetJobTotalPay.Field()
     setJobTip = SetJobTip.Field()
     setJobMileage = SetJobMileage.Field()
+    setJobEmployer = SetJobEmployer.Field()
     endJob = EndJob.Field()
     mergeJobs = MergeJobs.Field()
+    deleteJob = DeleteJob.Field()
     setShiftEmployers = SetShiftEmployers.Field()
     addLocationsToShift = AddLocationsToShift.Field()
     addScreenshotToShift = AddScreenshotToShift.Field()
