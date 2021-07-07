@@ -1,6 +1,6 @@
 import moment, { Moment } from 'moment';
 import Constants from 'expo-constants';
-import fetch from 'node-fetch';
+import fetch, { HeadersInit, Headers } from 'node-fetch';
 import { GraphQLClient } from 'graphql-request';
 /**
  *
@@ -70,7 +70,7 @@ export function fetchWithQueryParams(
     uri: String,
     obj: Object,
     method: string,
-    headers: fetch.Headers | null
+    headers?: HeadersInit | undefined 
 ) {
     const encodedParams = objToQueryString(obj);
     return fetch(`${uri}?${encodedParams}`, { method: method, headers: headers });
