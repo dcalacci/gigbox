@@ -125,3 +125,8 @@ export const stopGettingBackgroundLocation = async () => {
     log.info('Stopping location updates...');
     return Loc.stopLocationUpdatesAsync('gigbox.mileageTracker');
 };
+
+export const isGettingBackgroundLocation = async () => {
+    log.info("Checking if we have a registered location task...")
+    return Loc.hasStartedLocationUpdatesAsync('gigbox.mileageTracker')
+}

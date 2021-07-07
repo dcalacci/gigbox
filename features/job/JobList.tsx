@@ -20,6 +20,8 @@ import * as Haptics from 'expo-haptics';
 import { fileAsyncTransport } from 'react-native-logs';
 import { log, uri as API_URI} from '../../utils';
 
+import BinaryFilterPill from '../../components/BinaryFilterPill';
+
 export enum SortArgs {
     START,
     END,
@@ -193,35 +195,6 @@ const NumericFilterPill = ({
     </Pressable>
 );
 
-export const BinaryFilterPill = ({
-    displayText,
-    onPress,
-    value,
-}: {
-    displayText: string;
-    onPress: () => void;
-    value: boolean;
-}) => (
-    <Pressable
-        style={[
-            tailwind('rounded-2xl m-2 p-1 pl-2 pr-2 bg-gray-200'),
-            value ? tailwind('bg-black') : null,
-        ]}
-        onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            onPress();
-        }}
-    >
-        <Text
-            style={[
-                tailwind('text-sm font-bold'),
-                value ? tailwind('text-white') : tailwind('text-black'),
-            ]}
-        >
-            {displayText}
-        </Text>
-    </Pressable>
-);
 
 export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
     // routing gives us dates as strings, so convert them

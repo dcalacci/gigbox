@@ -24,6 +24,7 @@ import { TripItem } from './TripItem';
 import { StyleProp } from 'react-native';
 import { useEffect } from 'react';
 import moment from 'moment';
+import AnimatedEllipsis from '../../components/Ellipsis';
 
 const TripsStack = createStackNavigator();
 
@@ -330,8 +331,15 @@ export const TripList = () => {
 
     if (status == 'loading' || data === undefined) {
         return (
-            <View style={tailwind('pt-10 flex-col')}>
-                <Text style={tailwind('text-xl font-bold')}>Loading...</Text>
+            <View style={tailwind('pt-10 flex-col w-full h-full items-center justify-center')}>
+                <AnimatedEllipsis
+                    numberOfDots={3}
+                    style={{
+                        minHeight: 50,
+                        color: '#1C1C1C',
+                        fontSize: 100
+                    }}
+                />
             </View>
         );
     } else {

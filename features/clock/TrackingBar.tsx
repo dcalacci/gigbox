@@ -17,16 +17,16 @@ import Toggle from '../../components/Toggle';
 
 import { AuthState } from '../auth/authSlice';
 import { formatElapsedTime } from '../../utils';
-import { startGettingBackgroundLocation, stopGettingBackgroundLocation } from '../../tasks';
 import {
-    setShiftEmployers,
-    fetchActiveShift,
-    endShift,
-    createShift,
-} from './api';
+    isGettingBackgroundLocation,
+    startGettingBackgroundLocation,
+    stopGettingBackgroundLocation,
+} from '../../tasks';
+import { setShiftEmployers, fetchActiveShift, endShift, createShift } from './api';
 import { log } from '../../utils';
 import EmployerSelector from './EmployerSelector';
 import { Employers } from '../../types';
+import ModalMultiSelect from '../../components/ModalMultiSelect';
 
 export default function TrackingBar() {
     const queryClient = useQueryClient();
@@ -70,17 +70,16 @@ export default function TrackingBar() {
         onError: (err, newShift, context) => {
             queryClient.invalidateQueries('activeShift');
             log.error(`Problem ending shift: ${err}`);
-            log.error(err.message)
-            err.response.errors.map((e) => Toast.show(e.message));
+            log.error(err.message);
+            // err.response.errors.map((e) => Toast.show(e.message));
         },
         onSettled: async (d, error) => {
             // if the shift is inactive, stop our location updates.
             if (d == undefined || d.endShift.shift.active == false) {
-                const res = await stopGettingBackgroundLocation()
-                log.info(`Stopped getting background location.`)
-
+                const res = await stopGettingBackgroundLocation();
+                log.info(`Stopped getting background location.`);
             }
-        }
+        },
     });
 
     const createActiveShift = useMutation(createShift, {
@@ -138,24 +137,39 @@ export default function TrackingBar() {
     const onTogglePress = () => {
         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
         if (!activeShift.data?.active) {
-            startGettingBackgroundLocation()
-            .then(() => {
-                createActiveShift.mutate();
-            }).catch((err) => {
-                log.error("Couldn't start tracking location")
-                log.error(err)
-                Toast.show("Couldn't start tracking location. Try again?")
-            })
+            createActiveShift.mutate();
+            startGettingBackgroundLocation().catch((err) => {
+                log.error("Couldn't start tracking location");
+                log.error(err);
+                //TODO: modal asking about location settings.
+                Toast.show("Couldn't start tracking location, but clocking you in anyway.");
+            });
         } else {
             stopGettingBackgroundLocation()
-            .then(() => {
-                log.info(`Stopped getting background location.`)
-                log.info('Ending shift ', activeShift.data.id);
-                endActiveShift.mutate(activeShift.data.id);
-            }).catch((err) => {
-                log.error(`Caught an error while trying to stop background location: ${err}`)
-                Toast.show("Had a problem clocking out. Try again?")
-            })
+                .then(() => {
+                    log.info(`Stopped getting background location.`);
+                    log.info('Ending shift ', activeShift.data.id);
+                    endActiveShift.mutate(activeShift.data.id);
+                    Toast.show('Successfully clocked out.');
+                })
+                .catch((err) => {
+                    log.error(`Caught an error while trying to stop background location: ${err}`);
+                    Toast.show('Had a problem clocking out. Try again?');
+                })
+                .finally(() => {
+                    // If we don't have a location task, end our shift anyway. Otherwise
+                    // show user an error happened.
+                    isGettingBackgroundLocation().then((isRegistered: boolean) => {
+                        if (isRegistered) {
+                            Toast.show(
+                                "Couldn't stop getting background location. Try again soon."
+                            );
+                        } else {
+                            endActiveShift.mutate(activeShift.data.id);
+                            Toast.show('Successfully clocked out.');
+                        }
+                    });
+                });
         }
     };
 
@@ -225,25 +239,19 @@ export default function TrackingBar() {
                             <Text style={textStyle}>{elapsedTime}</Text>
                         </View>
                     </View>
-                    {shift.active && !shift.employers ? (
-                        <Tooltip
-                            isVisible={employerTtVisible}
-                            content={
-                                <Text>
-                                    Select any apps you're working for (looking for jobs on) during
-                                    this shift.
-                                </Text>
-                            }
-                            placement="bottom"
-                            onClose={() => setEmployerTtVisible(false)}
-                        >
-                            <EmployerSelector
-                                onEmployersSubmitted={onEmployersSubmitted}
-                                potentialEmployers={auth.user?.employers}
-                                submissionStatus={setEmployers.status}
-                            />
-                        </Tooltip>
-                    ) : null}
+
+                    <ModalMultiSelect
+                        isOpen={shift.active && !shift.employers}
+                        onClose={() => {
+                            endActiveShift.mutate(activeShift.data.id);
+                            console.log('closed');
+                        }}
+                        promptText={
+                            "Select any apps you're working for (looking for jobs on) during this shift."
+                        }
+                        options={auth.user?.employers}
+                        onSelectOptions={onEmployersSubmitted}
+                    ></ModalMultiSelect>
                 </View>
             </Tooltip>
         );
