@@ -1,24 +1,16 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { ScrollView, View, Text, Image, Pressable, TextInput, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useCallback } from 'react';
+import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
 import { tailwind } from 'tailwind';
-import { Ionicons } from '@expo/vector-icons';
 import { Region, Marker, LatLng } from 'react-native-maps';
-import { useQueryClient, useMutation } from 'react-query';
 import moment from 'moment';
-import { Employers, Job, Screenshot, Shift } from '../../types';
+import { Employers, Job } from '../../types';
 import { parse } from 'wellknown';
 import TripMap from '../shiftList/TripMap';
-import { TripDetailScreen } from './TripDetailScreen';
 import { log } from '../../utils';
-import { updateJobValue, deleteImage, updateJobEmployer } from '../job/api';
-import { EmployerBox } from '../clock/EmployerSelector';
-import Modal from 'react-native-modal';
 
-import Toast from 'react-native-root-toast';
 import { useNavigation } from '@react-navigation/core';
 
 import ModalPicker from '../../components/ModalPicker';
-import { setShiftEmployers } from '../clock/api';
 
 export const TripItem = ({
     job,
@@ -271,7 +263,7 @@ export const TripItem = ({
                                 <EmployerModalPicker
                                     job={job}
                                     onEmployerChange={(e: Employers) => {
-                                        setEmployer(e);
+                                        if (setEmployer) setEmployer(e);
                                     }}
                                 />
                             </>

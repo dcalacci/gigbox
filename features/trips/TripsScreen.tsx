@@ -1,25 +1,21 @@
-import React, { useState, FunctionComponent, useMemo } from 'react';
+import React, { useState } from 'react';
 import {
     Text,
     View,
-    SafeAreaView,
-    StyleSheet,
     RefreshControl,
     Pressable,
     ViewStyle,
     LayoutAnimation,
-    ScrollView,
 } from 'react-native';
 
 import Toast from 'react-native-root-toast';
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from 'react-query';
+import { useMutation, useQueryClient } from 'react-query';
 import { FlatList } from 'react-native-gesture-handler';
 
 import { Ionicons } from '@expo/vector-icons';
 import { log } from '../../utils';
 import { tailwind } from 'tailwind';
-import { useUncategorizedJobs, filter, useMergedTripsPreview, mergeJobs } from './hooks';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { useUncategorizedJobs, filter, mergeJobs } from './hooks';
 import { Employers, Job, TripsScreenNavigationProp } from '@/types';
 import { createStackNavigator } from '@react-navigation/stack';
 import { TripDetailScreen } from './TripDetailScreen';
@@ -27,7 +23,6 @@ import { TripItem } from './TripItem';
 import { StyleProp } from 'react-native';
 import { useEffect } from 'react';
 import moment from 'moment';
-import { deleteJob } from '../job/api';
 
 const TripsStack = createStackNavigator();
 

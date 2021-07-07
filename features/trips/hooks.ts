@@ -1,12 +1,11 @@
-import { useQuery, useInfiniteQuery, useMutation } from 'react-query';
+import { useInfiniteQuery, useMutation } from 'react-query';
 import { getClient } from '../../utils';
 import { store } from '../../store/store';
 import { gql } from 'graphql-request';
 import { JobFilter, SortArgs } from '../job/JobList';
 import { Employers, Job } from '../../types';
 
-import { coreJobQuery, createFilterString, getFilteredJobs } from '../job/api';
-import { consoleTransport } from 'react-native-logs';
+import { coreJobQuery, createFilterString } from '../job/api';
 
 export const useUncategorizedJobs = ({ onSettled }: { onSettled: () => void }) => {
     return useInfiniteQuery<

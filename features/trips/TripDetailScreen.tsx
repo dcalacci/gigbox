@@ -1,29 +1,14 @@
-import React, { useState, FunctionComponent, useMemo } from 'react';
+import React, {  } from 'react';
 import {
     Text,
     View,
-    SafeAreaView,
-    StyleSheet,
-    RefreshControl,
     Pressable,
-    ViewStyle,
-    LayoutAnimation,
-    ScrollView,
 } from 'react-native';
 
-import { useInfiniteQuery, useQuery, useMutation, useQueryClient } from 'react-query';
-import { FlatList } from 'react-native-gesture-handler';
 
 import { Ionicons } from '@expo/vector-icons';
-import { log } from '../../utils';
 import { tailwind } from 'tailwind';
-import { useUncategorizedJobs, filter } from './hooks';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { Job, TripsScreenNavigationProp } from '@/types';
-import { createStackNavigator } from '@react-navigation/stack';
-import { TripItem } from './TripItem';
-import { StyleProp } from 'react-native';
-import { useEffect } from 'react';
+import { Job } from '@/types';
 import { JobItem } from '../job/Job';
 
 const TripScreenHeader = ({ isMerging, onPress }: { isMerging: boolean; onPress: () => void }) => {
