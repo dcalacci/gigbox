@@ -103,18 +103,9 @@ export default function BottomTabNavigator({}) {
                             ),
                         }}
                     />
-                                        <BottomTab.Screen
-                        name="Shifts"
-                        component={ShiftsScreen}
-                        options={{
-                            tabBarIcon: ({ color }) => (
-                                <TabBarIcon name="receipt-outline" color={color} />
-                            ),
-                        }}
-                    />
 
                     <BottomTab.Screen
-                        name="Jobs"
+                        name="History"
                         component={JobsScreen}
                         options={{
                             tabBarIcon: ({ color }) => (

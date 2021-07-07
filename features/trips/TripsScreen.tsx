@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import {
     Text,
+    Image,
     View,
     RefreshControl,
     Pressable,
@@ -52,27 +53,37 @@ export default function TripsScreen({ navigation }: { navigation: TripsScreenNav
     );
 }
 
-const TripScreenHeader = ({ isMerging, onPress }: { isMerging: boolean; onPress: () => void }) => {
+const TripScreenHeader = ({
+    canMerge,
+    isMerging,
+    onPress,
+}: {
+    canMerge: boolean;
+    isMerging: boolean;
+    onPress: () => void;
+}) => {
+    const MergeButton = () =>
+        isMerging ? (
+            <Pressable
+                onPress={onPress}
+                style={[tailwind('flex-row rounded-lg p-2 border items-center')]}
+            >
+                <Text style={tailwind('text-black font-bold')}>Done</Text>
+            </Pressable>
+        ) : (
+            <Pressable
+                onPress={onPress}
+                style={[tailwind('flex-row rounded-lg p-2 bg-black items-center')]}
+            >
+                <Text style={tailwind('text-white font-bold')}>Merge</Text>
+                <Ionicons name="git-merge" color="white" size={16} />
+            </Pressable>
+        );
     return (
         <View style={tailwind('flex-col w-full bg-gray-100')}>
             <View style={tailwind('flex-row p-2 mt-5 justify-between')}>
                 <Text style={[tailwind('text-4xl font-bold')]}>Trips</Text>
-                {isMerging ? (
-                    <Pressable
-                        onPress={onPress}
-                        style={[tailwind('flex-row rounded-lg p-2 border items-center')]}
-                    >
-                        <Text style={tailwind('text-black font-bold')}>Done</Text>
-                    </Pressable>
-                ) : (
-                    <Pressable
-                        onPress={onPress}
-                        style={[tailwind('flex-row rounded-lg p-2 bg-black items-center')]}
-                    >
-                        <Text style={tailwind('text-white font-bold')}>Merge</Text>
-                        <Ionicons name="git-merge" color="white" size={16} />
-                    </Pressable>
-                )}
+                {canMerge ? <MergeButton /> : null}
             </View>
         </View>
     );
@@ -104,7 +115,7 @@ const TripListHeader = ({
             if (v.dryRun == false) {
                 onConfirmMerge();
                 setSuccessfulMerge(true);
-                Toast.show(`Successfully merged ${selectedJobs.length} trips!`)
+                Toast.show(`Successfully merged ${selectedJobs.length} trips!`);
             }
         },
         onError: (err, v) => {
@@ -298,6 +309,25 @@ export const TripList = () => {
         );
     };
 
+    const ListEmpty = () => {
+        return (
+            <View style={tailwind('h-full w-full p-1 items-center')}>
+                <Text style={tailwind('text-lg font-bold text-black p-2')}>
+                    All done! You don't have any trips!
+                </Text>
+                <Image
+                    style={tailwind('w-3/4 h-64 mt-10 mb-10 self-center')}
+                    resizeMode={'contain'}
+                    source={require('./loc-img.png')}
+                />
+                <Text style={tailwind('text-lg font-bold text-black p-2')}>
+                    Clock in and drive to automatically track your trips, and then return here to
+                    save your pay.
+                </Text>
+            </View>
+        );
+    };
+
     if (status == 'loading' || data === undefined) {
         return (
             <View style={tailwind('pt-10 flex-col')}>
@@ -305,12 +335,18 @@ export const TripList = () => {
             </View>
         );
     } else {
+        console.log('DATA', data.length);
         return (
             <View style={tailwind('pt-10 flex-col h-full bg-gray-100')}>
                 <FlatList
+                    ListEmptyComponent={ListEmpty}
                     ListHeaderComponent={
                         <>
-                            <TripScreenHeader isMerging={isMerging} onPress={toggleMerging} />
+                            <TripScreenHeader
+                                canMerge={data.length > 0}
+                                isMerging={isMerging}
+                                onPress={toggleMerging}
+                            />
                             <TripListHeader
                                 cancelMerge={() => {
                                     LayoutAnimation.configureNext(
