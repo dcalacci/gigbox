@@ -1,35 +1,44 @@
-import React, { useState, useEffect, useMemo, useCallback} from 'react';
-import {
-    ScrollView,
-    View,
-    Text,
-    Image,
-    Pressable,
-    TextInput,
-    StyleSheet,
-    Modal,
-} from 'react-native';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { ScrollView, View, Text, Image, Pressable, TextInput, StyleSheet } from 'react-native';
 import { tailwind } from 'tailwind';
 import { Ionicons } from '@expo/vector-icons';
 import { Region, Marker, LatLng } from 'react-native-maps';
 import { useQueryClient, useMutation } from 'react-query';
 import moment from 'moment';
-import { Job, Screenshot, Shift } from '../../types';
+import { Employers, Job, Screenshot, Shift } from '../../types';
 import { parse } from 'wellknown';
 import TripMap from '../shiftList/TripMap';
+import { TripDetailScreen } from './TripDetailScreen';
 import { log } from '../../utils';
-import { updateJobValue, deleteImage } from '../job/api';
+import { updateJobValue, deleteImage, updateJobEmployer } from '../job/api';
 import { EmployerBox } from '../clock/EmployerSelector';
+import Modal from 'react-native-modal';
 
 import Toast from 'react-native-root-toast';
+import { useNavigation } from '@react-navigation/core';
 
-export const TripItem = ({ job }: { job: Job }) => {
+import ModalPicker from '../../components/ModalPicker';
+import { setShiftEmployers } from '../clock/api';
+
+export const TripItem = ({
+    job,
+    displayDetails,
+    setEmployer,
+    setTotalPay,
+    setTip,
+}: {
+    job: Job;
+    displayDetails: boolean;
+    setEmployer?: (e: Employers) => void;
+    setTotalPay?: (s: string) => void;
+    setTip?: (s: string) => void;
+}) => {
     const [region, setRegion] = useState<Region>();
     const [locations, setLocations] = useState<LatLng[]>();
 
-    const [modalVisible, setModalVisible] = useState(false);
+    const navigation = useNavigation();
     useEffect(() => {
-        console.log("Updating map, geometry changed")
+        console.log('Updating map, geometry changed');
         if (job.snappedGeometry) {
             const { geometries, bounding_box } = JSON.parse(job.snappedGeometry);
             const locations = geometries.map((c: [number, number]) => {
@@ -52,31 +61,17 @@ export const TripItem = ({ job }: { job: Job }) => {
         prefix,
         suffix,
         placeholder,
-        mutationKey,
-        dataKey,
+        onChangeValue,
     }: {
         label: string;
         value: number | string | undefined;
         prefix: string;
         suffix: string;
         placeholder: string;
-        mutationKey: string;
-        dataKey: string;
+        onChangeValue: ((v: string) => void) | undefined;
     }) => {
         const [displayValue, setDisplayValue] = useState<string>();
         const [isFocused, setFocused] = useState<boolean>();
-        const queryClient = useQueryClient();
-
-        const setJobValue = useMutation(updateJobValue, {
-            onSuccess: (data, variables) => {
-                log.info('updating job value:', data, variables);
-                queryClient.invalidateQueries('filteredJobs');
-                queryClient.invalidateQueries('shifts');
-                queryClient.invalidateQueries('trackedJobs');
-                queryClient.invalidateQueries('weeklySummary');
-            },
-        });
-
         // set value from our input, and submit mutation
         useEffect(() => {
             if (value) {
@@ -94,22 +89,8 @@ export const TripItem = ({ job }: { job: Job }) => {
         const onSubmit = () => {
             if (displayValue) {
                 const val = parseFloat(displayValue).toFixed(2);
-                console.log('Submitted. data:', val);
-                setJobValue.mutate({
-                    jobId: job.id,
-                    mutationKey: mutationKey,
-                    key: dataKey,
-                    value: val,
-                });
+                if (onChangeValue) onChangeValue(val);
             }
-        };
-
-        const onFocus = () => {
-            console.log('Focused text input!');
-        };
-
-        const onBlur = () => {
-            console.log('Blurred text input!');
         };
 
         return (
@@ -137,6 +118,7 @@ export const TripItem = ({ job }: { job: Job }) => {
                         maxLength={5}
                         keyboardType={'decimal-pad'}
                         onSubmitEditing={onSubmit}
+                        onEndEditing={onSubmit}
                         returnKeyType={'done'}
                         onFocus={() => setFocused(true)}
                         onBlur={() => setFocused(false)}
@@ -159,29 +141,32 @@ export const TripItem = ({ job }: { job: Job }) => {
     };
 
     // it's expensive to render, so we use useCallback
-    const Map = useCallback(() => (
-        <TripMap interactive={false} isActive={false} tripLocations={locations} region={region}>
-            {job.endLocation ? (
-                <Marker
-                    pinColor={'red'}
-                    coordinate={{
-                        longitude: parse(job.endLocation)?.coordinates[0] as number,
-                        latitude: parse(job.endLocation)?.coordinates[1] as number,
-                    }}
-                ></Marker>
-            ) : null}
+    const Map = useCallback(
+        () => (
+            <TripMap interactive={false} isActive={false} tripLocations={locations} region={region}>
+                {job.endLocation ? (
+                    <Marker
+                        pinColor={'red'}
+                        coordinate={{
+                            longitude: parse(job.endLocation)?.coordinates[0] as number,
+                            latitude: parse(job.endLocation)?.coordinates[1] as number,
+                        }}
+                    ></Marker>
+                ) : null}
 
-            {job.endLocation ? (
-                <Marker
-                    pinColor={'green'}
-                    coordinate={{
-                        longitude: parse(job.startLocation)?.coordinates[0] as number,
-                        latitude: parse(job.startLocation)?.coordinates[1] as number,
-                    }}
-                ></Marker>
-            ) : null}
-        </TripMap>
-    ), [job, locations])
+                {job.endLocation ? (
+                    <Marker
+                        pinColor={'green'}
+                        coordinate={{
+                            longitude: parse(job.startLocation)?.coordinates[0] as number,
+                            latitude: parse(job.startLocation)?.coordinates[1] as number,
+                        }}
+                    ></Marker>
+                ) : null}
+            </TripMap>
+        ),
+        [job, locations]
+    );
 
     const RowHeader = () => (
         <View style={tailwind('flex-row p-2 justify-between')}>
@@ -199,50 +184,102 @@ export const TripItem = ({ job }: { job: Job }) => {
         </View>
     );
 
+    const EmployerModalPicker = ({
+        job,
+        onEmployerChange,
+    }: {
+        job: Job;
+        onEmployerChange: (e: Employers) => void;
+    }) => {
+        const [selectedEmployer, setSelectedEmployer] = useState<String | undefined>(job.employer);
+        const [open, setOpen] = useState<boolean>(false);
+
+        return (
+            <View style={tailwind('m-1 pl-2 pr-2')}>
+                <Text style={tailwind('text-xs text-black p-0 m-0')}>Service</Text>
+                <Pressable
+                    style={tailwind('flex flex-col rounded-lg w-40 flex-col bg-gray-100 p-2')}
+                    onPress={() => setOpen(true)}
+                >
+                    <ModalPicker
+                        options={Object.keys(Employers)}
+                        onSelectOption={(option) => {
+                            setSelectedEmployer(option);
+                            setOpen(false);
+                            if (option === 'Select Service') {
+                                return;
+                            } else {
+                                const enumEmployer: Employers = option;
+                                onEmployerChange(enumEmployer);
+                            }
+                        }}
+                        onClose={() => setOpen(false)}
+                        isOpen={open}
+                        defaultText={'Select Service'}
+                    />
+                    <View style={tailwind('flex-row items-center')}>
+                        <Text style={tailwind('p-1 text-black')}>{selectedEmployer}</Text>
+                    </View>
+                </Pressable>
+            </View>
+        );
+    };
+
     return (
-        <View
+        <Pressable
             style={[
                 tailwind('flex-col w-full mt-2 mb-2 bg-white rounded-lg'),
-                {overflow: 'hidden'}
+                { overflow: 'hidden' },
             ]}
+            onPress={() => {
+                log.info('Navigating to job detail', job);
+                navigation.navigate('Trip Detail', { job: job });
+            }}
         >
-            <View style={tailwind('flex-col w-full m-0 h-36')}>
+            <View
+                style={[
+                    tailwind('flex-col w-full m-0'),
+                    displayDetails ? tailwind('h-44') : tailwind('h-24'),
+                ]}
+            >
                 <View style={tailwind('flex-row flex-none')}>
                     <View style={[tailwind('h-full w-1/3')]}>
-                        <View style={styles.mapTitle}></View>
-
-                        {locations && region ? (
-                            <Map />
-                        ) : (
-                            <Text>No locations recorded for this job</Text>
-                        )}
+                        {locations && region ? <Map /> : <Text>No locations...</Text>}
                     </View>
                     <View style={tailwind('flex-col w-2/3')}>
                         <RowHeader />
-                        <View style={[tailwind('flex flex-row flex-wrap pl-2 pr-2')]}>
-                            <JobDetail
-                                label={'Total Pay'}
-                                value={job.totalPay}
-                                prefix={'$ '}
-                                suffix={''}
-                                placeholder={''}
-                                mutationKey={'setJobTotalPay'}
-                                dataKey={'totalPay'}
-                            ></JobDetail>
-                            <JobDetail
-                                label={'Tip'}
-                                value={job.tip}
-                                prefix={'$ '}
-                                suffix={''}
-                                placeholder={''}
-                                mutationKey={'setJobTip'}
-                                dataKey={'tip'}
-                            ></JobDetail>
-                        </View>
+                        {displayDetails ? (
+                            <>
+                                <View style={[tailwind('flex flex-row pl-2 pr-2')]}>
+                                    <JobDetail
+                                        label={'Total Pay'}
+                                        value={job.totalPay}
+                                        prefix={'$ '}
+                                        suffix={''}
+                                        placeholder={''}
+                                        onChangeValue={setTotalPay}
+                                    ></JobDetail>
+                                    <JobDetail
+                                        label={'Tip'}
+                                        value={job.tip}
+                                        prefix={'$ '}
+                                        suffix={''}
+                                        placeholder={''}
+                                        onChangeValue={setTip}
+                                    ></JobDetail>
+                                </View>
+                                <EmployerModalPicker
+                                    job={job}
+                                    onEmployerChange={(e: Employers) => {
+                                        setEmployer(e);
+                                    }}
+                                />
+                            </>
+                        ) : null}
                     </View>
                 </View>
             </View>
-        </View>
+        </Pressable>
     );
 };
 const styles = StyleSheet.create({

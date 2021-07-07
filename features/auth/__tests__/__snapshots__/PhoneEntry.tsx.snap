@@ -650,7 +650,7 @@ exports[`<PhoneEntry/> moves to verify otp screen if phone is submitted 2`] = `
       }
       testID="phone-input"
       underlineColorAndroid="transparent"
-      value="(732) 563-0288"
+      value="(908) 229-8992"
     />
     <View
       accessible={true}

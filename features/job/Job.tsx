@@ -285,6 +285,7 @@ export const JobItem = ({ job }: { job: Job }) => {
                         maxLength={5}
                         keyboardType={'decimal-pad'}
                         onSubmitEditing={onSubmit}
+                        onEndEditing={onSubmit}
                         returnKeyType={'done'}
                         onFocus={() => setFocused(true)}
                         onBlur={() => setFocused(false)}
@@ -339,7 +340,7 @@ export const JobItem = ({ job }: { job: Job }) => {
                             ></Marker>
                         ) : null}
 
-                        {job.endLocation ? (
+                        {job.startLocation ? (
                             <Marker
                                 pinColor={'green'}
                                 coordinate={{

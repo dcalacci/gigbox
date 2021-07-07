@@ -50,15 +50,6 @@ export default function SettingsScreen({ route }) {
         },
     });
 
-    const [tasks, setTasks] = useState<TaskManagerTask[]>()
-    useEffect(() => {
-        TaskManager.getRegisteredTasksAsync()
-        .then((tasks) => {
-            console.log("registered tasks:", tasks)
-            setTasks(tasks)
-        })
-    })
-
     const LoadingScreen = () => {
         return (
             <View style={tailwind('flex flex-col content-around content-center')}>
@@ -141,11 +132,6 @@ export default function SettingsScreen({ route }) {
                             Un-Enroll & Delete Data
                         </Text>
                     </Pressable>
-                    <View style={tailwind('w-full')}>
-                        {tasks?.map((t: TaskManagerTask) => {
-                            <Text>t.taskName</Text>
-                        })}
-                    </View>
                     <Text>API: {uri}</Text>
                         <Text>Release Channel: {Constants.manifest.releaseChannel}</Text>
                 </View>

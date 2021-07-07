@@ -3,7 +3,7 @@ import { getClient } from '../../utils';
 import { store } from '../../store/store';
 import { QueryKey, useQuery, UseQueryResult } from 'react-query';
 import { JobFilterList, JobFilter, SortArgs } from './JobList';
-import { Job } from '@/types';
+import { Job, Employers } from '@/types';
 import moment from 'moment';
 
 export const exportJobs = ({ ids }: { ids: string[] }) => {
@@ -59,6 +59,39 @@ export const updateJobValue = ({
         value,
     });
 };
+
+export const updateJobEmployer = ({ jobId, employer }: { jobId: string; employer: Employers }) => {
+    const client = getClient(store);
+    const query = gql`
+        mutation mutation($jobId: ID!, $value: EmployerNames!) {
+            setJobEmployer(jobId: $jobId, value: $value) {
+                job {
+                    employer
+                }
+            }
+        }
+    `;
+    return client.request(query, {
+        jobId,
+        value: employer,
+    });
+};
+
+export const deleteJob = ({ jobId }: { jobId: string }) => {
+    const client = getClient(store);
+    const query = gql`
+        mutation mutation($jobId: ID!) {
+            deleteJob(jobId: $jobId) {
+                ok
+                message
+            }
+        }
+    `;
+    return client.request(query, {
+        jobId,
+    });
+};
+
 export const createFilterString = (filters: JobFilter): string => {
     let or_filters = [];
     let and_filters = [`{mileageIsNull: false}, {endTimeIsNull: false}`];
