@@ -25,6 +25,7 @@ import { StyleProp } from 'react-native';
 import { useEffect } from 'react';
 import moment from 'moment';
 import AnimatedEllipsis from '../../components/Ellipsis';
+import { StatusBar } from 'expo-status-bar';
 
 const TripsStack = createStackNavigator();
 
@@ -346,6 +347,7 @@ export const TripList = () => {
         console.log('DATA', data.length);
         return (
             <View style={tailwind('pt-10 flex-col h-full bg-gray-100')}>
+                <StatusBar style="dark" />
                 <FlatList
                     ListEmptyComponent={ListEmpty}
                     ListHeaderComponent={
