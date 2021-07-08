@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react';
 import { ScrollView, Pressable, SafeAreaView, StyleSheet, View, Text } from 'react-native';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 
@@ -9,24 +9,32 @@ import {
     updateDataSharing,
     updateInterview,
     unenrollAndDeleteMutation,
+    submitUserEmployers,
 } from '../features/consent/api';
 import tailwind from 'tailwind-rn';
 
 import { StatusBar } from 'expo-status-bar';
 import * as Loc from 'expo-location';
-import * as TaskManager from 'expo-task-manager'
-import { TaskManagerTask } from 'expo-task-manager'
+import * as TaskManager from 'expo-task-manager';
+import { TaskManagerTask } from 'expo-task-manager';
 
 import AnimatedEllipsis from '../components/Ellipsis';
 import BinarySurveyQuestion from '../features/consent/BinarySurveyQuestion';
-import { reset } from '../features/auth/authSlice';
-import { useDispatch } from 'react-redux';
-import { User } from '../types';
-import { uri } from '../utils'
+import { useDispatch, useSelector } from 'react-redux';
+import { Employers, User } from '../types';
+import { uri } from '../utils';
 import { Ionicons } from '@expo/vector-icons';
+import { AuthState, reset } from '../features/auth/authSlice';
+import { EmployerSelector } from '../features/consent/InitialSurvey';
+import BinaryFilterPill from '../components/BinaryFilterPill';
+import { RootState } from '../store';
+import ModalMultiSelect from '../components/ModalMultiSelect';
+import Toast from 'react-native-root-toast';
+import SetEmployersCard from '../components/SetEmployersCard';
 
 export default function SettingsScreen({ route }) {
     const dispatch = useDispatch();
+    const auth = useSelector((state: RootState): AuthState => state.auth);
     const userStatus = useQuery('userInfoSettings', getUserInfo, {
         onSuccess: (d) => {
             console.log('user info in settings:', d.consent);
@@ -50,6 +58,10 @@ export default function SettingsScreen({ route }) {
         },
     });
 
+    const signOut = () => {
+        dispatch(reset());
+    };
+
     const LoadingScreen = () => {
         return (
             <View style={tailwind('flex flex-col content-around content-center')}>
@@ -65,12 +77,19 @@ export default function SettingsScreen({ route }) {
             <StatusBar style="dark" />
             <ScrollView>
                 {/* <Text style={styles.title}>Jobs</Text> */}
-                <View style={tailwind('flex-row p-5 content-start')}>
-                    <Text style={tailwind('text-3xl font-bold ')}>Settings</Text>
+                <View style={tailwind('flex-row p-5 content-start justify-between')}>
+                    <Text style={tailwind('text-4xl font-bold ')}>Settings</Text>
+                    <Pressable onPress={signOut} style={tailwind('p-2 self-end')}>
+                        <Text style={tailwind('text-xl underline')}>Sign Out</Text>
+                    </Pressable>
                 </View>
+                <View style={tailwind('flex-row p-5 content-start')}>
+                    <Text style={tailwind('text-2xl font-bold')}>Your Services</Text>
+                </View>
+                <SetEmployersCard />
 
                 <View style={tailwind('flex-row p-5 content-start')}>
-                    <Text style={tailwind('text-2xl font-bold underline')}>
+                    <Text style={tailwind('text-2xl font-bold')}>
                         Consent, Data, and Enrollment
                     </Text>
                 </View>
@@ -116,6 +135,7 @@ export default function SettingsScreen({ route }) {
                     <Text style={tailwind('text-lg pt-2 pb-2 underline text-center')}>
                         Your gigbox account will be reset and you can re-join at any time.
                     </Text>
+
                     <Pressable
                         onPress={() => {
                             console.log('deleting account');
@@ -133,7 +153,7 @@ export default function SettingsScreen({ route }) {
                         </Text>
                     </Pressable>
                     <Text>API: {uri}</Text>
-                        <Text>Release Channel: {Constants.manifest.releaseChannel}</Text>
+                    <Text>Release Channel: {Constants.manifest.releaseChannel}</Text>
                 </View>
             </ScrollView>
         </SafeAreaView>

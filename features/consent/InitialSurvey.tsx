@@ -1,37 +1,27 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
-    SafeAreaView,
     ScrollView,
     View,
     Text,
-    Image,
     Pressable,
-    TextInput,
-    StyleSheet,
 } from 'react-native';
 import { tailwind } from 'tailwind';
-import { useQueryClient, useMutation, useQuery } from 'react-query';
-import * as Permissions from 'expo-permissions';
+import { useQueryClient, useMutation } from 'react-query';
 import * as Haptics from 'expo-haptics';
-import { askPermissions } from '../../tasks';
-import BinarySurveyQuestion from './BinarySurveyQuestion';
-import { submitConsent, submitIntroSurvey} from './api';
-import { Extras } from './Extras';
-import { Signature } from './Signature';
+import { submitUserEmployers } from './api';
 import { Employers } from '../../types';
-import { BinaryFilterPill } from '../job/JobList';
+import BinaryFilterPill from '../../components/BinaryFilterPill';
 
-export const InitialSurvey = ({ onSurveyFinish }: { onSurveyFinish: () => void }) => {
+export const EmployerSelector = ({ onSubmit }: { onSubmit: () => void }) => {
     const [selectedServices, setSelectedServices] = useState<Employers[]>([]);
-    const queryClient = useQueryClient()
-    const submitSurvey = useMutation(submitIntroSurvey, {
+    const queryClient = useQueryClient();
+    const submitSurvey = useMutation(submitUserEmployers, {
         onSuccess: (data) => {
-            console.log("data:", data)
+            console.log('data:', data);
             queryClient.invalidateQueries('userInfo');
-            onSurveyFinish();
+            onSubmit();
         },
     });
-
     const toggleSelect = (e: Employers): void => {
         if (!selectedServices.includes(e)) {
             console.log('Adding', e);
@@ -41,44 +31,39 @@ export const InitialSurvey = ({ onSurveyFinish }: { onSurveyFinish: () => void }
             setSelectedServices(selectedServices.filter((empl) => empl !== e));
         }
     };
-    return (
-        <ScrollView style={tailwind('bg-gray-100 ')}>
-            <View style={tailwind('p-2')}>
-                <Text style={[tailwind('text-3xl font-bold text-green-500')]}>
-                    Let's get started
-                </Text>
 
-                <View style={tailwind('rounded-lg bg-white p-2 m-2')}>
-                    <Text style={tailwind('text-lg pt-2 pb-2 underline text-center')}>
-                        What services do you work for?
-                    </Text>
-                    <View style={tailwind('flex-row flex-wrap p-2')}>
-                        <BinaryFilterPill
-                            displayText={'Instacart'}
-                            onPress={() => toggleSelect(Employers.INSTACART)}
-                            value={selectedServices.includes(Employers.INSTACART)}
-                        />
-                        <BinaryFilterPill
-                            displayText={'Doordash'}
-                            onPress={() => toggleSelect(Employers.DOORDASH)}
-                            value={selectedServices.includes(Employers.DOORDASH)}
-                        />
-                        <BinaryFilterPill
-                            displayText={'GrubHub'}
-                            onPress={() => toggleSelect(Employers.GRUBHUB)}
-                            value={selectedServices.includes(Employers.GRUBHUB)}
-                        />
-                        <BinaryFilterPill
-                            displayText={'UberEats'}
-                            onPress={() => toggleSelect(Employers.UBEREATS)}
-                            value={selectedServices.includes(Employers.UBEREATS)}
-                        />
-                        <BinaryFilterPill
-                            displayText={'Shipt'}
-                            onPress={() => toggleSelect(Employers.SHIPT)}
-                            value={selectedServices.includes(Employers.SHIPT)}
-                        />
-                    </View>
+    return (
+        <View style={tailwind('flex-col')}>
+            <View style={tailwind('rounded-lg bg-white p-2 m-2')}>
+                <Text style={tailwind('text-lg pt-2 pb-2 underline text-center')}>
+                    What services do you work for?
+                </Text>
+                <View style={tailwind('flex-row flex-wrap p-2')}>
+                    <BinaryFilterPill
+                        displayText={'Instacart'}
+                        onPress={() => toggleSelect(Employers.INSTACART)}
+                        value={selectedServices.includes(Employers.INSTACART)}
+                    />
+                    <BinaryFilterPill
+                        displayText={'Doordash'}
+                        onPress={() => toggleSelect(Employers.DOORDASH)}
+                        value={selectedServices.includes(Employers.DOORDASH)}
+                    />
+                    <BinaryFilterPill
+                        displayText={'GrubHub'}
+                        onPress={() => toggleSelect(Employers.GRUBHUB)}
+                        value={selectedServices.includes(Employers.GRUBHUB)}
+                    />
+                    <BinaryFilterPill
+                        displayText={'UberEats'}
+                        onPress={() => toggleSelect(Employers.UBEREATS)}
+                        value={selectedServices.includes(Employers.UBEREATS)}
+                    />
+                    <BinaryFilterPill
+                        displayText={'Shipt'}
+                        onPress={() => toggleSelect(Employers.SHIPT)}
+                        value={selectedServices.includes(Employers.SHIPT)}
+                    />
                 </View>
             </View>
             <Pressable
@@ -91,16 +76,27 @@ export const InitialSurvey = ({ onSurveyFinish }: { onSurveyFinish: () => void }
                 disabled={selectedServices.length == 0}
                 onPress={() => {
                     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-                    submitSurvey.mutate({employers: selectedServices});
+                    submitSurvey.mutate({ employers: selectedServices });
                     //TODO: send value to server, wait until we get a response back, and continue
                 }}
             >
                 <Text style={tailwind('font-bold text-white text-xl text-center')}>
-                    {selectedServices.length == 0
-                        ? `Continue`
-                        : `Continue`}
+                    {selectedServices.length == 0 ? `Continue` : `Continue`}
                 </Text>
             </Pressable>
+        </View>
+    );
+};
+
+export const InitialSurvey = ({ onSurveyFinish }: { onSurveyFinish: () => void }) => {
+    return (
+        <ScrollView style={tailwind('bg-gray-100 ')}>
+            <View style={tailwind('p-2')}>
+                <Text style={[tailwind('text-3xl font-bold text-green-500')]}>
+                    Let's get started
+                </Text>
+            </View>
+            <EmployerSelector onSubmit={onSurveyFinish} />
         </ScrollView>
     );
 };

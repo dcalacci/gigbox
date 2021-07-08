@@ -5,21 +5,26 @@ import tailwind from 'tailwind-rn';
 import { Picker } from '@react-native-picker/picker';
 
 import BinaryFilterPill from './BinaryFilterPill';
+import { useEffect } from 'react';
 
 export default ({
     isOpen,
     onClose,
     promptText,
     options,
+    selected,
     onSelectOptions,
+    buttonText,
 }: {
     isOpen: boolean;
     onClose: () => void;
     promptText: string;
     options: string[];
+    selected: string[];
     onSelectOptions: (o: string[]) => void;
+    buttonText: string;
 }) => {
-    const [selectedOptions, setSelectedOptions] = useState<string[]>([]);
+    const [selectedOptions, setSelectedOptions] = useState<string[]>(selected);
     const toggleSelect = (s: string): void => {
         if (!selectedOptions.includes(s)) {
             console.log('Adding', s);
@@ -54,10 +59,12 @@ export default ({
                 </View>
             </View>
             <Pressable
-                onPress={() => onSelectOptions(selectedOptions)}
+                onPress={() => {
+                    onSelectOptions(selectedOptions);
+                }}
                 style={tailwind('bg-black p-5 rounded-lg items-center mt-5 mb-5 w-full')}
             >
-                <Text style={tailwind('text-white font-bold text-lg')}>Clock In</Text>
+                <Text style={tailwind('text-white font-bold text-lg')}>{buttonText}</Text>
             </Pressable>
         </Modal>
     );

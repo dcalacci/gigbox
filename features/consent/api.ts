@@ -129,7 +129,7 @@ export const unenrollAndDeleteMutation = async () => {
     return client.request(query);
 };
 
-export const submitIntroSurvey = ({ employers }: { employers: Employers[] }) => {
+export const submitUserEmployers = ({ employers }: { employers: Employers[] }) => {
     const client = getClient(store);
     const query = gql`
         mutation mutation($employers: [EmployerNames]!) {

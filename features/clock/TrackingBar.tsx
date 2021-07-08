@@ -154,7 +154,6 @@ export default function TrackingBar() {
                 })
                 .catch((err) => {
                     log.error(`Caught an error while trying to stop background location: ${err}`);
-                    Toast.show('Had a problem clocking out. Try again?');
                 })
                 .finally(() => {
                     // If we don't have a location task, end our shift anyway. Otherwise
@@ -250,7 +249,9 @@ export default function TrackingBar() {
                             "Select any apps you're working for (looking for jobs on) during this shift."
                         }
                         options={auth.user?.employers}
+                        selected={[]}
                         onSelectOptions={onEmployersSubmitted}
+                        buttonText={"Clock In"}
                     ></ModalMultiSelect>
                 </View>
             </Tooltip>
