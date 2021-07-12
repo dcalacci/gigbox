@@ -81,7 +81,7 @@ const JobsScreenHeader = ({
                             tailwind(
                                 'flex-row rounded-lg ml-2 mr-2 p-1 border-2 border-red-400 items-center'
                             ),
-                            tailwind('bg-red-400 border-none'),
+                            tailwind('bg-red-400'),
                         ]}
                     >
                         <Text style={[tailwind('text-red-400 font-bold'), tailwind('text-white')]}>
