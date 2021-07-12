@@ -11,7 +11,7 @@ import { tailwind } from 'tailwind';
 import { Job } from '@/types';
 import { JobItem } from '../job/Job';
 
-const TripScreenHeader = ({ isMerging, onPress }: { isMerging: boolean; onPress: () => void }) => {
+const JobDetailScreenHeader = ({ isMerging, onPress }: { isMerging: boolean; onPress: () => void }) => {
     return (
         <View style={tailwind('flex-col w-full')}>
             <View style={tailwind('flex-row p-2 mt-10 justify-between')}>
@@ -37,14 +37,14 @@ const TripScreenHeader = ({ isMerging, onPress }: { isMerging: boolean; onPress:
     );
 };
 
-export const TripDetailScreen = ({ route}: { route: {params: {job: Job}}}) => {
+export const JobDetailScreen = ({ route}: { route: {params: {job: Job}}}) => {
     const job = route.params.job
     return (
         <>
-            <TripScreenHeader
+            <JobDetailScreenHeader
                 isMerging={false}
                 onPress={() => console.log('press...')}
-            ></TripScreenHeader>
+            ></JobDetailScreenHeader>
             <JobItem job={job} />
         </>
     );

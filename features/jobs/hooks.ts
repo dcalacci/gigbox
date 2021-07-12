@@ -14,7 +14,7 @@ export const useUncategorizedJobs = ({ onSettled }: { onSettled: () => void }) =
     >(['uncategorizedJobs', filter], getPaginatedUncategorizedJobs, {
         notifyOnChangeProps: ['data'],
         staleTime: 60,
-        keepPreviousData: true,
+        // keepPreviousData: true,
         enabled: true,
         getNextPageParam: (lastPage, pages) => {
             console.log('last page:', lastPage);

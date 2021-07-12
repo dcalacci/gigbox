@@ -19,8 +19,8 @@ import { tailwind } from 'tailwind';
 import { useUncategorizedJobs, filter, mergeJobs } from './hooks';
 import { Employers, Job, TripsScreenNavigationProp } from '@/types';
 import { createStackNavigator } from '@react-navigation/stack';
-import { TripDetailScreen } from './TripDetailScreen';
-import { TripItem } from './TripItem';
+import { JobDetailScreen } from './JobDetailScreen';
+import { JobItem } from './JobItem';
 import { StyleProp } from 'react-native';
 import { useEffect } from 'react';
 import moment from 'moment';
@@ -28,7 +28,7 @@ import AnimatedEllipsis from '../../components/Ellipsis';
 import { StatusBar } from 'expo-status-bar';
 const TripsStack = createStackNavigator();
 
-export default function TripsScreen({ navigation }: { navigation: TripsScreenNavigationProp }) {
+export default function JobsScreen({ navigation }: { navigation: TripsScreenNavigationProp }) {
     return (
         <TripsStack.Navigator
             screenOptions={{
@@ -37,7 +37,7 @@ export default function TripsScreen({ navigation }: { navigation: TripsScreenNav
         >
             <TripsStack.Screen
                 name="Trips"
-                component={TripList}
+                component={JobsList}
                 options={{
                     headerShown: false,
                 }}
@@ -45,7 +45,7 @@ export default function TripsScreen({ navigation }: { navigation: TripsScreenNav
 
             <TripsStack.Screen
                 name="Trip Detail"
-                component={TripDetailScreen}
+                component={JobDetailScreen}
                 options={{
                     headerShown: false,
                 }}
@@ -54,7 +54,7 @@ export default function TripsScreen({ navigation }: { navigation: TripsScreenNav
     );
 }
 
-const TripScreenHeader = ({
+const JobsScreenHeader = ({
     canCombine,
     isCombining,
     onPress,
@@ -90,7 +90,7 @@ const TripScreenHeader = ({
     );
 };
 
-const TripListHeader = ({
+const JobsListHeader = ({
     cancelCombine,
     isCombining,
     selectedJobs,
@@ -158,7 +158,7 @@ const TripListHeader = ({
                         You'll make one {jobPreview.mileage.toFixed(2)} mi trip, from{' '}
                         {startTimeText} to {endTimeText}.
                     </Text>
-                    <TripItem
+                    <JobItem
                         job={jobPreview}
                         displayDetails={true}
                         setEmployer={setEmployer}
@@ -236,7 +236,7 @@ const TripListHeader = ({
     );
 };
 
-export const TripList = () => {
+export const JobsList = () => {
     const queryClient = useQueryClient();
     const [refreshing, setRefreshing] = useState(false);
     const [selectedJobs, setSelectedJobs] = useState<String[]>([]);
@@ -343,12 +343,12 @@ export const TripList = () => {
                     ListEmptyComponent={ListEmpty}
                     ListHeaderComponent={
                         <>
-                            <TripScreenHeader
+                            <JobsScreenHeader
                                 canCombine={data.length > 0}
                                 isCombining={isCombining}
                                 onPress={toggleMerging}
                             />
-                            <TripListHeader
+                            <JobsListHeader
                                 cancelCombine={() => {
                                     LayoutAnimation.configureNext(
                                         LayoutAnimation.create(100, 'linear', 'opacity')
@@ -378,7 +378,7 @@ export const TripList = () => {
                                         jobId={props.item.node.id}
                                     />
                                 ) : null}
-                                <TripItem job={props.item.node} displayDetails={true} />
+                                <JobItem job={props.item.node} displayDetails={true} />
                             </View>
                         )
                     }

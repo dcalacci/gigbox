@@ -7,7 +7,7 @@ import React, { useEffect } from 'react';
 import Colors from '../constants/Colors';
 import HomeScreen from '../screens/HomeScreen';
 import ShiftsScreen from '../screens/ShiftsScreen';
-import JobsScreen from '../screens/JobsScreen';
+import HistoryScreen from '../screens/HistoryScreen';
 import SettingsScreen from '../screens/SettingsScreen';
 import { RootState } from '../store/index';
 import { BottomTabParamList, HomeParamList } from '../types';
@@ -23,7 +23,7 @@ import { Onboarding } from '../features/onboarding/Onboarding';
 import { User } from '../types';
 import * as SplashScreen from 'expo-splash-screen';
 import { SurveyForm } from '../features/surveys/Survey';
-import TripsScreen from '../features/trips/TripsScreen';
+import JobsScreen from '../features/jobs/JobsScreen';
 
 const BottomTab = createBottomTabNavigator<BottomTabParamList>();
 
@@ -95,8 +95,8 @@ export default function BottomTabNavigator({}) {
                         }}
                     />
                     <BottomTab.Screen
-                        name="Trips"
-                        component={TripsScreen}
+                        name="Jobs"
+                        component={JobsScreen}
                         options={{
                             tabBarIcon: ({ color }) => (
                                 <TabBarIcon name="receipt-outline" color={color} />
@@ -106,7 +106,7 @@ export default function BottomTabNavigator({}) {
 
                     <BottomTab.Screen
                         name="History"
-                        component={JobsScreen}
+                        component={HistoryScreen}
                         options={{
                             tabBarIcon: ({ color }) => (
                                 <TabBarIcon name="list-outline" color={color} />

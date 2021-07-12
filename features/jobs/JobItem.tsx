@@ -13,7 +13,7 @@ import { useNavigation } from '@react-navigation/core';
 
 import ModalPicker from '../../components/ModalPicker';
 
-export const TripItem = ({
+export const JobItem = ({
     job,
     displayDetails,
     setEmployer,
@@ -31,7 +31,6 @@ export const TripItem = ({
 
     const navigation = useNavigation();
     useEffect(() => {
-        console.log('Updating map, geometry changed');
         if (job.snappedGeometry) {
             const { geometries, bounding_box } = JSON.parse(job.snappedGeometry);
             const locations = geometries.map((c: [number, number]) => {
@@ -270,7 +269,7 @@ export const TripItem = ({
                 <View
                     style={[
                         tailwind('flex-col w-full m-0'),
-                        displayDetails ? tailwind('h-44') : tailwind('h-24'),
+                        displayDetails ? tailwind('max-h-48') : tailwind('max-h-24'),
                     ]}
                 >
                     <View style={tailwind('flex-row flex-none')}>

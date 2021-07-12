@@ -8,7 +8,7 @@ import TripMap from './TripMap';
 import { log } from '../../utils';
 
 import { deleteShift } from './api';
-import { extractJobsFromShift } from '../trips/hooks';
+import { extractJobsFromShift } from '../jobs/hooks';
 
 export const ShiftTrips = ({
     routeParams,

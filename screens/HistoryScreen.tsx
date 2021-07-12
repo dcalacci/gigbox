@@ -7,7 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { JobFilterList, JobFilter } from '../features/job/JobList';
 import tailwind from 'tailwind-rn';
 
-export default function JobsScreen({ route }) {
+export default function HistoryScreen({ route }) {
     /* let filter: JobFilter | undefined; */
     const filter = route.params?.filters
         ? {
