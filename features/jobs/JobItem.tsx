@@ -204,6 +204,7 @@ export const JobItem = ({
                         onClose={() => setOpen(false)}
                         isOpen={open}
                         defaultText={'Select Service'}
+                        promptText={'What service was this job for?'}
                     />
                     <View style={tailwind('flex-row items-center')}>
                         <Text style={tailwind('p-1 text-black')}>{selectedEmployer}</Text>
