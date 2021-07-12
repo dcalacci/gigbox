@@ -77,7 +77,7 @@ export const updateJobEmployer = ({ jobId, employer }: { jobId: string; employer
     });
 };
 
-export const deleteJob = ({ jobId }: { jobId: string }) => {
+export const deleteJob = ({ jobId }: { jobId: String }) => {
     const client = getClient(store);
     const query = gql`
         mutation mutation($jobId: ID!) {
