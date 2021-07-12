@@ -373,8 +373,9 @@ export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
 
     const toggleEditing = () => {
         LayoutAnimation.configureNext(LayoutAnimation.create(100, 'linear', 'opacity'));
-        setIsEditing(!isEditing);
-        if (!isEditing) {
+        const nextIsEditing = !isEditing;
+        setIsEditing(nextIsEditing);
+        if (!nextIsEditing) {
             setSelectedJobs([]);
             setIsCombining(false);
         }
@@ -693,6 +694,9 @@ export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
                             deleteEnabled={selectedJobs.length > 0}
                             combineEnabled={selectedJobs.length > 1}
                         />
+                        <View style={tailwind('w-full border-t border-b border-gray-200')}>
+                            <JobFilters />
+                        </View>
                         <JobsListHeader
                             cancelCombine={() => {
                                 LayoutAnimation.configureNext(
@@ -707,9 +711,6 @@ export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
                             selectedJobs={selectedJobs}
                             isVisible={selectedJobs.length > 0}
                         />
-                        <View style={tailwind('w-full border-t border-b border-gray-200')}>
-                            <JobFilters />
-                        </View>
                     </>
                 }
                 style={[tailwind('w-full flex-auto flex-col flex-grow pl-1 pr-1')]}
