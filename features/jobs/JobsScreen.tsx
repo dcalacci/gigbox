@@ -628,37 +628,20 @@ export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
         );
     };
 
-    const ListEmpty = () => {
-        return (
-            <View style={tailwind('h-full w-full p-1 items-center')}>
-                <Text style={tailwind('text-lg font-bold text-black p-2')}>
-                    All done! You don't have any trips!
-                </Text>
-                <Image
-                    style={tailwind('w-3/4 h-64 mt-10 mb-10 self-center')}
-                    resizeMode={'contain'}
-                    source={require('./loc-img.png')}
-                />
-                <Text style={tailwind('text-lg font-bold text-black p-2')}>
-                    Clock in and drive to automatically track your trips, and then return here to
-                    save your pay.
-                </Text>
-            </View>
-        );
-    };
     const ListEmptyComponent = () => {
         if (filter.needsEntry) {
             return (
-                <View style={tailwind('h-full w-full p-1 items-center')}>
+                <View style={tailwind('h-full w-full p-1 items-center flex-col')}>
                     <Text style={tailwind('text-lg font-bold text-black p-2')}>
-                        All done! You don't have any trips!
+                        Great work! You don't have any Jobs left that need their pay, tip, or
+                        service filled in.
                     </Text>
                     <Image
                         style={tailwind('w-3/4 h-64 mt-10 mb-10 self-center')}
                         resizeMode={'contain'}
                         source={require('./loc-img.png')}
                     />
-                    <Text style={tailwind('text-lg font-bold text-black p-2')}>
+                    <Text style={tailwind('text-lg font-bold text-black p-3')}>
                         Clock in and drive to automatically track your trips, and then return here
                         to save your pay.
                     </Text>
@@ -676,6 +659,10 @@ export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
                         resizeMode={'contain'}
                         source={require('./loc-img.png')}
                     />
+                    <Text style={tailwind('text-lg font-bold text-black p-2')}>
+                        Clock in and drive to automatically track your trips, and then return here
+                        to save your pay.
+                    </Text>
                 </View>
             );
         }
