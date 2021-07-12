@@ -2,9 +2,9 @@ import { gql } from 'graphql-request';
 import { getClient } from '../../utils';
 import { store } from '../../store/store';
 import { QueryKey, useQuery, UseQueryResult } from 'react-query';
-import { JobFilterList, JobFilter, SortArgs } from '../job/JobList';
 import { Job, Employers } from '@/types';
 import moment from 'moment';
+import { JobFilter } from '../../components/FilterPills';
 
 export const exportJobs = ({ ids }: { ids: string[] }) => {
     const client = getClient(store);

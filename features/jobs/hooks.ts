@@ -2,10 +2,10 @@ import { QueryKey, useInfiniteQuery, useMutation } from 'react-query';
 import { getClient } from '../../utils';
 import { store } from '../../store/store';
 import { gql } from 'graphql-request';
-import { JobFilter, SortArgs } from '../job/JobList';
 import { Employers, Job } from '../../types';
 
 import { coreJobQuery, createFilterString } from './api';
+import { JobFilter, SortArgs } from '../../components/FilterPills';
 // Getting paginated "trips"
 const N = 10;
 

@@ -1,24 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import {
     SafeAreaView,
-    ScrollView,
     View,
     Text,
     Image,
     Pressable,
-    TextInput,
-    StyleSheet,
 } from 'react-native';
 import { tailwind } from 'tailwind';
-import { useQueryClient, useMutation, useQuery } from 'react-query';
 import * as Haptics from 'expo-haptics';
-import BinarySurveyQuestion from './BinarySurveyQuestion';
-import { submitConsent, submitIntroSurvey } from './api';
-import { Extras } from './Extras';
-import { Signature } from './Signature';
-
-import { Employers } from '../../types';
-import { BinaryFilterPill } from '../job/JobList';
 
 const NUM_PAGES = 3;
 

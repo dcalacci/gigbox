@@ -3,12 +3,12 @@ import { ScrollView, View, Modal, Text, StyleSheet, Pressable } from 'react-nati
 import { tailwind } from 'tailwind';
 import { useMutation, useQueryClient } from 'react-query';
 import { Job, Shift } from '../../types';
-import { JobList } from '../job/JobList';
 import TripMap from './TripMap';
 import { log } from '../../utils';
 
 import { deleteShift } from './api';
 import { extractJobsFromShift } from '../jobs/hooks';
+import { JobList } from '../history/JobList';
 
 export const ShiftTrips = ({
     routeParams,

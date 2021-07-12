@@ -27,9 +27,9 @@ import moment, { Moment } from 'moment';
 import AnimatedEllipsis from '../../components/Ellipsis';
 import { StatusBar } from 'expo-status-bar';
 import { deleteJob } from './api';
-import { DateRangeFilterPill, JobFilter } from '../job/JobList';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import BinaryFilterPill from '../../components/BinaryFilterPill';
+import { DateRangeFilterPill, JobFilter } from '../../components/FilterPills';
 const TripsStack = createStackNavigator();
 
 export default function JobsScreen({ navigation }: { navigation: TripsScreenNavigationProp }) {
