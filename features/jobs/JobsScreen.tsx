@@ -7,27 +7,29 @@ import {
     Pressable,
     ViewStyle,
     LayoutAnimation,
-    ViewPropsAndroid,
 } from 'react-native';
 
 import Toast from 'react-native-root-toast';
-import { useMutation, useQueryClient } from 'react-query';
+import { useInfiniteQuery, useMutation, useQueryClient } from 'react-query';
 import { FlatList } from 'react-native-gesture-handler';
 import Modal from 'react-native-modal';
 import { Ionicons } from '@expo/vector-icons';
 import { log } from '../../utils';
 import { tailwind } from 'tailwind';
-import { useUncategorizedJobs, filter, mergeJobs } from './hooks';
+import { defaultJobFilter, mergeJobs, getPaginatedUncategorizedJobs } from './hooks';
 import { Employers, Job, TripsScreenNavigationProp } from '@/types';
 import { createStackNavigator } from '@react-navigation/stack';
 import { JobDetailScreen } from './JobDetailScreen';
 import { JobItem } from './JobItem';
 import { StyleProp } from 'react-native';
 import { useEffect } from 'react';
-import moment from 'moment';
+import moment, { Moment } from 'moment';
 import AnimatedEllipsis from '../../components/Ellipsis';
 import { StatusBar } from 'expo-status-bar';
 import { deleteJob } from '../job/api';
+import { DateRangeFilterPill, JobFilter } from '../job/JobList';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import BinaryFilterPill from '../../components/BinaryFilterPill';
 const TripsStack = createStackNavigator();
 
 export default function JobsScreen({ navigation }: { navigation: TripsScreenNavigationProp }) {
@@ -91,7 +93,11 @@ const JobsScreenHeader = ({
                 ) : null}
                 {isEditing ? (
                     <Pressable
-                        onPress={() => (combineEnabled ? onPressCombine() : Toast.show("Select more than one Job to combine them."))}
+                        onPress={() =>
+                            combineEnabled
+                                ? onPressCombine()
+                                : Toast.show('Select more than one Job to combine them.')
+                        }
                         style={[
                             tailwind('flex-row rounded-lg ml-2 mr-2 p-1 border-2 items-center'),
                             combineEnabled ? tailwind('bg-black') : null,
@@ -287,10 +293,11 @@ const JobsListHeader = ({
     );
 };
 
-export const JobsList = () => {
+export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
     const queryClient = useQueryClient();
     const [refreshing, setRefreshing] = useState(false);
     const [selectedJobs, setSelectedJobs] = useState<String[]>([]);
+    const [filter, setFilter] = useState<JobFilter>(inputFilters ? inputFilters : defaultJobFilter);
     const [isCombining, setIsCombining] = useState<boolean>(false);
     // True if user is in the process of combining jobs
     const [isEditing, setIsEditing] = useState<boolean>(false);
@@ -321,14 +328,41 @@ export const JobsList = () => {
 
     const onRefresh = () => {
         setRefreshing(true);
-        queryClient.invalidateQueries(['uncategorizedJobs', filter]);
+        queryClient.invalidateQueries(['filteredJobs', filter]);
     };
 
-    const { status, data, error, fetchNextPage, hasNextPage } = useUncategorizedJobs({
-        onSettled: () => {
-            setRefreshing(false);
-        },
-    });
+    const { status, data, error, fetchNextPage, hasNextPage } = useInfiniteQuery(
+        ['filteredJobs', filter],
+        getPaginatedUncategorizedJobs,
+        {
+            staleTime: 60,
+            notifyOnChangeProps: ['data'],
+            // keepPreviousData: true,
+            enabled: true,
+            getNextPageParam: (lastPage, pages) => {
+                console.log('last page:', lastPage);
+                console.log(lastPage);
+                return lastPage.allJobs.pageInfo.endCursor;
+            },
+            select: (d) => {
+                return d?.pages.map((a) => a.allJobs.edges).flat();
+            },
+            onSettled: () => setRefreshing(false),
+        }
+    );
+
+    useEffect(() => {
+        log.info('invalidating filtered jobs query...');
+        queryClient.invalidateQueries('filteredJobs');
+        LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
+        log.info('new filter:', filter);
+    }, [filter]);
+
+    useEffect(() => {
+        if (inputFilters) {
+            setFilter({ ...inputFilters });
+        }
+    }, [inputFilters]);
 
     // called after user combines jobs
     const onConfirmCombine = () => {
@@ -438,25 +472,6 @@ export const JobsList = () => {
         );
     };
 
-    const ListEmpty = () => {
-        return (
-            <View style={tailwind('h-full w-full p-1 items-center')}>
-                <Text style={tailwind('text-lg font-bold text-black p-2')}>
-                    All done! You don't have any trips!
-                </Text>
-                <Image
-                    style={tailwind('w-3/4 h-64 mt-10 mb-10 self-center')}
-                    resizeMode={'contain'}
-                    source={require('./loc-img.png')}
-                />
-                <Text style={tailwind('text-lg font-bold text-black p-2')}>
-                    Clock in and drive to automatically track your trips, and then return here to
-                    save your pay.
-                </Text>
-            </View>
-        );
-    };
-
     const FlatListJobItem = (props: { item: { node: Job } }) => {
         // Renders a Job Item with details, plus a radio button to its left if
         // the state variable 'isEditing' is true. Calls `selectOrUnselectJob` on radio button
@@ -475,68 +490,260 @@ export const JobsList = () => {
         );
     };
 
-    if (status == 'loading' || data === undefined) {
+    const JobFilters = () => {
         return (
-            <View style={tailwind('pt-10 flex-col w-full h-full items-center justify-center')}>
-                <AnimatedEllipsis
-                    numberOfDots={3}
-                    style={{
-                        minHeight: 50,
-                        color: '#1C1C1C',
-                        fontSize: 100,
-                    }}
+            <KeyboardAwareScrollView
+                horizontal={true}
+                style={tailwind('content-around flex-row flex-none border-b border-gray-200')}
+            >
+                <Text style={tailwind('font-bold text-lg text-center self-center')}>Filters:</Text>
+                <BinaryFilterPill
+                    displayText={'Needs Entry'}
+                    value={filter.needsEntry}
+                    onPress={() =>
+                        setFilter({
+                            ...filter,
+                            needsEntry: !filter.needsEntry ? true : false,
+                            saved: false,
+                        })
+                    }
                 />
-            </View>
-        );
-    } else {
-        return (
-            <View style={tailwind('pt-10 flex-col h-full bg-gray-100')}>
-                <StatusBar style="dark" />
-                <ConfirmDeleteModal />
-                <FlatList
-                    ListEmptyComponent={ListEmpty}
-                    ListHeaderComponent={
-                        <>
-                            <JobsScreenHeader
-                                isEditing={isEditing}
-                                onPress={toggleEditing}
-                                onPressDelete={() => setConfirmDeleteModalVisible(true)}
-                                onPressCombine={previewCombinedJobs}
-                                deleteEnabled={selectedJobs.length > 0}
-                                combineEnabled={selectedJobs.length > 1}
-                            />
-                            <JobsListHeader
-                                cancelCombine={() => {
-                                    LayoutAnimation.configureNext(
-                                        LayoutAnimation.create(100, 'linear', 'opacity')
-                                    );
-                                    setIsCombining(false);
-                                    setSelectedJobs([]);
-                                    setIsEditing(false)
-                                }}
-                                onConfirmCombine={onConfirmCombine}
-                                isCombining={isCombining}
-                                selectedJobs={selectedJobs}
-                                isVisible={selectedJobs.length > 0}
-                            />
-                        </>
+                <BinaryFilterPill
+                    displayText={'Saved'}
+                    value={filter.saved}
+                    onPress={() =>
+                        setFilter({
+                            ...filter,
+                            saved: !filter.saved ? true : false,
+                            needsEntry: false,
+                        })
                     }
-                    style={[tailwind('w-full flex-auto flex-col flex-grow pl-1 pr-1')]}
-                    data={data}
-                    renderItem={FlatListJobItem}
-                    refreshControl={
-                        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+                />
+                <BinaryFilterPill
+                    displayText={'Today'}
+                    value={
+                        // use 'hour' here because the endOf is not precise when parsed from a string, like from our route params (not sure why)
+                        (filter.startDate?.isSame(moment().startOf('day'), 'hour') &&
+                            filter.endDate?.isSame(moment().endOf('day'), 'hour')) ||
+                        false
                     }
-                    onEndReached={() => {
-                        console.log('reached end');
-                        if (hasNextPage) {
-                            console.log('fetching next page');
-                            fetchNextPage();
+                    onPress={() => {
+                        if (
+                            filter.startDate?.isSame(moment().startOf('day'), 'hour') &&
+                            filter.endDate?.isSame(moment().endOf('day'), 'hour')
+                        ) {
+                            setFilter({ ...filter, startDate: null, endDate: null });
+                        } else {
+                            setFilter({
+                                ...filter,
+                                startDate: moment().startOf('day'),
+                                endDate: moment().endOf('day'),
+                            });
                         }
                     }}
-                    keyExtractor={(job) => job.node.id}
-                ></FlatList>
+                />
+
+                <BinaryFilterPill
+                    displayText={'This Week'}
+                    value={
+                        (filter.startDate?.isSame(moment().startOf('week'), 'day') &&
+                            filter.endDate?.isSame(moment().endOf('day'), 'day')) ||
+                        false
+                    }
+                    onPress={() => {
+                        if (
+                            filter.startDate?.isSame(moment().startOf('week'), 'day') &&
+                            filter.endDate?.isSame(moment().endOf('day'), 'day')
+                        ) {
+                            setFilter({ ...filter, startDate: null, endDate: null });
+                        } else {
+                            setFilter({
+                                ...filter,
+                                startDate: moment().startOf('week'),
+                                endDate: moment().endOf('day'),
+                            });
+                        }
+                    }}
+                />
+                <BinaryFilterPill
+                    displayText={'This Month'}
+                    value={
+                        filter.startDate?.isSame(moment().startOf('month'), 'day') &&
+                        filter.endDate?.isSame(moment().endOf('day'), 'day')
+                    }
+                    onPress={() => {
+                        if (
+                            filter.startDate?.isSame(moment().startOf('month'), 'day') &&
+                            filter.endDate?.isSame(moment().endOf('day'), 'day')
+                        ) {
+                            setFilter({ ...filter, startDate: null, endDate: null });
+                        } else {
+                            setFilter({
+                                ...filter,
+                                startDate: moment().startOf('month'),
+                                endDate: moment().endOf('day'),
+                            });
+                        }
+                    }}
+                />
+
+                <DateRangeFilterPill
+                    displayText={'Date Range'}
+                    onDateRangeChange={(dates: {
+                        startDate: Moment | null;
+                        endDate: Moment | null;
+                    }) => {
+                        setFilter({ ...filter, ...dates });
+                    }}
+                    start={filter.startDate}
+                    end={filter.endDate}
+                    onPress={() => {
+                        console.log('pressed date pill');
+                    }}
+                />
+                <BinaryFilterPill
+                    displayText={'Past 30 Days'}
+                    value={
+                        filter.startDate?.isSame(moment().subtract(1, 'month').startOf('day')) &&
+                        filter.endDate?.isSame(moment().startOf('day'))
+                    }
+                    onPress={() => {
+                        if (
+                            filter.startDate?.isSame(
+                                moment().subtract(1, 'month').startOf('day')
+                            ) &&
+                            filter.endDate?.isSame(moment().startOf('day'))
+                        ) {
+                            setFilter({ ...filter, startDate: null, endDate: null });
+                        } else {
+                            setFilter({
+                                ...filter,
+                                startDate: moment().subtract(1, 'month').startOf('day'),
+                                endDate: moment().startOf('day'),
+                            });
+                        }
+                    }}
+                />
+            </KeyboardAwareScrollView>
+        );
+    };
+
+    const ListEmpty = () => {
+        return (
+            <View style={tailwind('h-full w-full p-1 items-center')}>
+                <Text style={tailwind('text-lg font-bold text-black p-2')}>
+                    All done! You don't have any trips!
+                </Text>
+                <Image
+                    style={tailwind('w-3/4 h-64 mt-10 mb-10 self-center')}
+                    resizeMode={'contain'}
+                    source={require('./loc-img.png')}
+                />
+                <Text style={tailwind('text-lg font-bold text-black p-2')}>
+                    Clock in and drive to automatically track your trips, and then return here to
+                    save your pay.
+                </Text>
             </View>
         );
-    }
+    };
+    const ListEmptyComponent = () => {
+        if (filter.needsEntry) {
+            return (
+                <View style={tailwind('h-full w-full p-1 items-center')}>
+                    <Text style={tailwind('text-lg font-bold text-black p-2')}>
+                        All done! You don't have any trips!
+                    </Text>
+                    <Image
+                        style={tailwind('w-3/4 h-64 mt-10 mb-10 self-center')}
+                        resizeMode={'contain'}
+                        source={require('./loc-img.png')}
+                    />
+                    <Text style={tailwind('text-lg font-bold text-black p-2')}>
+                        Clock in and drive to automatically track your trips, and then return here
+                        to save your pay.
+                    </Text>
+                </View>
+            );
+        }
+        if (status == 'loading') {
+            return <AnimatedEllipsis style={{ color: '#1c1c1c', fontSize: 100 }} />;
+        } else {
+            return (
+                <View style={tailwind('h-full w-full p-1 items-center justify-center')}>
+                    <Text style={tailwind('text-lg font-bold text-black p-2')}>No Jobs found!</Text>
+                    <Image
+                        style={tailwind('w-3/4 h-64 mt-10 mb-10 self-center')}
+                        resizeMode={'contain'}
+                        source={require('./loc-img.png')}
+                    />
+                </View>
+            );
+        }
+    };
+
+    return (
+        <View style={tailwind('pt-10 flex-col h-full bg-gray-100')}>
+            <StatusBar style="dark" />
+            <ConfirmDeleteModal />
+            <FlatList
+                ListEmptyComponent={ListEmptyComponent}
+                ListFooterComponent={() => {
+                    return (
+                        <View style={tailwind('flex-row p-2 items-center justify-center')}>
+                            <Text style={tailwind('text-black font-bold text-lg')}>
+                                {data?.length} Jobs
+                            </Text>
+                        </View>
+                    );
+                }}
+                ListHeaderComponent={
+                    <>
+                        <JobsScreenHeader
+                            isEditing={isEditing}
+                            onPress={toggleEditing}
+                            onPressDelete={() => setConfirmDeleteModalVisible(true)}
+                            onPressCombine={previewCombinedJobs}
+                            deleteEnabled={selectedJobs.length > 0}
+                            combineEnabled={selectedJobs.length > 1}
+                        />
+                        <JobsListHeader
+                            cancelCombine={() => {
+                                LayoutAnimation.configureNext(
+                                    LayoutAnimation.create(100, 'linear', 'opacity')
+                                );
+                                setIsCombining(false);
+                                setSelectedJobs([]);
+                                setIsEditing(false);
+                            }}
+                            onConfirmCombine={onConfirmCombine}
+                            isCombining={isCombining}
+                            selectedJobs={selectedJobs}
+                            isVisible={selectedJobs.length > 0}
+                        />
+                        <View style={tailwind('w-full border-t border-b border-gray-200')}>
+                            <JobFilters />
+                        </View>
+                    </>
+                }
+                style={[tailwind('w-full flex-auto flex-col flex-grow pl-1 pr-1')]}
+                data={data}
+                renderItem={FlatListJobItem}
+                refreshControl={
+                    <RefreshControl
+                        refreshing={refreshing || status === 'loading'}
+                        onRefresh={onRefresh}
+                    />
+                }
+                refreshing={status === 'loading'}
+                onEndReached={() => {
+                    console.log('reached end');
+                    if (hasNextPage) {
+                        console.log('fetching next page');
+                        fetchNextPage();
+                    }
+                }}
+                keyExtractor={(job) => job.node.id}
+            ></FlatList>
+        </View>
+    );
 };

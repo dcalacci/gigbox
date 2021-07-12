@@ -1,4 +1,4 @@
-import { useInfiniteQuery, useMutation } from 'react-query';
+import { QueryKey, useInfiniteQuery, useMutation } from 'react-query';
 import { getClient } from '../../utils';
 import { store } from '../../store/store';
 import { gql } from 'graphql-request';
@@ -6,26 +6,13 @@ import { JobFilter, SortArgs } from '../job/JobList';
 import { Employers, Job } from '../../types';
 
 import { coreJobQuery, createFilterString } from '../job/api';
+// Getting paginated "trips"
+const N = 10;
 
-export const useUncategorizedJobs = ({ onSettled }: { onSettled: () => void }) => {
-    return useInfiniteQuery<
-        { allJobs: { edges: { node: Job }[] }; pageInfo: { endCursor: String } },
-        Error
-    >(['uncategorizedJobs', filter], getPaginatedUncategorizedJobs, {
-        notifyOnChangeProps: ['data'],
-        staleTime: 60,
-        // keepPreviousData: true,
-        enabled: true,
-        getNextPageParam: (lastPage, pages) => {
-            console.log('last page:', lastPage);
-            console.log(lastPage);
-            return lastPage.allJobs.pageInfo.endCursor;
-        },
-        select: (d) => {
-            return d?.pages.map((a) => a.allJobs.edges).flat();
-        },
-        onSettled: onSettled,
-    });
+export const defaultJobFilter: JobFilter = {
+    needsEntry: true,
+    saved: false,
+    sort: SortArgs.START,
 };
 
 export const useMergedTripsPreview = () => {
@@ -90,17 +77,14 @@ export const mergeJobs = async ({
     return client.request(query, variables);
 };
 
-// Getting paginated "trips"
-const N = 5;
-export const filter: JobFilter = {
-    needsEntry: true,
-    saved: false,
-    sort: SortArgs.START,
-};
-const getPaginatedUncategorizedJobs = async ({
+export const getPaginatedUncategorizedJobs = async ({
     pageParam = null,
+    queryKey
+}: {
+    pageParam: string | null;
+    queryKey: QueryKey;
 }): Promise<{ allJobs: { edges: { node: Job }[] }; pageInfo: { endCursor: String } }> => {
-    console.log('Page params:', pageParam);
+    const filter = queryKey[1] as JobFilter
     const filterString = createFilterString(filter);
     const query = gql`query AllJobs($after: String, $first: Int) {
             allJobs(filters: ${filterString}, sort: START_TIME_DESC, first: $first, after: $after) {

@@ -52,7 +52,7 @@ const defaultFilter: JobFilter = {
     sort: undefined,
 };
 
-const DateRangeFilterPill = ({
+export const DateRangeFilterPill = ({
     displayText,
     onPress,
     onDateRangeChange,
