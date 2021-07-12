@@ -269,10 +269,10 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
         <View style={tailwind('flex-col')}>
             <View style={tailwind('flex-row p-2 justify-between mt-5')}>
                 <View style={tailwind('flex-row justify-start')}>
-                    <Text style={tailwind('text-3xl text-green-500 font-bold')}>
+                    <Text style={tailwind('text-4xl text-green-500 font-bold')}>
                         {allJobs.edges.length}
                     </Text>
-                    <Text style={tailwind('text-3xl font-bold')}> Jobs</Text>
+                    <Text style={tailwind('text-4xl font-bold')}> Jobs</Text>
                 </View>
                 <Pressable
                     style={tailwind('rounded-lg bg-green-500 p-2 flex-row')}

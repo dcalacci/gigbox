@@ -26,7 +26,6 @@ import { useEffect } from 'react';
 import moment from 'moment';
 import AnimatedEllipsis from '../../components/Ellipsis';
 import { StatusBar } from 'expo-status-bar';
-
 const TripsStack = createStackNavigator();
 
 export default function TripsScreen({ navigation }: { navigation: TripsScreenNavigationProp }) {
@@ -56,16 +55,16 @@ export default function TripsScreen({ navigation }: { navigation: TripsScreenNav
 }
 
 const TripScreenHeader = ({
-    canMerge,
-    isMerging,
+    canCombine,
+    isCombining,
     onPress,
 }: {
-    canMerge: boolean;
-    isMerging: boolean;
+    canCombine: boolean;
+    isCombining: boolean;
     onPress: () => void;
 }) => {
-    const MergeButton = () =>
-        isMerging ? (
+    const CombineButton = () =>
+        isCombining ? (
             <Pressable
                 onPress={onPress}
                 style={[tailwind('flex-row rounded-lg p-2 border items-center')]}
@@ -77,46 +76,44 @@ const TripScreenHeader = ({
                 onPress={onPress}
                 style={[tailwind('flex-row rounded-lg p-2 bg-black items-center')]}
             >
-                <Text style={tailwind('text-white font-bold')}>Merge</Text>
+                <Text style={tailwind('text-white font-bold')}>Combine</Text>
                 <Ionicons name="git-merge" color="white" size={16} />
             </Pressable>
         );
     return (
         <View style={tailwind('flex-col w-full bg-gray-100')}>
             <View style={tailwind('flex-row p-2 mt-5 justify-between')}>
-                <Text style={[tailwind('text-4xl font-bold')]}>Trips</Text>
-                {canMerge ? <MergeButton /> : null}
+                <Text style={[tailwind('text-4xl font-bold')]}>Jobs</Text>
+                {canCombine ? <CombineButton /> : null}
             </View>
         </View>
     );
 };
 
 const TripListHeader = ({
-    cancelMerge,
-    isMerging,
+    cancelCombine,
+    isCombining,
     selectedJobs,
     isVisible,
-    onConfirmMerge,
+    onConfirmCombine,
 }: {
-    cancelMerge: () => void;
-    isMerging: boolean;
+    cancelCombine: () => void;
+    isCombining: boolean;
     selectedJobs: String[];
     isVisible: boolean;
-    onConfirmMerge: () => void;
+    onConfirmCombine: () => void;
 }) => {
     const [jobPreview, setJobPreview] = useState<Job>();
     const [totalPay, setTotalPay] = useState<number>();
     const [tip, setTip] = useState<number>();
     const [employer, setEmployer] = useState<Employers>();
     const [dryRun, setDryRun] = useState<boolean>(true);
-    const [successfulMerge, setSuccessfulMerge] = useState<boolean>(false);
 
     const { mutate, status } = useMutation(mergeJobs, {
         onSuccess: async (data, v, c) => {
             setJobPreview(data.mergeJobs.mergedJob);
             if (v.dryRun == false) {
-                onConfirmMerge();
-                setSuccessfulMerge(true);
+                onConfirmCombine();
                 Toast.show(`Successfully merged ${selectedJobs.length} trips!`);
             }
         },
@@ -128,7 +125,7 @@ const TripListHeader = ({
 
     // create a dry-run preview each time our selected jobs changes
     useEffect(() => {
-        if (selectedJobs.length > 1) {
+        if (selectedJobs.length > 0) {
             setDryRun(true);
             mutate({
                 jobIds: selectedJobs,
@@ -151,7 +148,7 @@ const TripListHeader = ({
         }
     }, [totalPay, tip, employer]);
 
-    const MergedTripPreview = () => {
+    const CombinedTripPreview = () => {
         if (jobPreview !== undefined) {
             const startTimeText = moment.utc(jobPreview.startTime).local().format('LT');
             const endTimeText = moment.utc(jobPreview.endTime).local().format('LT');
@@ -175,12 +172,7 @@ const TripListHeader = ({
         }
     };
 
-    const confirmMerge = () => {
-        console.log('merging job with values:', jobPreview);
-        console.log(employer);
-        console.log(totalPay);
-        console.log(tip);
-        console.log(selectedJobs);
+    const confirmCombine = () => {
         setDryRun(false);
         if (jobPreview !== undefined) {
             mutate({
@@ -197,12 +189,12 @@ const TripListHeader = ({
 
     return (
         <View style={tailwind('flex-col w-full')}>
-            {isMerging ? (
+            {isCombining ? (
                 <View style={tailwind('flex-col rounded-lg bg-white m-1 p-2 items-center')}>
                     {isVisible ? (
                         <>
                             <Text style={tailwind('font-bold text-lg')}>
-                                Merge these {selectedJobs.length} trips?
+                                Combine these {selectedJobs.length} trips?
                             </Text>
                             {status === 'success' && !dryRun ? (
                                 <Text style={tailwind('text-black font-bold text-xl')}>
@@ -212,12 +204,12 @@ const TripListHeader = ({
                             {status === 'loading' && !dryRun ? (
                                 <Text style={tailwind('text-black font-bold')}>Loading...</Text>
                             ) : (
-                                <MergedTripPreview />
+                                <CombinedTripPreview />
                             )}
                             <View style={tailwind('flex-row items-center')}>
                                 <Pressable
                                     onPress={() => {
-                                        cancelMerge();
+                                        cancelCombine();
                                     }}
                                     style={tailwind('border rounded-lg p-1 pl-2 pr-2 m-2 ')}
                                 >
@@ -226,17 +218,17 @@ const TripListHeader = ({
                                     </Text>
                                 </Pressable>
                                 <Pressable
-                                    onPress={confirmMerge}
+                                    onPress={confirmCombine}
                                     style={tailwind('bg-black rounded-lg p-1 pl-2 pr-2 m-2 ')}
                                 >
                                     <Text style={tailwind('text-white text-lg font-bold')}>
-                                        Merge
+                                        Combine 
                                     </Text>
                                 </Pressable>
                             </View>
                         </>
                     ) : (
-                        <Text style={tailwind('font-bold text-lg')}>Select trips to merge.</Text>
+                        <Text style={tailwind('font-bold text-lg')}>Select trips to combine.</Text>
                     )}
                 </View>
             ) : null}
@@ -248,7 +240,7 @@ export const TripList = () => {
     const queryClient = useQueryClient();
     const [refreshing, setRefreshing] = useState(false);
     const [selectedJobs, setSelectedJobs] = useState<String[]>([]);
-    const [isMerging, setIsMerging] = useState<boolean>(false);
+    const [isCombining, setIsMerging] = useState<boolean>(false);
 
     const onRefresh = () => {
         setRefreshing(true);
@@ -262,7 +254,7 @@ export const TripList = () => {
         },
     });
 
-    const onConfirmMerge = () => {
+    const onConfirmCombine = () => {
         setSelectedJobs([]);
         setIsMerging(false);
         onRefresh();
@@ -270,8 +262,8 @@ export const TripList = () => {
 
     const toggleMerging = () => {
         LayoutAnimation.configureNext(LayoutAnimation.create(100, 'linear', 'opacity'));
-        setIsMerging(!isMerging);
-        if (!isMerging) {
+        setIsMerging(!isCombining);
+        if (!isCombining) {
             setSelectedJobs([]);
         }
     };
@@ -338,13 +330,12 @@ export const TripList = () => {
                     style={{
                         minHeight: 50,
                         color: '#1C1C1C',
-                        fontSize: 100
+                        fontSize: 100,
                     }}
                 />
             </View>
         );
     } else {
-        console.log('DATA', data.length);
         return (
             <View style={tailwind('pt-10 flex-col h-full bg-gray-100')}>
                 <StatusBar style="dark" />
@@ -353,22 +344,22 @@ export const TripList = () => {
                     ListHeaderComponent={
                         <>
                             <TripScreenHeader
-                                canMerge={data.length > 0}
-                                isMerging={isMerging}
+                                canCombine={data.length > 0}
+                                isCombining={isCombining}
                                 onPress={toggleMerging}
                             />
                             <TripListHeader
-                                cancelMerge={() => {
+                                cancelCombine={() => {
                                     LayoutAnimation.configureNext(
                                         LayoutAnimation.create(100, 'linear', 'opacity')
                                     );
                                     setIsMerging(false);
                                     setSelectedJobs([]);
                                 }}
-                                onConfirmMerge={onConfirmMerge}
-                                isMerging={isMerging}
+                                onConfirmCombine={onConfirmCombine}
+                                isCombining={isCombining}
                                 selectedJobs={selectedJobs}
-                                isVisible={selectedJobs.length > 1}
+                                isVisible={selectedJobs.length > 0}
                             />
                         </>
                     }
@@ -380,14 +371,14 @@ export const TripList = () => {
                                 key={props.item.node.id}
                                 style={tailwind('flex-row w-full m-0 p-0 items-center')}
                             >
-                                {isMerging ? (
+                                {isCombining ? (
                                     <MergingRadioButton
                                         onPress={() => onPressTripSelector(props.item.node.id)}
                                         style={tailwind('p-2')}
                                         jobId={props.item.node.id}
                                     />
                                 ) : null}
-                                <TripItem job={props.item.node} displayDetails={false} />
+                                <TripItem job={props.item.node} displayDetails={true} />
                             </View>
                         )
                     }

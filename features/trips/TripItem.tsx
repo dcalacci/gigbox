@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, Text, Pressable, TextInput, StyleSheet } from 'react-native';
+import { View, Text, Pressable, TextInput, StyleSheet, Animated } from 'react-native';
 import { tailwind } from 'tailwind';
 import { Region, Marker, LatLng } from 'react-native-maps';
 import moment from 'moment';
@@ -7,6 +7,7 @@ import { Employers, Job } from '../../types';
 import { parse } from 'wellknown';
 import TripMap from '../shiftList/TripMap';
 import { log } from '../../utils';
+import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 import { useNavigation } from '@react-navigation/core';
 
@@ -86,28 +87,24 @@ export const TripItem = ({
         };
 
         return (
-            <View style={[tailwind('flex flex-col m-1')]}>
-                <Text style={tailwind('text-xs text-black p-0 m-0')}>{label}</Text>
+            <View style={[tailwind('flex flex-col m-1 w-20')]}>
+                <Text style={tailwind('text-xs text-black m-0 p-0')}>{label}</Text>
                 <View
                     style={[
-                        tailwind('rounded-lg flex-row w-24 items-center'),
-                        isFocused ? tailwind('border-2') : null,
-                        tailwind('bg-gray-100'),
+                        tailwind('rounded-lg flex-row items-center bg-gray-100 pl-1 pr-1 pb-1'),
+                        isFocused ? tailwind('border') : null,
                     ]}
                 >
-                    <Text style={[tailwind('ml-2 text-lg flex-auto'), tailwind('text-black')]}>
+                    <Text style={[tailwind('text-lg self-end flex-grow-0'), tailwind('text-black')]}>
                         {prefix}
                     </Text>
                     <TextInput
                         style={[
-                            tailwind('text-lg mb-2 text-black w-full flex-auto'),
-                            displayValue == undefined
-                                ? tailwind('border-b-2')
-                                : tailwind('font-bold underline'),
+                            tailwind('text-base text-black flex-grow border-b'),
                         ]}
                         key={`${value}`}
                         onChangeText={setFormattedValue}
-                        maxLength={5}
+                        maxLength={6}
                         keyboardType={'decimal-pad'}
                         onSubmitEditing={onSubmit}
                         onEndEditing={onSubmit}
@@ -119,7 +116,7 @@ export const TripItem = ({
                     </TextInput>
                     <Text
                         style={[
-                            tailwind('flex-grow font-bold pt-2 mr-4'),
+                            tailwind('flex-initial font-bold mr-4'),
                             displayValue == undefined
                                 ? tailwind('text-black')
                                 : tailwind('font-bold'),
@@ -190,7 +187,7 @@ export const TripItem = ({
             <View style={tailwind('m-1 pl-2 pr-2')}>
                 <Text style={tailwind('text-xs text-black p-0 m-0')}>Service</Text>
                 <Pressable
-                    style={tailwind('flex flex-col rounded-lg w-40 flex-col bg-gray-100 p-2')}
+                    style={tailwind('flex flex-col rounded-lg w-40 flex-col bg-gray-100 p-1')}
                     onPress={() => setOpen(true)}
                 >
                     <ModalPicker
@@ -217,61 +214,104 @@ export const TripItem = ({
         );
     };
 
+    const leftSwipe = (progress, dragX) => {
+        const scale = dragX.interpolate({
+            inputRange: [0, 100],
+            outputRange: [0, 1],
+            extrapolate: 'clamp',
+        });
+        return (
+            <View style={tailwind('flex-row h-full p-2')}>
+                <Pressable
+                    style={tailwind('flex bg-black rounded-lg m-2 p-5 items-center justify-center')}
+                    onPress={() => console.log('pressed delete')}
+                >
+                    <Animated.Text
+                        style={[
+                            tailwind('text-white font-bold'),
+                            { transform: [{ scale: scale }] },
+                        ]}
+                    >
+                        Delete
+                    </Animated.Text>
+                </Pressable>
+                <Pressable
+                    style={tailwind('flex bg-black rounded-lg m-2 p-5 items-center justify-center')}
+                    onPress={() => console.log('pressed delete')}
+                >
+                    <Animated.Text
+                        style={[
+                            tailwind('text-white font-bold'),
+                            { transform: [{ scale: scale }] },
+                        ]}
+                    >
+                        Select
+                    </Animated.Text>
+                </Pressable>
+            </View>
+        );
+    };
+
     return (
-        <Pressable
-            style={[
-                tailwind('flex-col w-full mt-2 mb-2 bg-white rounded-lg'),
-                { overflow: 'hidden' },
-            ]}
-            onPress={() => {
-                log.info('Navigating to job detail', job);
-                navigation.navigate('Trip Detail', { job: job });
-            }}
+        <Swipeable
+            //TODO: if details are disabled, don't make it swipeable
+            renderLeftActions={leftSwipe}
         >
-            <View
+            <Pressable
                 style={[
-                    tailwind('flex-col w-full m-0'),
-                    displayDetails ? tailwind('h-44') : tailwind('h-24'),
+                    tailwind('flex-col w-full mt-2 mb-2 bg-white rounded-lg'),
+                    { overflow: 'hidden' },
                 ]}
+                onPress={() => {
+                    log.info('Navigating to job detail', job);
+                    navigation.navigate('Trip Detail', { job: job });
+                }}
             >
-                <View style={tailwind('flex-row flex-none')}>
-                    <View style={[tailwind('h-full w-1/3')]}>
-                        {locations && region ? <Map /> : <Text>No locations...</Text>}
-                    </View>
-                    <View style={tailwind('flex-col w-2/3')}>
-                        <RowHeader />
-                        {displayDetails ? (
-                            <>
-                                <View style={[tailwind('flex flex-row pl-2 pr-2')]}>
-                                    <JobDetail
-                                        label={'Total Pay'}
-                                        value={job.totalPay}
-                                        prefix={'$ '}
-                                        suffix={''}
-                                        placeholder={''}
-                                        onChangeValue={setTotalPay}
-                                    ></JobDetail>
-                                    <JobDetail
-                                        label={'Tip'}
-                                        value={job.tip}
-                                        prefix={'$ '}
-                                        suffix={''}
-                                        placeholder={''}
-                                        onChangeValue={setTip}
-                                    ></JobDetail>
-                                </View>
-                                <EmployerModalPicker
-                                    job={job}
-                                    onEmployerChange={(e: Employers) => {
-                                        if (setEmployer) setEmployer(e);
-                                    }}
-                                />
-                            </>
-                        ) : null}
+                <View
+                    style={[
+                        tailwind('flex-col w-full m-0'),
+                        displayDetails ? tailwind('h-44') : tailwind('h-24'),
+                    ]}
+                >
+                    <View style={tailwind('flex-row flex-none')}>
+                        <View style={[tailwind('h-full w-1/3')]}>
+                            {locations && region ? <Map /> : <Text>No locations...</Text>}
+                        </View>
+                        <View style={tailwind('flex-col w-2/3')}>
+                            <RowHeader />
+                            {displayDetails ? (
+                                <>
+                                    <View style={[tailwind('flex flex-row pl-2 pr-2')]}>
+                                        <JobDetail
+                                            label={'Pay'}
+                                            value={job.totalPay}
+                                            prefix={'$ '}
+                                            suffix={''}
+                                            placeholder={''}
+                                            onChangeValue={setTotalPay}
+                                        ></JobDetail>
+                                        <JobDetail
+                                            label={'Tip'}
+                                            value={job.tip}
+                                            prefix={'$ '}
+                                            suffix={''}
+                                            placeholder={''}
+                                            onChangeValue={setTip}
+                                        ></JobDetail>
+                                    </View>
+                                    <EmployerModalPicker
+                                        job={job}
+                                        onEmployerChange={(e: Employers) => {
+                                            if (setEmployer) setEmployer(e);
+                                        }}
+                                    />
+                                </>
+                            ) : null}
+                        </View>
                     </View>
                 </View>
-            </View>
-        </Pressable>
+            </Pressable>
+        </Swipeable>
     );
 };
 const styles = StyleSheet.create({
