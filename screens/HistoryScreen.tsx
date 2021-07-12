@@ -4,7 +4,7 @@ import { StyleSheet, View, Text } from 'react-native';
 import moment from 'moment';
 
 import { StatusBar } from 'expo-status-bar';
-import { JobFilterList, JobFilter } from '../features/job/JobList';
+import { JobFilterList } from '../features/history/JobList';
 import tailwind from 'tailwind-rn';
 
 export default function HistoryScreen({ route }) {

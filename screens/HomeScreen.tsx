@@ -9,7 +9,7 @@ import SurveyCard from '../features/surveys/Surveycard'
 import WeeklyCard from '../features/weeklySummary/WeeklyCard';
 import {
     getFilteredJobs,
-} from '../features/job/api';
+} from '../features/jobs/api';
 import { useNumTrackedShifts } from '../features/clock/api';
 import { Job, RootStackParamList, HomeScreenNavigationProp } from '../types';
 import moment from 'moment';

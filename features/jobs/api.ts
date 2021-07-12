@@ -2,7 +2,7 @@ import { gql } from 'graphql-request';
 import { getClient } from '../../utils';
 import { store } from '../../store/store';
 import { QueryKey, useQuery, UseQueryResult } from 'react-query';
-import { JobFilterList, JobFilter, SortArgs } from './JobList';
+import { JobFilterList, JobFilter, SortArgs } from '../job/JobList';
 import { Job, Employers } from '@/types';
 import moment from 'moment';
 

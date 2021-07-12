@@ -26,7 +26,7 @@ import { useEffect } from 'react';
 import moment, { Moment } from 'moment';
 import AnimatedEllipsis from '../../components/Ellipsis';
 import { StatusBar } from 'expo-status-bar';
-import { deleteJob } from '../job/api';
+import { deleteJob } from './api';
 import { DateRangeFilterPill, JobFilter } from '../job/JobList';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import BinaryFilterPill from '../../components/BinaryFilterPill';

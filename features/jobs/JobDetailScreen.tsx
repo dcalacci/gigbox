@@ -9,7 +9,7 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { tailwind } from 'tailwind';
 import { Job } from '@/types';
-import { JobItem } from '../job/Job';
+import { JobItem } from './Job';
 
 const JobDetailScreenHeader = ({ isMerging, onPress }: { isMerging: boolean; onPress: () => void }) => {
     return (

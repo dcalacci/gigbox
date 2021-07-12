@@ -5,7 +5,7 @@ import { gql } from 'graphql-request';
 import { JobFilter, SortArgs } from '../job/JobList';
 import { Employers, Job } from '../../types';
 
-import { coreJobQuery, createFilterString } from '../job/api';
+import { coreJobQuery, createFilterString } from './api';
 // Getting paginated "trips"
 const N = 10;
 
