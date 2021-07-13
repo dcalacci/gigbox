@@ -695,12 +695,12 @@ class DeleteJob(Mutation):
     message = Field(lambda: String, description="Any error or success message")
 
     class Arguments:
-        job_id = List(ID)
+        job_id = graphene.Argument(ID, required=True)
 
     @login_required
     def mutate(self, info, job_id):
-        job_id = from_global_id(job_id)[1]
-        job = JobModel.query.get(id=job_id)
+        id = from_global_id(job_id)[1]
+        job = JobModel.query.get(id)
         if not job:
             return DeleteJob(ok=False, message="Either that job doesn't exist or you don't have access to it.")
         else:
