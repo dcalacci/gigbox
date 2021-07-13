@@ -139,21 +139,7 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
 
     return (
         <>
-            <View style={tailwind('p-5 pt-10 flex-col')}>
-                {JobFilterListHeader}
-                <View style={tailwind('border-b border-gray-200 h-1 mb-2 mr-5 ml-5')} />
-            </View>
-            {filteredJobsStatus.isLoading ||
-            filteredJobsStatus.isError ||
-            filteredJobsStatus.data.allJobs.edges.length === 0 ? (
-                <View style={tailwind('flex-col flex-grow justify-center items-center')}>
-                    <Text style={tailwind('text-xl font-bold text-black pt-20')}>
-                        No Jobs that match your filters!
-                    </Text>
-                </View>
-            ) : (
-                <JobList jobs={filteredJobsStatus.data.allJobs.edges}></JobList>
-            )}
+            <View style={tailwind('p-5 pt-10 flex-col')}>{JobFilterListHeader}</View>
         </>
     );
 };

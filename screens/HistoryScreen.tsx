@@ -5,6 +5,7 @@ import moment from 'moment';
 
 import { StatusBar } from 'expo-status-bar';
 import { JobFilterList } from '../features/history/JobList';
+import NetPayCard from '../features/history/NetPayCard';
 import tailwind from 'tailwind-rn';
 
 export default function HistoryScreen({ route }) {
@@ -19,10 +20,11 @@ export default function HistoryScreen({ route }) {
           }
         : undefined;
     return (
-        <View style={tailwind('bg-gray-100 items-center justify-start flex-col')}>
+        <View style={tailwind('bg-gray-100 items-center justify-start flex-col h-full')}>
             <StatusBar style="dark" />
             {/* <Text style={styles.title}>Jobs</Text> */}
             <JobFilterList inputFilters={filter} />
+            <NetPayCard/>
         </View>
     );
 }
