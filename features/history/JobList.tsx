@@ -8,7 +8,6 @@ import moment from 'moment';
 import { Ionicons } from '@expo/vector-icons';
 import { Job } from '../../types';
 import { getFilteredJobs, exportJobs } from '../jobs/api';
-import { JobItem } from '../jobs/Job';
 import { uri as API_URI } from '../../utils';
 import { defaultFilter, JobFilter } from '../../components/FilterPills';
 

@@ -26,7 +26,7 @@ import { useEffect } from 'react';
 import moment, { Moment } from 'moment';
 import AnimatedEllipsis from '../../components/Ellipsis';
 import { StatusBar } from 'expo-status-bar';
-import { deleteJob } from './api';
+import { deleteJob, updateJobValue } from './api';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import BinaryFilterPill from '../../components/BinaryFilterPill';
 import { DateRangeFilterPill, JobFilter } from '../../components/FilterPills';
@@ -168,6 +168,11 @@ const JobsListHeader = ({
 
     const { mutate, status } = useMutation(mergeJobs, {
         onSuccess: async (data, v, c) => {
+            // make sure the ID is null if it's a "dry run" --
+            // we don't want to alter an existing job
+            if (v.dryRun) {
+                data.mergeJobs.mergedJob.id = null;
+            }
             setJobPreview(data.mergeJobs.mergedJob);
             if (v.dryRun == false) {
                 onConfirmCombine();
@@ -218,6 +223,7 @@ const JobsListHeader = ({
                     <JobItem
                         job={jobPreview}
                         displayDetails={true}
+                        submitChanges={false}
                         setEmployer={setEmployer}
                         setTotalPay={(s) => setTotalPay(parseFloat(s))}
                         setTip={(s) => setTip(parseFloat(s))}
@@ -486,7 +492,7 @@ export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
                         jobId={props.item.node.id}
                     />
                 ) : null}
-                <JobItem job={props.item.node} displayDetails={true} />
+                <JobItem job={props.item.node} displayDetails={true} submitChanges={true} />
             </View>
         );
     };

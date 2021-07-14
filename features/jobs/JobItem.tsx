@@ -11,7 +11,12 @@ import Swipeable from 'react-native-gesture-handler/Swipeable';
 
 import { useNavigation } from '@react-navigation/core';
 
-import ModalPicker from '../../components/ModalPicker';
+import { updateJobEmployer, updateJobValue } from './api';
+import { useMutation } from 'react-query';
+import EmployerModalPicker from './EmployerModalPicker';
+import JobDetail from './JobDetail';
+import ScreenshotUploader from './ScreenshotPicker';
+import { Screenshots } from './JobDetailScreen';
 
 export const JobItem = ({
     job,
@@ -19,15 +24,22 @@ export const JobItem = ({
     setEmployer,
     setTotalPay,
     setTip,
+    submitChanges = true,
+    showMap = true,
+    showScreenshots = false,
 }: {
     job: Job;
-    displayDetails: boolean;
-    setEmployer?: (e: Employers) => void;
-    setTotalPay?: (s: string) => void;
-    setTip?: (s: string) => void;
+    displayDetails: boolean; // whether to display job details
+    submitChanges?: boolean; // whether to submit changes to server
+    setEmployer?: (e: Employers) => void; // callback to set employer
+    setTotalPay?: (p: string) => void; // callback to set total pay
+    setTip?: (t: string) => void; // callback to set tip
+    showMap?: boolean; // whether to show map
+    showScreenshots?: boolean;
 }) => {
     const [region, setRegion] = useState<Region>();
     const [locations, setLocations] = useState<LatLng[]>();
+    const [modalVisible, setModalVisible] = useState(false);
 
     const navigation = useNavigation();
     useEffect(() => {
@@ -47,85 +59,33 @@ export const JobItem = ({
         }
     }, [job.snappedGeometry]);
 
-    const JobDetail = ({
-        label,
-        value,
-        prefix,
-        suffix,
-        placeholder,
-        onChangeValue,
-    }: {
-        label: string;
-        value: number | string | undefined;
-        prefix: string;
-        suffix: string;
-        placeholder: string;
-        onChangeValue: ((v: string) => void) | undefined;
-    }) => {
-        const [displayValue, setDisplayValue] = useState<string>();
-        const [isFocused, setFocused] = useState<boolean>();
-        // set value from our input, and submit mutation
-        useEffect(() => {
-            if (value) {
-                setDisplayValue(
-                    typeof value === 'number' ? value.toFixed(2) : parseFloat(value).toFixed(2)
-                );
-            }
-        }, [value]);
+    const submitJobValue = useMutation(['job'], updateJobValue, {
+        onSuccess: (d) => {
+            log.info('Successfully updated job value:', d);
+        },
+    });
 
-        const setFormattedValue = (input: string) => {
-            console.log('Setting formatted val:', input);
-            setDisplayValue(input);
-        };
-
-        const onSubmit = () => {
-            if (displayValue) {
-                const val = parseFloat(displayValue).toFixed(2);
-                if (onChangeValue) onChangeValue(val);
-            }
-        };
-
-        return (
-            <View style={[tailwind('flex flex-col m-1 w-20')]}>
-                <Text style={tailwind('text-xs text-black m-0 p-0')}>{label}</Text>
-                <View
-                    style={[
-                        tailwind('rounded-lg flex-row items-center bg-gray-100 pl-1 pr-1 pb-1'),
-                        isFocused ? tailwind('border') : null,
-                    ]}
-                >
-                    <Text style={[tailwind('text-lg self-end flex-grow-0'), tailwind('text-black')]}>
-                        {prefix}
-                    </Text>
-                    <TextInput
-                        style={[
-                            tailwind('text-base text-black flex-grow border-b'),
-                        ]}
-                        key={`${value}`}
-                        onChangeText={setFormattedValue}
-                        maxLength={6}
-                        keyboardType={'decimal-pad'}
-                        onSubmitEditing={onSubmit}
-                        onEndEditing={onSubmit}
-                        returnKeyType={'done'}
-                        onFocus={() => setFocused(true)}
-                        onBlur={() => setFocused(false)}
-                    >
-                        {displayValue}
-                    </TextInput>
-                    <Text
-                        style={[
-                            tailwind('flex-initial font-bold mr-4'),
-                            displayValue == undefined
-                                ? tailwind('text-black')
-                                : tailwind('font-bold'),
-                        ]}
-                    >
-                        {suffix}
-                    </Text>
-                </View>
-            </View>
-        );
+    const updateJobPay = (totalPay: string) => {
+        if (submitChanges) {
+            return submitJobValue.mutate({
+                jobId: job.id,
+                mutationKey: 'setJobTotalPay',
+                key: 'totalPay',
+                value: totalPay,
+            });
+        }
+        if (setTotalPay) setTotalPay(totalPay);
+    };
+    const updateJobTip = (tip: string) => {
+        if (submitChanges) {
+            return submitJobValue.mutate({
+                jobId: job.id,
+                mutationKey: 'setJobTip',
+                key: 'tip',
+                value: tip,
+            });
+        }
+        if (setTip) setTip(tip);
     };
 
     // it's expensive to render, so we use useCallback
@@ -157,7 +117,7 @@ export const JobItem = ({
     );
 
     const RowHeader = () => (
-        <View style={tailwind('flex-row p-2 justify-between')}>
+        <View style={tailwind('flex-row p-1 pl-2 pr-2 justify-between')}>
             <View style={tailwind('flex-col')}>
                 <Text style={tailwind('font-bold')}>
                     {moment.utc(job.startTime).local().format('LL')}{' '}
@@ -172,123 +132,47 @@ export const JobItem = ({
         </View>
     );
 
-    const EmployerModalPicker = ({
-        job,
-        onEmployerChange,
-    }: {
-        job: Job;
-        onEmployerChange: (e: Employers) => void;
-    }) => {
-        const [selectedEmployer, setSelectedEmployer] = useState<String | undefined>(job.employer);
-        const [open, setOpen] = useState<boolean>(false);
-
-        return (
-            <View style={tailwind('m-1 pl-2 pr-2')}>
-                <Text style={tailwind('text-xs text-black p-0 m-0')}>Service</Text>
-                <Pressable
-                    style={tailwind('flex flex-col rounded-lg w-40 flex-col bg-gray-100 p-1')}
-                    onPress={() => setOpen(true)}
-                >
-                    <ModalPicker
-                        options={Object.keys(Employers)}
-                        onSelectOption={(option) => {
-                            setSelectedEmployer(option);
-                            setOpen(false);
-                            if (option === 'Select Service') {
-                                return;
-                            } else {
-                                const enumEmployer: Employers = option;
-                                onEmployerChange(enumEmployer);
-                            }
-                        }}
-                        onClose={() => setOpen(false)}
-                        isOpen={open}
-                        defaultText={'Select Service'}
-                        promptText={'What service was this job for?'}
-                    />
-                    <View style={tailwind('flex-row items-center')}>
-                        <Text style={tailwind('p-1 text-black')}>{selectedEmployer}</Text>
-                    </View>
-                </Pressable>
-            </View>
-        );
-    };
-
-    const leftSwipe = (progress, dragX) => {
-        const scale = dragX.interpolate({
-            inputRange: [0, 100],
-            outputRange: [0, 1],
-            extrapolate: 'clamp',
-        });
-        return (
-            <View style={tailwind('flex-row h-full p-2')}>
-                <Pressable
-                    style={tailwind('flex bg-black rounded-lg m-2 p-5 items-center justify-center')}
-                    onPress={() => console.log('pressed delete')}
-                >
-                    <Animated.Text
-                        style={[
-                            tailwind('text-white font-bold'),
-                            { transform: [{ scale: scale }] },
-                        ]}
-                    >
-                        Delete
-                    </Animated.Text>
-                </Pressable>
-                <Pressable
-                    style={tailwind('flex bg-black rounded-lg m-2 p-5 items-center justify-center')}
-                    onPress={() => console.log('pressed delete')}
-                >
-                    <Animated.Text
-                        style={[
-                            tailwind('text-white font-bold'),
-                            { transform: [{ scale: scale }] },
-                        ]}
-                    >
-                        Select
-                    </Animated.Text>
-                </Pressable>
-            </View>
-        );
-    };
-
     return (
-        <Swipeable
-            //TODO: if details are disabled, don't make it swipeable
-            renderLeftActions={leftSwipe}
+        <Pressable
+            style={[
+                tailwind('flex-col w-full mt-2 mb-2 bg-white rounded-lg'),
+                { overflow: 'hidden' },
+            ]}
+            onPress={() => {
+                log.info('Navigating to job detail', job);
+                navigation.navigate('Trip Detail', { job: job });
+            }}
         >
-            <Pressable
+            <View
                 style={[
-                    tailwind('flex-col w-full mt-2 mb-2 bg-white rounded-lg'),
-                    { overflow: 'hidden' },
+                    tailwind('flex-col w-full m-0'),
+                    displayDetails ? tailwind('max-h-48') : tailwind('max-h-24'),
                 ]}
-                onPress={() => {
-                    log.info('Navigating to job detail', job);
-                    navigation.navigate('Trip Detail', { job: job });
-                }}
             >
-                <View
-                    style={[
-                        tailwind('flex-col w-full m-0'),
-                        displayDetails ? tailwind('max-h-48') : tailwind('max-h-24'),
-                    ]}
-                >
-                    <View style={tailwind('flex-row flex-none')}>
+                <ScreenshotUploader
+                    shiftId={job.shiftId}
+                    jobId={job.id}
+                    modalVisible={modalVisible}
+                    setModalVisible={setModalVisible}
+                />
+                <View style={tailwind('flex-row flex-none')}>
+                    {showMap ? (
                         <View style={[tailwind('h-full w-1/3')]}>
                             {locations && region ? <Map /> : <Text>No locations...</Text>}
                         </View>
-                        <View style={tailwind('flex-col w-2/3')}>
+                    ) : null}
+                        <View style={tailwind('flex-col justify-start')}>
                             <RowHeader />
                             {displayDetails ? (
                                 <>
-                                    <View style={[tailwind('flex flex-row pl-2 pr-2')]}>
+                                    <View style={[tailwind('flex-row flex-wrap')]}>
                                         <JobDetail
                                             label={'Pay'}
                                             value={job.totalPay}
                                             prefix={'$ '}
                                             suffix={''}
                                             placeholder={''}
-                                            onChangeValue={setTotalPay}
+                                            onChangeValue={updateJobPay}
                                         ></JobDetail>
                                         <JobDetail
                                             label={'Tip'}
@@ -296,22 +180,28 @@ export const JobItem = ({
                                             prefix={'$ '}
                                             suffix={''}
                                             placeholder={''}
-                                            onChangeValue={setTip}
+                                            onChangeValue={updateJobTip}
                                         ></JobDetail>
+                                        <EmployerModalPicker
+                                            job={job}
+                                            submitChange={submitChanges}
+                                            onEmployerChange={(e: Employers) => {
+                                                if (setEmployer) setEmployer(e);
+                                            }}
+                                        />
+                                        {showScreenshots ? (
+                                            <Screenshots
+                                                screenshots={job.screenshots}
+                                                onPressAddScreenshots={() => setModalVisible(true)}
+                                            />
+                                        ) : null}
                                     </View>
-                                    <EmployerModalPicker
-                                        job={job}
-                                        onEmployerChange={(e: Employers) => {
-                                            if (setEmployer) setEmployer(e);
-                                        }}
-                                    />
                                 </>
                             ) : null}
                         </View>
                     </View>
                 </View>
-            </Pressable>
-        </Swipeable>
+        </Pressable>
     );
 };
 const styles = StyleSheet.create({
