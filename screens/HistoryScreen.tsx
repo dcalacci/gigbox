@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { StyleSheet, View, Text } from 'react-native';
+import { StyleSheet, View, Text, ScrollView } from 'react-native';
 
 import moment from 'moment';
 
@@ -20,11 +20,13 @@ export default function HistoryScreen({ route }) {
           }
         : undefined;
     return (
-        <View style={tailwind('bg-gray-100 items-center justify-start flex-col h-full')}>
+        <View style={tailwind('bg-gray-100 items-center justify-start flex-col h-full p-2')}>
             <StatusBar style="dark" />
             {/* <Text style={styles.title}>Jobs</Text> */}
             <JobFilterList inputFilters={filter} />
-            <NetPayCard/>
+            <ScrollView style={tailwind('p-2 m-0 flex-col flex w-full')}>
+                <NetPayCard />
+            </ScrollView>
         </View>
     );
 }
