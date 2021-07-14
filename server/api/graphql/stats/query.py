@@ -13,10 +13,10 @@ from api.graphql.object import JobNode
 from .object import NetPay
 
 class StatsQuery(graphene.ObjectType):
-    getNetPay = graphene.Field(NetPay)
+    getNetPay = graphene.Field(NetPay, start_date=graphene.DateTime(), end_date=graphene.DateTime())
 
     @login_required
-    def resolve_getNetPay(self, info, start_date=pendulum.now().start_of('week'), end_date=pendulum.now()):
+    def resolve_getNetPay(self, info, start_date=None, end_date=pendulum.now()):
         """Returns net pay for a given time period, from start_date to end_date.
 
         TODO: Test. To test, need to add pay and tip to jobs in fixtures, then test date range calculation.
@@ -30,9 +30,10 @@ class StatsQuery(graphene.ObjectType):
         userId = str(g.user)
         jobs = (JobNode.get_query(info=info)
                 .filter(JobModel.user_id == userId)
-                .filter(JobModel.start_time > start_date)
                 .filter(JobModel.end_time <= end_date)
                 )
+        if start_date:
+            jobs = jobs.filter(JobModel.start_time > start_date)
         deduction = get_mileage_deduction(jobs)
         tip = sum(filter(None, [j.tip for j in jobs]))
         pay = sum(filter(None, [j.total_pay for j in jobs]))

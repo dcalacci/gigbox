@@ -773,6 +773,7 @@ class MergeJobs(Mutation):
         newJob.mileage = res['distance']
 
         if dry_run:
+            newJob.id = None
             return MergeJobs(ok=True, committed=False, message="(Dry Run) Merged {} trips".format(len(jobs)), mergedJob=newJob)
         try:
             db.session.add(newJob)
