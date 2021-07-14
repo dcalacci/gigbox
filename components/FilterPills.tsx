@@ -28,7 +28,7 @@ export interface JobFilter {
 }
 
 export const defaultFilter: JobFilter = {
-    startDate: moment().startOf('week'),
+    startDate: moment().startOf('year'),
     endDate: moment().endOf('day'),
     needsEntry: false,
     saved: false,

@@ -55,8 +55,8 @@ const NetPayCard = () => {
 
     return (
         <View style={tailwind('rounded-lg bg-white p-2 w-full flex-col')}>
-            <View style={tailwind('flex-row w-full overflow-scroll items-center')}>
-                <Text style={tailwind('font-bold text-2xl')}>Net Pay</Text>
+            <View style={tailwind('flex-row w-full items-center justify-between')}>
+                <Text style={tailwind('font-bold text-3xl')}>Pay</Text>
                 <DateRangeFilterPill
                     displayText={'All Time - Select Dates'}
                     end={dates.endDate}
