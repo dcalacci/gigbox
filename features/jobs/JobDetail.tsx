@@ -47,7 +47,7 @@ export default ({
             <Text style={tailwind('text-base text-black m-0 p-0')}>{label}</Text>
             <View
                 style={[
-                    tailwind('rounded-lg flex-row items-center bg-gray-100 pl-1 pr-1 pb-1 w-20'),
+                    tailwind('rounded-lg flex-row items-center bg-gray-100 pl-1 pr-1 pb-1 max-w-md'),
                     isFocused ? tailwind('border') : null,
                 ]}
             >
