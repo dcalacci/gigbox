@@ -31,11 +31,11 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import BinaryFilterPill from '../../components/BinaryFilterPill';
 import { DateRangeFilterPill, JobFilter } from '../../components/FilterPills';
 import { RootState } from '../../store';
-const TripsStack = createStackNavigator();
 import { dismissCombineHint, dismissJobListHint } from '../history/OnboardingSlice';
 import Tooltip from 'react-native-walkthrough-tooltip';
 
-export default function JobsScreen({ navigation }: { navigation: TripsScreenNavigationProp }) {
+const TripsStack = createStackNavigator();
+export default function JobsScreen({ route, navigation }) {
     return (
         <TripsStack.Navigator
             screenOptions={{
@@ -43,7 +43,7 @@ export default function JobsScreen({ navigation }: { navigation: TripsScreenNavi
             }}
         >
             <TripsStack.Screen
-                name="Trips"
+                name="Tracked Jobs"
                 component={JobsList}
                 options={{
                     headerShown: false,
@@ -51,7 +51,7 @@ export default function JobsScreen({ navigation }: { navigation: TripsScreenNavi
             ></TripsStack.Screen>
 
             <TripsStack.Screen
-                name="Trip Detail"
+                name="Job Detail"
                 component={JobDetailScreen}
                 options={{
                     headerShown: false,
@@ -343,7 +343,9 @@ const JobsListHeader = ({
     );
 };
 
-export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
+export const JobsList = ({ route }) => {
+    const inputFilters = (route.params?.filters || defaultJobFilter) as JobFilter;
+    console.log('route filters:', inputFilters);
     const queryClient = useQueryClient();
     const [refreshing, setRefreshing] = useState(false);
     const [selectedJobs, setSelectedJobs] = useState<String[]>([]);

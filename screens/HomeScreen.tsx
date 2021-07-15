@@ -54,9 +54,12 @@ export default function HomeScreen({ navigation }: { navigation: HomeScreenNavig
                         style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}
                         onPress={() =>
                             navigation.navigate('Jobs', {
-                                filters: {
-                                    startDate: moment().startOf('day'),
-                                    endDate: moment().endOf('day'),
+                                screen: 'Tracked Jobs',
+                                params: {
+                                    filters: {
+                                        startDate: moment().startOf('day'),
+                                        endDate: moment().endOf('day'),
+                                    },
                                 },
                             })
                         }
@@ -74,10 +77,13 @@ export default function HomeScreen({ navigation }: { navigation: HomeScreenNavig
                         style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}
                         onPress={() =>
                             navigation.navigate('Jobs', {
-                                filters: {
-                                    needsEntry: true,
-                                    startDate: moment().startOf('day'),
-                                    endDate: moment().endOf('day'),
+                                screen: 'Tracked Jobs',
+                                params: {
+                                    filters: {
+                                        needsEntry: true,
+                                        startDate: moment().startOf('day'),
+                                        endDate: moment().endOf('day'),
+                                    },
                                 },
                             })
                         }
