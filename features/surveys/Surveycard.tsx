@@ -65,9 +65,9 @@ const SurveyCard = () => {
                             to complete
                         </Text>
                     </View>
-                    <Text style={tailwind('text-black text-base m-2')}>
-                        Answer survey questions as you use Gigbox to help other workers,
-                        researchers, and advocates understand more about Gig worker experience!
+                    <Text style={tailwind('text-black text-base m-2 pb-2 ')}>
+                        Answer anonymous survey questions as you use Gigbox to help workers,
+                        researchers, and advocates understand Gig work more fully.
                     </Text>
                 </View>
                 <Pressable
@@ -79,7 +79,7 @@ const SurveyCard = () => {
                         })
                     }
                 >
-                    <Text style={tailwind('text-base text-white')}>Answer 5min Survey</Text>
+                    <Text style={tailwind('text-base text-white font-bold')}>Answer 5min Survey</Text>
                 </Pressable>
             </View>
         );
