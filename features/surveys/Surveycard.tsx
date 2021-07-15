@@ -52,18 +52,7 @@ const SurveyCard = () => {
     } else {
         return (
             <View style={[tailwind('flex-1 flex-col m-2 p-2 rounded-xl bg-white flex-col')]}>
-                <Pressable
-                    onPress={() =>
-                        navigation.navigate('Survey', {
-                            surveys: availableSurveys.data,
-                            navigation,
-                        })
-                    }
-                    style={[
-                        tailwind('flex-row items-center p-2'),
-                        { justifyContent: 'space-between' },
-                    ]}
-                >
+                <View style={tailwind('flex-col items-start')}>
                     <View style={tailwind('justify-start flex-row items-center')}>
                         <View style={tailwind('rounded-full bg-red-400 p-1 m-2')}>
                             <Ionicons size={20} name="alert" />
@@ -76,8 +65,21 @@ const SurveyCard = () => {
                             to complete
                         </Text>
                     </View>
-
-                    <Ionicons name="caret-forward-outline" size={24} color="black" />
+                    <Text style={tailwind('text-black text-base m-2')}>
+                        Answer survey questions as you use Gigbox to help other workers,
+                        researchers, and advocates understand more about Gig worker experience!
+                    </Text>
+                </View>
+                <Pressable
+                    style={tailwind('flex-row bg-black rounded-lg p-2 justify-around')}
+                    onPress={() =>
+                        navigation.navigate('Survey', {
+                            surveys: availableSurveys.data,
+                            navigation,
+                        })
+                    }
+                >
+                    <Text style={tailwind('text-base text-white')}>Answer 5min Survey</Text>
                 </Pressable>
             </View>
         );
