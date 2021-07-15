@@ -93,7 +93,12 @@ export const JobDetailCard = ({ job }: { job: Job }) => {
                         ) : null}
                     </TripMap>
                 ) : (
-                    <Text>No locations recorded for this job</Text>
+                    <View style={tailwind('bg-gray-200 flex-grow items-center justify-center p-2')}>
+                        <Ionicons name={'map-outline'} size={48} color={'gray'} />
+                        <Text style={tailwind('text-base text-center')}>
+                            No locations tracked in this job
+                        </Text>
+                    </View>
                 )}
             </View>
             <JobDetailScreenHeader />
@@ -139,15 +144,15 @@ export const Screenshots = ({
     });
     const uploadScreenshotView = () => (
         <>
+            <Text style={tailwind('text-base text-center m-1')}>
+                Upload images to keep track of expenses, verify your pay, and more.
+            </Text>
             <Pressable
                 onPress={onPressAddScreenshots}
                 style={tailwind('self-center justify-self-center bg-gray-800 rounded-lg p-2')}
             >
-                <Text style={tailwind('text-white text-xl font-bold underline')}>Add Images</Text>
+                <Text style={tailwind('text-white text-lg font-bold ')}>Add Images</Text>
             </Pressable>
-            <Text style={tailwind('text-base text-center m-1')}>
-                Upload images to keep track of expenses, verify your pay, and more.
-            </Text>
         </>
     );
     if (!screenshots || screenshots.length === 0) {

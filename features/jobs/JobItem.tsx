@@ -16,6 +16,7 @@ import { useMutation } from 'react-query';
 import EmployerModalPicker from '../../components/EmployerModalPicker';
 import JobDetail from './JobDetail';
 import ScreenshotUploader from './ScreenshotPicker';
+import { Ionicons } from '@expo/vector-icons';
 
 export const JobItem = ({
     job,
@@ -143,7 +144,7 @@ export const JobItem = ({
             <View
                 style={[
                     tailwind('flex-col w-full m-0'),
-                    displayDetails ? tailwind('max-h-48') : tailwind('max-h-24'),
+                    displayDetails ? tailwind('max-h-44') : tailwind('max-h-24'),
                 ]}
             >
                 <ScreenshotUploader
@@ -155,7 +156,21 @@ export const JobItem = ({
                 <View style={tailwind('flex-row flex-none')}>
                     {showMap ? (
                         <View style={[tailwind('h-full w-1/3')]}>
-                            {locations && region ? <Map /> : <Text>No locations...</Text>}
+                            {locations && region ? (
+                                <Map />
+                            ) : (
+                                <View
+                                    style={tailwind(
+                                        'bg-gray-200 flex-grow items-center justify-center p-2'
+                                    )}
+                                >
+                                    <Ionicons name={'map-outline'} size={48} color={'gray'} />
+
+                                    <Text style={tailwind('text-xs text-center')}>
+                                        No locations tracked in this job
+                                    </Text>
+                                </View>
+                            )}
                         </View>
                     ) : null}
                     <View

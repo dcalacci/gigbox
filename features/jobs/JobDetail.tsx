@@ -43,11 +43,11 @@ export default ({
     };
 
     return (
-        <View style={[tailwind('flex flex-col m-1 pl-1 pr-1')]}>
+        <View style={[tailwind('flex flex-col m-1 pl-1 pr-1 ')]}>
             <Text style={tailwind('text-base text-black m-0 p-0')}>{label}</Text>
             <View
                 style={[
-                    tailwind('rounded-lg flex-row items-center bg-gray-100 pl-1 pr-1 pb-1'),
+                    tailwind('rounded-lg flex-row items-center bg-gray-100 pl-1 pr-1 pb-1 w-20'),
                     isFocused ? tailwind('border') : null,
                 ]}
             >
