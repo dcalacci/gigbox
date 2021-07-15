@@ -1,11 +1,5 @@
 import React, { useState } from 'react';
-import {
-    SafeAreaView,
-    View,
-    Text,
-    Image,
-    Pressable,
-} from 'react-native';
+import { SafeAreaView, View, Text, Image, Pressable } from 'react-native';
 import { tailwind } from 'tailwind';
 import * as Haptics from 'expo-haptics';
 
@@ -17,50 +11,50 @@ export const Onboarding = ({ onOnboardingFinish }: { onOnboardingFinish: () => v
     const Pages = [
         <View style={tailwind('flex-col flex-grow w-full justify-items-end p-5 pt-10 -mb-10')}>
             <View style={tailwind('flex-row')}>
-                <Text style={tailwind('text-4xl text-white font-bold')}>Welcome to gigbox.</Text>
+                <Text style={tailwind('text-4xl text-black font-bold')}>Welcome to gigbox.</Text>
             </View>
             <Image
-                style={tailwind('w-3/4 h-64 mt-10 mb-10 self-center')}
+                style={tailwind('h-1/2 mt-10 mb-10 self-center')}
                 resizeMode={'contain'}
                 source={require('./Gigbox-Preview.png')}
             />
-            <Text style={tailwind('text-2xl text-white font-bold pb-2')}>
+            <Text style={tailwind('text-2xl text-black font-bold pb-2')}>
                 Gigbox is an open-source work tracker designed with & for app-based workers.
             </Text>
         </View>,
 
         <View style={tailwind('flex-col flex-grow w-full justify-items-end p-5 pt-10 -mb-10')}>
             <View style={tailwind('flex-col')}>
-                <Text style={tailwind('text-4xl text-white font-bold')}>Your data is yours.</Text>
-                <Text style={tailwind('text-2xl text-white font-bold')}>
+                <Text style={tailwind('text-4xl text-black font-bold')}>Your data is yours.</Text>
+                <Text style={tailwind('text-2xl text-black font-bold')}>
                     And there's power in numbers.
                 </Text>
             </View>
             <Image
-                style={tailwind('w-3/4 h-48 mt-10 mb-10 self-center')}
+                style={tailwind('h-1/3 mt-10 mb-10 self-center')}
                 resizeMode={'contain'}
                 source={require('./gigbox-group.png')}
             />
-            <Text style={tailwind('text-2xl text-white font-bold pb-2')}>
+            <Text style={tailwind('text-xl text-black font-bold pb-2')}>
                 Gigbox is designed to make it easy to share your work data with anyone —
                 researchers, advocates, other workers, and organizers.
             </Text>
         </View>,
         <View style={tailwind('flex-col flex-grow w-full justify-items-end p-5 pt-10 -mb-10')}>
             <View style={tailwind('flex-col')}>
-                <Text style={tailwind('text-4xl text-white font-bold')}>
+                <Text style={tailwind('text-4xl text-black font-bold')}>
                     Gigbox is a research project
                 </Text>
-                <Text style={tailwind('text-2xl text-white font-bold')}>
+                <Text style={tailwind('text-2xl text-black font-bold')}>
                     Run by researchers at the MIT Media Lab.
                 </Text>
             </View>
             <Image
-                style={tailwind('w-3/4 h-48 mt-10 mb-10 self-center')}
+                style={tailwind('h-1/2 self-center')}
                 resizeMode={'contain'}
                 source={require('./graph-1.png')}
             />
-            <Text style={tailwind('text-xl text-white font-bold pb-2')}>
+            <Text style={tailwind('text-xl text-black font-bold pb-2')}>
                 We believe that you have rights to the data you generate while you work. We will
                 never sell your data, and will only share your information in ways you explicitly
                 tell us we can.
@@ -69,8 +63,8 @@ export const Onboarding = ({ onOnboardingFinish }: { onOnboardingFinish: () => v
     ];
 
     return (
-        <SafeAreaView style={tailwind('flex-col w-full h-full bg-green-500')}>
-            {Pages[page]}
+        <SafeAreaView style={tailwind('flex-col w-full h-full bg-gray-100 pb-10')}>
+            <View style={tailwind('flex-col flex-grow overflow-scroll')}>{Pages[page]}</View>
 
             <View style={tailwind('flex-col h-20')}>
                 <View style={tailwind('flex-row w-full')}>
@@ -81,10 +75,10 @@ export const Onboarding = ({ onOnboardingFinish }: { onOnboardingFinish: () => v
                                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
                             }}
                             style={tailwind(
-                                'rounded-lg border flex-grow border-white m-2 self-center'
+                                'rounded-lg border flex-grow border-black p-2 m-2 self-center'
                             )}
                         >
-                            <Text style={tailwind('text-white font-bold text-lg text-center p-1')}>
+                            <Text style={tailwind('text-black font-bold text-lg text-center p-1')}>
                                 Back
                             </Text>
                         </Pressable>
@@ -98,7 +92,7 @@ export const Onboarding = ({ onOnboardingFinish }: { onOnboardingFinish: () => v
                                 setPage(page + 1);
                             }
                         }}
-                        style={tailwind('rounded-lg border flex-grow border-white m-2 self-center')}
+                        style={tailwind('rounded-lg flex-grow bg-black p-2 m-2 self-center')}
                     >
                         <Text style={tailwind('text-white font-bold text-lg text-center p-1')}>
                             Next
@@ -139,7 +133,7 @@ const Dot = ({ selected }: { selected: boolean }) => {
         <View
             style={[
                 tailwind('w-4 h-4 rounded-xl ml-2 mr-2'),
-                selected ? tailwind('bg-white') : tailwind('bg-gray-300'),
+                selected ? tailwind('bg-black') : tailwind('bg-gray-300'),
             ]}
         />
     );

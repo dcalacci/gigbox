@@ -59,7 +59,7 @@ const PhoneEntry: React.FC = (props) => {
                     <Text style={tailwind('text-black text-xl font-semibold')}>
                         Verify your Passcode
                     </Text>
-                    <Text style={tailwind('text-gray-400 text-sm font-semibold pb-2')}>
+                    <Text style={tailwind('text-black text-sm font-semibold pb-2')}>
                         Enter the passcode we sent to your phone below:
                     </Text>
                     <TextInput
@@ -97,24 +97,22 @@ const PhoneEntry: React.FC = (props) => {
                         onPress={() => dispatch(reset())}
                     >
                         <Text style={tailwind('text-gray-400 text-sm font-semibold p-2')}>
-                            Entered the wrong number? Tap here to restart.
+                            Entered the wrong number or something went wrong? Tap here to restart.
                         </Text>
                     </Pressable>
                 </SafeAreaView>
             ) : (
                 <SafeAreaView>
-                    <Text style={tailwind('text-green-500 text-3xl font-bold')}>
-                        Login to Gigbox
-                    </Text>
+                    <Text style={tailwind('text-black text-3xl font-bold')}>Login to Gigbox</Text>
                     <Text style={tailwind('text-green-500 text-lg font-bold')}>
                         Your phone number is never saved and is only used to log you in
                     </Text>
 
                     <Text style={tailwind('text-black text-xl font-semibold pt-20')}>
-                        Get your One-Time Passcode
+                        Enter your phone number below:
                     </Text>
                     <Text style={tailwind('text-gray-400 text-sm font-semibold pb-2')}>
-                        Enter your phone number below:
+                        Get your one-time passcode
                     </Text>
                     <TextInput
                         testID="phone-input"
@@ -134,7 +132,7 @@ const PhoneEntry: React.FC = (props) => {
                         testID="request-code-button"
                         style={[
                             tailwind('items-center rounded-md py-2 w-full mt-6'),
-                            phoneIsValid ? tailwind('bg-green-500') : tailwind('bg-gray-600'),
+                            phoneIsValid ? tailwind('bg-black') : tailwind('bg-gray-600'),
                         ]}
                         disabled={!phoneIsValid}
                         onPress={() => {
