@@ -16,7 +16,6 @@ import { useMutation } from 'react-query';
 import EmployerModalPicker from '../../components/EmployerModalPicker';
 import JobDetail from './JobDetail';
 import ScreenshotUploader from './ScreenshotPicker';
-import { Screenshots } from './JobDetailScreen';
 
 export const JobItem = ({
     job,
@@ -26,7 +25,6 @@ export const JobItem = ({
     setTip,
     submitChanges = true,
     showMap = true,
-    showScreenshots = false,
 }: {
     job: Job;
     displayDetails: boolean; // whether to display job details
@@ -35,7 +33,6 @@ export const JobItem = ({
     setTotalPay?: (p: string) => void; // callback to set total pay
     setTip?: (t: string) => void; // callback to set tip
     showMap?: boolean; // whether to show map
-    showScreenshots?: boolean;
 }) => {
     const [region, setRegion] = useState<Region>();
     const [locations, setLocations] = useState<LatLng[]>();
@@ -194,12 +191,6 @@ export const JobItem = ({
                                             if (setEmployer) setEmployer(e);
                                         }}
                                     />
-                                    {showScreenshots ? (
-                                        <Screenshots
-                                            screenshots={job.screenshots}
-                                            onPressAddScreenshots={() => setModalVisible(true)}
-                                        />
-                                    ) : null}
                                 </View>
                             </>
                         ) : null}

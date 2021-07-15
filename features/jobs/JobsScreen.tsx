@@ -32,7 +32,8 @@ import BinaryFilterPill from '../../components/BinaryFilterPill';
 import { DateRangeFilterPill, JobFilter } from '../../components/FilterPills';
 import { RootState } from '../../store';
 const TripsStack = createStackNavigator();
-import { dismissJobListHint } from '../history/OnboardingSlice';
+import { dismissCombineHint, dismissJobListHint } from '../history/OnboardingSlice';
+import Tooltip from 'react-native-walkthrough-tooltip';
 
 export default function JobsScreen({ navigation }: { navigation: TripsScreenNavigationProp }) {
     return (
@@ -75,6 +76,12 @@ const JobsScreenHeader = ({
     deleteEnabled: boolean;
     combineEnabled: boolean;
 }) => {
+    const dismissedCombineHint = useSelector(
+        (state: RootState): boolean => state.onboarding.dismissedCombineHint || false
+    );
+    const [showCombineHint, setShowCombineHint] = useState(true);
+    const dispatch = useDispatch();
+    console.log('dismissed hint:', dismissedCombineHint, showCombineHint);
     const EditButton = () =>
         isEditing ? (
             <View style={tailwind('flex-row justify-around')}>
@@ -94,33 +101,63 @@ const JobsScreenHeader = ({
                     </Pressable>
                 ) : null}
                 {isEditing ? (
-                    <Pressable
-                        onPress={() =>
-                            combineEnabled
-                                ? onPressCombine()
-                                : Toast.show('Select more than one Job to combine them.')
+                    <Tooltip
+                        isVisible={showCombineHint && !dismissedCombineHint}
+                        content={
+                            <>
+                                <Text>
+                                    Tip: Have two jobs that are really the same? Select two or more
+                                    Jobs and press Combine to merge them and track your pay more
+                                    accurately.
+                                </Text>
+                                <View style={tailwind('flex-row justify-around')}>
+                                    <Pressable onPress={() => dispatch(dismissCombineHint())}>
+                                        <Text style={tailwind('underline text-base pt-1 pb-1')}>
+                                            Don't show again
+                                        </Text>
+                                    </Pressable>
+                                    <Pressable onPress={() => setShowCombineHint(false)}>
+                                        <Text style={tailwind('underline text-base pt-1 pb-1')}>
+                                            Dismiss
+                                        </Text>
+                                    </Pressable>
+                                </View>
+                            </>
                         }
-                        style={[
-                            tailwind('flex-row rounded-lg ml-2 mr-2 p-1 border-2 items-center'),
-                            combineEnabled ? tailwind('bg-black') : null,
-                        ]}
+                        placement="bottom"
+                        onClose={() => {
+                            setShowCombineHint(false);
+                            dispatch(dismissCombineHint());
+                        }}
                     >
-                        <Text
+                        <Pressable
+                            onPress={() =>
+                                combineEnabled
+                                    ? onPressCombine()
+                                    : Toast.show('Select more than one Job to combine them.')
+                            }
                             style={[
-                                tailwind('text-black font-bold'),
-                                combineEnabled ? tailwind('text-white') : null,
+                                tailwind('flex-row rounded-lg ml-2 mr-2 p-1 border-2 items-center'),
+                                combineEnabled ? tailwind('bg-black') : null,
                             ]}
                         >
-                            Combine
-                        </Text>
+                            <Text
+                                style={[
+                                    tailwind('text-black font-bold'),
+                                    combineEnabled ? tailwind('text-white') : null,
+                                ]}
+                            >
+                                Combine
+                            </Text>
 
-                        <Ionicons
-                            name="git-merge"
-                            color={combineEnabled ? 'white' : 'black'}
-                            size={16}
-                            style={tailwind('p-1')}
-                        />
-                    </Pressable>
+                            <Ionicons
+                                name="git-merge"
+                                color={combineEnabled ? 'white' : 'black'}
+                                size={16}
+                                style={tailwind('p-1')}
+                            />
+                        </Pressable>
+                    </Tooltip>
                 ) : null}
 
                 <Pressable
@@ -140,9 +177,14 @@ const JobsScreenHeader = ({
             </Pressable>
         );
     return (
-        <View style={tailwind('flex-col w-full bg-gray-100 h-24')}>
-            <View style={tailwind('flex-row p-2 mt-5 justify-between')}>
-                <Text style={[tailwind('text-4xl font-bold')]}>Jobs</Text>
+        <View style={tailwind('flex-row p-2 mt-5 justify-between items-center h-24')}>
+            {!isEditing && (
+                <View style={tailwind('flex-col m-2 justify-self-start')}>
+                    <Text style={[tailwind('text-4xl font-bold')]}>Tracked</Text>
+                    <Text style={[tailwind('text-4xl font-bold')]}>Jobs</Text>
+                </View>
+            )}
+            <View style={tailwind('flex-row flex-grow justify-end')}>
                 <EditButton />
             </View>
         </View>

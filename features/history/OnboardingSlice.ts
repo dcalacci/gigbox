@@ -6,10 +6,12 @@ import { State } from 'react-native-gesture-handler';
 
 export interface OnboardingState {
     dismissedJobListHint: boolean
+    dismissedCombineHint: boolean
 }
 
 const initialState: OnboardingState = {
-    dismissedJobListHint: false
+    dismissedJobListHint: false,
+    dismissedCombineHint: false
 }
 
 
@@ -19,12 +21,16 @@ const onboardingSlice = createSlice({
     reducers: {
         dismissJobListHint: (state) => {
             state.dismissedJobListHint = true;
+        },
+        dismissCombineHint: (state) => {
+            state.dismissedJobListHint = true;
         }
     }
 })
 
 export const {
-    dismissJobListHint
+    dismissJobListHint,
+    dismissCombineHint
 } = onboardingSlice.actions;
 
 export default onboardingSlice.reducer;

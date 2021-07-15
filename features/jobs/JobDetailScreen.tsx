@@ -5,8 +5,6 @@ import {
     Text,
     Image,
     Pressable,
-    TextInput,
-    StyleSheet,
     Modal,
 } from 'react-native';
 import { tailwind } from 'tailwind';
@@ -14,15 +12,14 @@ import { Ionicons } from '@expo/vector-icons';
 import { Region, Marker, LatLng } from 'react-native-maps';
 import { useQueryClient, useMutation } from 'react-query';
 import moment from 'moment';
-import { Job, Screenshot, Shift } from '../../types';
+import { Job, Screenshot } from '../../types';
 import { parse } from 'wellknown';
 import TripMap from './TripMap';
 import ScreenshotUploader from './ScreenshotPicker';
 import { log } from '../../utils';
-import { updateJobValue, deleteImage } from './api';
+import { deleteImage } from './api';
 
 import Toast from 'react-native-root-toast';
-import EmployerModalPicker from '../../components/EmployerModalPicker';
 import { JobItem } from './JobItem';
 
 export const JobDetailScreen = ({ route }: { route: { params: { job: Job } } }) => {

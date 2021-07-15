@@ -5,18 +5,15 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { tailwind } from 'tailwind';
 import { useQuery } from 'react-query';
 import TrackingBar from '../features/clock/TrackingBar';
-import SurveyCard from '../features/surveys/Surveycard'
+import SurveyCard from '../features/surveys/Surveycard';
 import WeeklyCard from '../features/weeklySummary/WeeklyCard';
-import {
-    getFilteredJobs,
-} from '../features/jobs/api';
+import { getFilteredJobs } from '../features/jobs/api';
 import { useNumTrackedShifts } from '../features/clock/api';
 import { Job, RootStackParamList, HomeScreenNavigationProp } from '../types';
 
 import moment from 'moment';
 
-
-export default function HomeScreen({ navigation }: {navigation: HomeScreenNavigationProp}) {
+export default function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
     // const numTrackedJobsStatus = useNumTrackedJobsToday();
     const numJobsTodayNeedEntry = useQuery(
         [
@@ -40,15 +37,14 @@ export default function HomeScreen({ navigation }: {navigation: HomeScreenNaviga
             select: (d: { allJobs: { edges: { node: Job }[] } }) => d.allJobs.edges.length,
         }
     );
-    const numTrackedShiftsStatus = useNumTrackedShifts();
     return (
         <View style={tailwind('bg-gray-100 h-full')}>
             <TrackingBar />
             <ScrollView style={tailwind('bg-gray-100 h-full')}>
-                <SurveyCard navigation={navigation}/>
+                <SurveyCard navigation={navigation} />
                 <Pressable style={[tailwind('bg-white m-2 p-5 rounded-2xl flex-col')]}>
                     <Text style={tailwind('text-green-500 text-3xl font-bold underline')}>
-                       Today 
+                        Today
                     </Text>
 
                     <View
@@ -93,16 +89,6 @@ export default function HomeScreen({ navigation }: {navigation: HomeScreenNaviga
                         </Text>
                         <Ionicons name="caret-forward-outline" size={24} color="black" />
                     </Pressable>
-                    <View style={tailwind('border-b border-gray-200 ml-5 mr-5')}></View>
-                    <View style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}>
-                        <Text style={tailwind('text-gray-800 text-lg font-bold')}>
-                            {numTrackedShiftsStatus.isLoading || numTrackedShiftsStatus.isError
-                                ? '... tracked shifts'
-                                : `${numTrackedJobsStatus.data} tracked shifts`}
-                        </Text>
-                        <Ionicons name="caret-forward-outline" size={24} color="black" />
-                    </View>
-                    <View style={tailwind('border-b border-gray-200 ml-5 mr-5')}></View>
                 </Pressable>
 
                 <WeeklyCard />

@@ -10,7 +10,7 @@ import { JobFilter, SortArgs } from '../../components/FilterPills';
 const N = 10;
 
 export const defaultJobFilter: JobFilter = {
-    needsEntry: true,
+    needsEntry: false,
     saved: false,
     sort: SortArgs.START,
 };
