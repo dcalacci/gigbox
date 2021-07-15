@@ -41,7 +41,7 @@ export default function HomeScreen({ navigation }: { navigation: HomeScreenNavig
         <View style={tailwind('bg-gray-100 h-full')}>
             <TrackingBar />
             <ScrollView style={tailwind('bg-gray-100 h-full')}>
-                <SurveyCard navigation={navigation} />
+                <SurveyCard />
                 <Pressable style={[tailwind('bg-white m-2 p-5 rounded-2xl flex-col')]}>
                     <Text style={tailwind('text-green-500 text-3xl font-bold underline')}>
                         Today

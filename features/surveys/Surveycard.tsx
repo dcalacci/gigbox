@@ -5,14 +5,17 @@ import { tailwind } from 'tailwind';
 import { useSelector } from 'react-redux';
 import { useQuery } from 'react-query';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/core';
 import { fetchAvailableSurveys } from './api';
 import { log } from '../../utils';
 import { RootState } from '../../store/index';
+import { User } from '../../types';
 
-const SurveyCard = ({ navigation }) => {
+const SurveyCard = () => {
+    const navigation = useNavigation();
     const [numUnansweredSurveys, setNumUnansweredSurveys] = useState<number>(0);
-    const userAge = useSelector((state: RootState): User | null => {
-        return moment(state.auth.user?.dateCreated).diff(moment(), 'days');
+    const userAge = useSelector((state: RootState): Number => {
+        return moment().diff(moment(state.auth.user?.dateCreated), 'days');
     });
     const availableSurveys = useQuery(['surveys'], fetchAvailableSurveys, {
         select: (d) => {
@@ -23,6 +26,7 @@ const SurveyCard = ({ navigation }) => {
                 const answeredQs = node.questions.edges.filter(
                     ({ node }) => node.answers?.edges.length > 0
                 );
+                console.log('unanswered qs:', unansweredQs);
                 return unansweredQs.length > 0 && userAge >= node.daysAfterInstall;
             });
             return unansweredSurveys;
@@ -50,7 +54,7 @@ const SurveyCard = ({ navigation }) => {
             <View style={[tailwind('flex-1 flex-col m-2 p-2 rounded-xl bg-white flex-col')]}>
                 <Pressable
                     onPress={() =>
-                        navigation.navigate('Survey Form', {
+                        navigation.navigate('Survey', {
                             surveys: availableSurveys.data,
                             navigation,
                         })
