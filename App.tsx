@@ -1,24 +1,18 @@
 import { StatusBar } from 'expo-status-bar';
 import React from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { ToastProvider } from 'react-native-fast-toast';
 
-import useCachedResources from './hooks/useCachedResources';
 import Constants from 'expo-constants';
 import { Provider } from 'react-redux';
 import { PersistGate } from 'redux-persist/integration/react';
 import Navigation from './navigation';
 import { store, persistor } from './store/store';
-import { useQuery, QueryClientProvider, QueryClient } from 'react-query';
+import { QueryClientProvider, QueryClient } from 'react-query';
 import * as TaskManager from 'expo-task-manager';
 import { LocationObject } from 'expo-location';
-import { useDispatch, useSelector } from 'react-redux';
+;
 import { log } from './utils';
 import { hasActiveShift, addLocationsToShift } from './tasks';
-import { logIn, LogInResponse } from './features/auth/api';
-import { setLoggedIn, setUser } from './features/auth/authSlice';
-import { RootState } from 'store/index';
-import * as SplashScreen from 'expo-splash-screen';
 import { EnsureLoggedIn } from './features/EnsureLoggedIn';
 import { RootSiblingParent } from 'react-native-root-siblings';
 const queryClient = new QueryClient();
