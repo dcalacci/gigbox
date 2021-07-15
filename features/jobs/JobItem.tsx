@@ -161,46 +161,51 @@ export const JobItem = ({
                             {locations && region ? <Map /> : <Text>No locations...</Text>}
                         </View>
                     ) : null}
-                        <View style={tailwind('flex-col justify-start w-2/3')}>
-                            <RowHeader />
-                            {displayDetails ? (
-                                <>
-                                    <View style={[tailwind('flex-row flex-wrap')]}>
-                                        <JobDetail
-                                            label={'Pay'}
-                                            value={job.totalPay}
-                                            prefix={'$ '}
-                                            suffix={''}
-                                            placeholder={''}
-                                            onChangeValue={updateJobPay}
-                                        ></JobDetail>
-                                        <JobDetail
-                                            label={'Tip'}
-                                            value={job.tip}
-                                            prefix={'$ '}
-                                            suffix={''}
-                                            placeholder={''}
-                                            onChangeValue={updateJobTip}
-                                        ></JobDetail>
-                                        <EmployerModalPicker
-                                            job={job}
-                                            submitChange={submitChanges}
-                                            onEmployerChange={(e: Employers) => {
-                                                if (setEmployer) setEmployer(e);
-                                            }}
+                    <View
+                        style={[
+                            tailwind('flex-col justify-start'),
+                            showMap ? tailwind('w-2/3') : tailwind('w-full'),
+                        ]}
+                    >
+                        <RowHeader />
+                        {displayDetails ? (
+                            <>
+                                <View style={[tailwind('flex-row flex-wrap'), showMap ? null : tailwind("justify-evenly")]}>
+                                    <JobDetail
+                                        label={'Pay'}
+                                        value={job.totalPay}
+                                        prefix={'$ '}
+                                        suffix={''}
+                                        placeholder={''}
+                                        onChangeValue={updateJobPay}
+                                    ></JobDetail>
+                                    <JobDetail
+                                        label={'Tip'}
+                                        value={job.tip}
+                                        prefix={'$ '}
+                                        suffix={''}
+                                        placeholder={''}
+                                        onChangeValue={updateJobTip}
+                                    ></JobDetail>
+                                    <EmployerModalPicker
+                                        job={job}
+                                        submitChange={submitChanges}
+                                        onEmployerChange={(e: Employers) => {
+                                            if (setEmployer) setEmployer(e);
+                                        }}
+                                    />
+                                    {showScreenshots ? (
+                                        <Screenshots
+                                            screenshots={job.screenshots}
+                                            onPressAddScreenshots={() => setModalVisible(true)}
                                         />
-                                        {showScreenshots ? (
-                                            <Screenshots
-                                                screenshots={job.screenshots}
-                                                onPressAddScreenshots={() => setModalVisible(true)}
-                                            />
-                                        ) : null}
-                                    </View>
-                                </>
-                            ) : null}
-                        </View>
+                                    ) : null}
+                                </View>
+                            </>
+                        ) : null}
                     </View>
                 </View>
+            </View>
         </Pressable>
     );
 };

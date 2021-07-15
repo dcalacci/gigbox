@@ -34,6 +34,92 @@ export const JobDetailScreen = ({ route }: { route: { params: { job: Job } } }) 
     );
 };
 
+// A single job, including its map, details, and screenshot uploader
+export const JobDetailCard = ({ job }: { job: Job }) => {
+    const [region, setRegion] = useState<Region>();
+    const [locations, setLocations] = useState<LatLng>();
+
+    const [modalVisible, setModalVisible] = useState(false);
+    useEffect(() => {
+        if (job.snappedGeometry) {
+            const { geometries, bounding_box } = JSON.parse(job.snappedGeometry);
+            const locations = geometries.map((c: [number, number]) => {
+                return { latitude: c[1], longitude: c[0] };
+            });
+            setLocations(locations);
+            const bbox = bounding_box;
+            setRegion({
+                latitudeDelta: (bbox.maxLat - bbox.minLat) * 2.05,
+                longitudeDelta: (bbox.maxLng - bbox.minLng) * 2.05,
+                latitude: bbox.maxLat - (bbox.maxLat - bbox.minLat) / 2,
+                longitude: bbox.maxLng - (bbox.maxLng - bbox.minLng) / 2,
+            });
+        }
+    }, [job.snappedGeometry]);
+    const JobDetailScreenHeader = () => {
+        return (
+            <View style={tailwind('flex-col w-full bg-white')}>
+                <View style={tailwind('flex-row p-2 justify-between')}>
+                    <Text style={[tailwind('text-3xl font-bold')]}>Job Details</Text>
+                </View>
+            </View>
+        );
+    };
+    return (
+        <ScrollView style={[tailwind('flex-col w-full rounded-lg bg-white h-full')]}>
+            <ScreenshotUploader
+                shiftId={job.shiftId}
+                jobId={job.id}
+                modalVisible={modalVisible}
+                setModalVisible={setModalVisible}
+            />
+
+            <View style={[tailwind('h-80 w-full'), { overflow: 'hidden' }]}>
+                {locations && region ? (
+                    <TripMap
+                        interactive={true}
+                        isActive={false}
+                        tripLocations={locations}
+                        region={region}
+                    >
+                        {job.endLocation ? (
+                            <Marker
+                                pinColor={'red'}
+                                coordinate={{
+                                    longitude: parse(job.endLocation)?.coordinates[0] as number,
+                                    latitude: parse(job.endLocation)?.coordinates[1] as number,
+                                }}
+                            ></Marker>
+                        ) : null}
+
+                        {job.startLocation ? (
+                            <Marker
+                                pinColor={'green'}
+                                coordinate={{
+                                    longitude: parse(job.startLocation)?.coordinates[0] as number,
+                                    latitude: parse(job.startLocation)?.coordinates[1] as number,
+                                }}
+                            ></Marker>
+                        ) : null}
+                    </TripMap>
+                ) : (
+                    <Text>No locations recorded for this job</Text>
+                )}
+            </View>
+            <JobDetailScreenHeader />
+            <View style={tailwind('flex-col flex-grow justify-center w-full pl-1 pr-1')}>
+                <JobItem job={job} displayDetails={true} submitChanges={true} showMap={false} />
+                <View style={tailwind('flex-row w-full justify-center mb-10')}>
+                    <Screenshots
+                        screenshots={job.screenshots}
+                        onPressAddScreenshots={() => setModalVisible(true)}
+                    />
+                </View>
+            </View>
+        </ScrollView>
+    );
+};
+
 // Scroll view of screenshots
 export const Screenshots = ({
     screenshots,
@@ -177,90 +263,4 @@ export const Screenshots = ({
             </View>
         );
     }
-};
-
-// A single job, including its map, details, and screenshot uploader
-export const JobDetailCard = ({ job }: { job: Job }) => {
-    const [region, setRegion] = useState<Region>();
-    const [locations, setLocations] = useState<LatLng>();
-
-    const [modalVisible, setModalVisible] = useState(false);
-    useEffect(() => {
-        if (job.snappedGeometry) {
-            const { geometries, bounding_box } = JSON.parse(job.snappedGeometry);
-            const locations = geometries.map((c: [number, number]) => {
-                return { latitude: c[1], longitude: c[0] };
-            });
-            setLocations(locations);
-            const bbox = bounding_box;
-            setRegion({
-                latitudeDelta: (bbox.maxLat - bbox.minLat) * 2.05,
-                longitudeDelta: (bbox.maxLng - bbox.minLng) * 2.05,
-                latitude: bbox.maxLat - (bbox.maxLat - bbox.minLat) / 2,
-                longitude: bbox.maxLng - (bbox.maxLng - bbox.minLng) / 2,
-            });
-        }
-    }, [job.snappedGeometry]);
-    const JobDetailScreenHeader = () => {
-        return (
-            <View style={tailwind('flex-col w-full bg-white')}>
-                <View style={tailwind('flex-row p-2 justify-between')}>
-                    <Text style={[tailwind('text-3xl font-bold')]}>Job Details</Text>
-                </View>
-            </View>
-        );
-    };
-    return (
-        <ScrollView style={[tailwind('flex-col w-full rounded-lg bg-white h-full')]}>
-            <ScreenshotUploader
-                shiftId={job.shiftId}
-                jobId={job.id}
-                modalVisible={modalVisible}
-                setModalVisible={setModalVisible}
-            />
-
-            <View style={[tailwind('h-80 w-full'), { overflow: 'hidden' }]}>
-                {locations && region ? (
-                    <TripMap
-                        interactive={true}
-                        isActive={false}
-                        tripLocations={locations}
-                        region={region}
-                    >
-                        {job.endLocation ? (
-                            <Marker
-                                pinColor={'red'}
-                                coordinate={{
-                                    longitude: parse(job.endLocation)?.coordinates[0] as number,
-                                    latitude: parse(job.endLocation)?.coordinates[1] as number,
-                                }}
-                            ></Marker>
-                        ) : null}
-
-                        {job.startLocation ? (
-                            <Marker
-                                pinColor={'green'}
-                                coordinate={{
-                                    longitude: parse(job.startLocation)?.coordinates[0] as number,
-                                    latitude: parse(job.startLocation)?.coordinates[1] as number,
-                                }}
-                            ></Marker>
-                        ) : null}
-                    </TripMap>
-                ) : (
-                    <Text>No locations recorded for this job</Text>
-                )}
-            </View>
-            <JobDetailScreenHeader />
-            <View style={tailwind('flex-col flex-1 justify-center')}>
-                <JobItem job={job} displayDetails={true} submitChanges={true} showMap={false} />
-                <View style={tailwind('flex-row w-full justify-center mb-10')}>
-                    <Screenshots
-                        screenshots={job.screenshots}
-                        onPressAddScreenshots={() => setModalVisible(true)}
-                    />
-                </View>
-            </View>
-        </ScrollView>
-    );
 };
