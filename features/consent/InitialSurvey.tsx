@@ -38,6 +38,9 @@ export const EmployerSelector = ({ onSubmit }: { onSubmit: () => void }) => {
                 <Text style={tailwind('text-lg pt-2 pb-2 underline text-center')}>
                     What services do you work for?
                 </Text>
+                <Text style={tailwind('text-base pt-2 pb-2 text-center')}>
+                    You can always change this later in settings.
+                </Text>
                 <View style={tailwind('flex-row flex-wrap p-2')}>
                     <BinaryFilterPill
                         displayText={'Instacart'}

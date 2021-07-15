@@ -105,7 +105,7 @@ export default function BottomTabNavigator({}) {
                     />
 
                     <BottomTab.Screen
-                        name="History"
+                        name="Your Stats"
                         component={HistoryScreen}
                         options={{
                             tabBarIcon: ({ color }) => (
