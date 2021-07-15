@@ -65,6 +65,7 @@ export default ({
                     returnKeyType={'done'}
                     onFocus={() => setFocused(true)}
                     onBlur={() => setFocused(false)}
+                    placeholder={placeholder}
                 >
                     {displayValue}
                 </TextInput>

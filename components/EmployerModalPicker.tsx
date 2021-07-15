@@ -11,20 +11,22 @@ export default ({
     onEmployerChange = undefined,
     submitChange = true,
 }: {
-    job: Job;
+    job: Job | null;
     onEmployerChange?: (e: Employers) => void;
     submitChange?: boolean;
 }) => {
-    const [selectedEmployer, setSelectedEmployer] = useState<String | undefined>(job.employer);
+    const [selectedEmployer, setSelectedEmployer] = useState<String | undefined>(
+        job?.employer || 'Select One'
+    );
     const [open, setOpen] = useState<boolean>(false);
 
-    const updateJob = useMutation(['updateJobEmployer', job.id], updateJobEmployer);
+    const updateJob = useMutation(['updateJobEmployer', job?.id], updateJobEmployer);
 
     return (
-        <View style={tailwind('m-1 pl-2 pr-2')}>
+        <View style={tailwind('mt-1 mb-1 pl-2 pr-2 w-32')}>
             <Text style={tailwind('text-base text-black p-0 m-0')}>Service</Text>
             <Pressable
-                style={tailwind('flex flex-col rounded-lg w-40 flex-col bg-gray-100 p-1')}
+                style={tailwind('flex flex-col rounded-lg flex-col bg-gray-100 p-1')}
                 onPress={() => setOpen(true)}
             >
                 <ModalPicker
@@ -32,15 +34,15 @@ export default ({
                     onSelectOption={(option) => {
                         setSelectedEmployer(option);
                         setOpen(false);
-                        if (option === 'Select Service') {
+                        if (option === 'Select One') {
                             return;
                         } else {
                             const enumEmployer: Employers = option as Employers;
                             if (onEmployerChange) onEmployerChange(enumEmployer);
-                            if (submitChange && job.id) {
+                            if (submitChange && job && job.id) {
                                 console.log('job:', job);
                                 updateJob.mutate({
-                                    jobId: job.id,
+                                    jobId: job?.id,
                                     employer: enumEmployer,
                                 });
                             }
@@ -52,7 +54,14 @@ export default ({
                     promptText={'What service was this job for?'}
                 />
                 <View style={tailwind('flex-row items-center')}>
-                    <Text style={tailwind('p-1 text-black')}>{selectedEmployer}</Text>
+                    <Text
+                        style={[
+                            tailwind('text-base'),
+                            tailwind(job?.employer ? 'text-black' : 'text-gray-500'),
+                        ]}
+                    >
+                        {selectedEmployer}
+                    </Text>
                 </View>
             </Pressable>
         </View>

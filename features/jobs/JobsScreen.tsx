@@ -34,6 +34,8 @@ import { RootState } from '../../store';
 import { dismissCombineHint, dismissJobListHint } from '../history/OnboardingSlice';
 import Tooltip from 'react-native-walkthrough-tooltip';
 
+import { useNavigation } from '@react-navigation/core';
+import { JobAddScreen } from './JobAddScreen';
 const TripsStack = createStackNavigator();
 export default function JobsScreen({ route, navigation }) {
     return (
@@ -45,6 +47,13 @@ export default function JobsScreen({ route, navigation }) {
             <TripsStack.Screen
                 name="Tracked Jobs"
                 component={JobsList}
+                options={{
+                    headerShown: false,
+                }}
+            ></TripsStack.Screen>
+            <TripsStack.Screen
+                name="Add Job"
+                component={JobAddScreen}
                 options={{
                     headerShown: false,
                 }}
@@ -81,6 +90,7 @@ const JobsScreenHeader = ({
     );
     const [showCombineHint, setShowCombineHint] = useState(true);
     const dispatch = useDispatch();
+    const navigation = useNavigation();
     console.log('dismissed hint:', dismissedCombineHint, showCombineHint);
     const EditButton = () =>
         isEditing ? (
@@ -168,13 +178,22 @@ const JobsScreenHeader = ({
                 </Pressable>
             </View>
         ) : (
-            <Pressable
-                onPress={onPress}
-                style={[tailwind('flex-row rounded-lg p-2 bg-black items-center')]}
-            >
-                <Text style={tailwind('text-white font-bold')}>Edit</Text>
-                <Ionicons name="create" color="white" size={16} style={tailwind('p-1')} />
-            </Pressable>
+            <View style={tailwind('flex-row justify-around')}>
+                <Pressable
+                    onPress={onPress}
+                    style={[tailwind('flex-row rounded-lg p-2 bg-black items-center ml-1 mr-1')]}
+                >
+                    <Text style={tailwind('text-white font-bold')}>Edit</Text>
+                    <Ionicons name="create" color="white" size={16} style={tailwind('p-1')} />
+                </Pressable>
+                <Pressable
+                    onPress={() => navigation.navigate('Add Job')}
+                    style={[tailwind('flex-row rounded-lg p-2 bg-black items-center ml-1 mr-1')]}
+                >
+                    <Text style={tailwind('text-white font-bold')}>New</Text>
+                    <Ionicons name="add-circle" color="white" size={16} style={tailwind('p-1')} />
+                </Pressable>
+            </View>
         );
     return (
         <View style={tailwind('flex-row p-2 mt-5 justify-between items-center h-24')}>
@@ -702,8 +721,8 @@ export const JobsList = ({ route }) => {
                         source={require('./loc-img.png')}
                     />
                     <Text style={tailwind('text-lg font-bold text-black p-3')}>
-                        Clock in and drive to automatically track your jobs, and then return here
-                        to save your pay.
+                        Clock in and drive to automatically track your jobs, and then return here to
+                        save your pay.
                     </Text>
                 </View>
             );
@@ -714,8 +733,8 @@ export const JobsList = ({ route }) => {
                 <View style={tailwind('w-full p-1 items-center justify-center')}>
                     <Text style={tailwind('text-lg font-bold text-black p-2')}>No Jobs found!</Text>
                     <Text style={tailwind('text-lg font-bold text-black p-2')}>
-                        Clock in and drive to automatically track your jobs, and then return here
-                        to save your pay.
+                        Clock in and drive to automatically track your jobs, and then return here to
+                        save your pay.
                     </Text>
                     <Image
                         style={tailwind('w-3/4 h-48 mt-10 mb-10 self-center')}

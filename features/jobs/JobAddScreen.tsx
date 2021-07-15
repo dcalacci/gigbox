@@ -5,7 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Region, Marker, LatLng } from 'react-native-maps';
 import { useQueryClient, useMutation } from 'react-query';
 import moment from 'moment';
-import { Job, Screenshot } from '../../types';
+import { Employers, Job, Screenshot } from '../../types';
 import { parse } from 'wellknown';
 import TripMap from './TripMap';
 import ScreenshotUploader from './ScreenshotPicker';
@@ -14,18 +14,55 @@ import { deleteImage } from './api';
 
 import Toast from 'react-native-root-toast';
 import { JobItem } from './JobItem';
+import JobDetail from './JobDetail';
+import EmployerModalPicker from '../../components/EmployerModalPicker';
 
-export const JobDetailScreen = ({ route }: { route: { params: { job: Job } } }) => {
-    const job = route.params.job;
+export const JobAddScreen = () => {
+    const [employer, setEmployer] = useState(null);
+    const [pay, setPay] = useState(0.0);
+    const [tip, setTip] = useState(0.0);
     return (
-        <>
-            <JobDetailCard job={job} />
-        </>
+        <View style={tailwind('flex-col p-2 flex-grow bg-gray-100 items-center')}>
+            <View style={[tailwind('flex-row w-full mt-20 content-start')]}>
+                <Text style={tailwind('text-4xl font-bold ')}>Add Job</Text>
+            </View>
+            <View
+                style={[
+                    tailwind(
+                        'flex-row flex-wrap w-full bg-white rounded-lg m-2 p-5 items-center justify-start'
+                    ),
+                ]}
+            >
+                <JobDetail
+                    label={'Pay'}
+                    value={pay}
+                    prefix={'$ '}
+                    suffix={''}
+                    placeholder={'Job Pay'}
+                    onChangeValue={setPay}
+                ></JobDetail>
+                <JobDetail
+                    label={'Tip'}
+                    value={tip}
+                    prefix={'$ '}
+                    suffix={''}
+                    placeholder={'Enter Tip'}
+                    onChangeValue={setTip}
+                ></JobDetail>
+                <EmployerModalPicker
+                    job={undefined}
+                    submitChange={false}
+                    onEmployerChange={(e: Employers) => {
+                        if (setEmployer) setEmployer(e);
+                    }}
+                />
+            </View>
+        </View>
     );
 };
 
 // A single job, including its map, details, and screenshot uploader
-export const JobDetailCard = ({ job }: { job: Job }) => {
+const JobDetailCard = ({ job }: { job: Job }) => {
     const [region, setRegion] = useState<Region>();
     const [locations, setLocations] = useState<LatLng>();
 
@@ -245,7 +282,9 @@ export const Screenshots = ({
                             'self-center justify-self-center bg-gray-800 rounded-lg p-2'
                         )}
                     >
-                        <Text style={tailwind('text-white text-lg font-bold')}>Add Images</Text>
+                        <Text style={tailwind('text-white text-xl font-bold underline')}>
+                            Add Images
+                        </Text>
                     </Pressable>
                 </View>
             </View>

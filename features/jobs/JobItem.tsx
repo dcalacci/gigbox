@@ -137,7 +137,7 @@ export const JobItem = ({
             ]}
             onPress={() => {
                 log.info('Navigating to job detail', job);
-                navigation.navigate('Trip Detail', { job: job });
+                navigation.navigate('Job Detail', { job: job });
             }}
         >
             <View
@@ -166,8 +166,13 @@ export const JobItem = ({
                     >
                         <RowHeader />
                         {displayDetails ? (
-                            <>
-                                <View style={[tailwind('flex-row flex-wrap'), showMap ? null : tailwind("justify-evenly")]}>
+                            <View style={tailwind('flex-col items-center flex-shrink')}>
+                                <View
+                                    style={[
+                                        tailwind('flex-row flex-wrap justify-start'),
+                                        showMap ? null : tailwind('justify-start'),
+                                    ]}
+                                >
                                     <JobDetail
                                         label={'Pay'}
                                         value={job.totalPay}
@@ -192,7 +197,7 @@ export const JobItem = ({
                                         }}
                                     />
                                 </View>
-                            </>
+                            </View>
                         ) : null}
                     </View>
                 </View>
