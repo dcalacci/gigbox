@@ -8,7 +8,7 @@ import {
     ViewStyle,
     LayoutAnimation,
 } from 'react-native';
-
+import { useDispatch, useSelector } from 'react-redux';
 import Toast from 'react-native-root-toast';
 import { useInfiniteQuery, useMutation, useQueryClient } from 'react-query';
 import { FlatList } from 'react-native-gesture-handler';
@@ -30,7 +30,9 @@ import { deleteJob, updateJobValue } from './api';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import BinaryFilterPill from '../../components/BinaryFilterPill';
 import { DateRangeFilterPill, JobFilter } from '../../components/FilterPills';
+import { RootState } from '../../store';
 const TripsStack = createStackNavigator();
+import { dismissJobListHint } from '../history/OnboardingSlice';
 
 export default function JobsScreen({ navigation }: { navigation: TripsScreenNavigationProp }) {
     return (
@@ -348,10 +350,17 @@ export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
             getNextPageParam: (lastPage, pages) => {
                 console.log('last page:', lastPage);
                 console.log(lastPage);
-                return lastPage.allJobs.pageInfo.endCursor;
+                const pageCursor = lastPage.allJobs.pageInfo.endCursor;
+                if (!pageCursor) {
+                    return undefined;
+                } else {
+                    return pageCursor;
+                }
             },
             select: (d) => {
-                return d?.pages.map((a) => a.allJobs.edges).flat();
+                let jobArr = d?.pages.map((a) => a.allJobs.edges).flat();
+                console.log('flattened:', d);
+                return jobArr;
             },
             onSettled: () => setRefreshing(false),
         }
@@ -638,13 +647,13 @@ export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
     const ListEmptyComponent = () => {
         if (filter.needsEntry) {
             return (
-                <View style={tailwind('h-full w-full p-1 items-center flex-col')}>
+                <View style={tailwind(' w-full p-1 items-center flex-col')}>
                     <Text style={tailwind('text-lg font-bold text-black p-2')}>
                         Great work! You don't have any Jobs left that need their pay, tip, or
                         service filled in.
                     </Text>
                     <Image
-                        style={tailwind('w-3/4 h-64 mt-10 mb-10 self-center')}
+                        style={tailwind('w-3/4 h-48 mt-10 mb-10 self-center')}
                         resizeMode={'contain'}
                         source={require('./loc-img.png')}
                     />
@@ -654,25 +663,63 @@ export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
                     </Text>
                 </View>
             );
-        }
-        if (status == 'loading') {
+        } else if (status == 'loading') {
             return <AnimatedEllipsis style={{ color: '#1c1c1c', fontSize: 100 }} />;
         } else {
             return (
-                <View style={tailwind('h-full w-full p-1 items-center justify-center')}>
+                <View style={tailwind('w-full p-1 items-center justify-center')}>
                     <Text style={tailwind('text-lg font-bold text-black p-2')}>No Jobs found!</Text>
-                    <Image
-                        style={tailwind('w-3/4 h-64 mt-10 mb-10 self-center')}
-                        resizeMode={'contain'}
-                        source={require('./loc-img.png')}
-                    />
                     <Text style={tailwind('text-lg font-bold text-black p-2')}>
                         Clock in and drive to automatically track your trips, and then return here
                         to save your pay.
                     </Text>
+                    <Image
+                        style={tailwind('w-3/4 h-48 mt-10 mb-10 self-center')}
+                        resizeMode={'contain'}
+                        source={require('./loc-img.png')}
+                    />
                 </View>
             );
         }
+    };
+
+    const [showInfoCard, setShowInfoCard] = useState(true);
+    const InfoCard = () => {
+        const dismissedJobListHint = useSelector(
+            (state: RootState): boolean => state.onboarding.dismissedJobListHint
+        );
+        const dispatch = useDispatch();
+        return showInfoCard && !dismissedJobListHint ? (
+            <View style={tailwind('w-full flex-col rounded-lg bg-white m-2 p-5 self-center')}>
+                <Text style={tailwind('text-base p-2')}>
+                    These are all the Jobs that Gigbox has automatically tracked while you've been
+                    "clocked in".
+                </Text>
+                <Text style={tailwind('text-base p-2')}>
+                    You can track your mileage just by deleting jobs that aren't work-related, but
+                    to track pay, go through each job and enter your pay & tip, and then select
+                    which service you worked for.
+                </Text>
+                <Text style={tailwind('text-base p-2 ')}>
+                    See two entries that are really the same job? Just combine them by tapping the
+                    'edit' button above.
+                </Text>
+                <View style={tailwind('flex-row w-full justify-around')}>
+                    <Pressable
+                        style={tailwind('flex-col p-2 border rounded-lg')}
+                        onPress={() => dispatch(dismissJobListHint())}
+                    >
+                        <Text style={tailwind('text-lg font-bold')}>Don't show again</Text>
+                    </Pressable>
+                    <Pressable
+                        style={tailwind('flex-col bg-black p-2 rounded-lg')}
+                        onPress={() => setShowInfoCard(false)}
+                    >
+                        <Text style={tailwind('text-lg text-white font-bold')}>Dismiss</Text>
+                    </Pressable>
+                </View>
+            </View>
+        ) : null;
     };
 
     return (
@@ -691,7 +738,7 @@ export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
                     );
                 }}
                 ListHeaderComponent={
-                    <>
+                    <View style={tailwind('flex-col w-full')}>
                         <JobsScreenHeader
                             isEditing={isEditing}
                             onPress={toggleEditing}
@@ -717,7 +764,8 @@ export const JobsList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
                             selectedJobs={selectedJobs}
                             isVisible={selectedJobs.length > 0}
                         />
-                    </>
+                        <InfoCard />
+                    </View>
                 }
                 style={[tailwind('w-full flex-auto flex-col flex-grow pl-1 pr-1')]}
                 data={data}

@@ -161,7 +161,7 @@ export const JobItem = ({
                             {locations && region ? <Map /> : <Text>No locations...</Text>}
                         </View>
                     ) : null}
-                        <View style={tailwind('flex-col justify-start')}>
+                        <View style={tailwind('flex-col justify-start w-2/3')}>
                             <RowHeader />
                             {displayDetails ? (
                                 <>
