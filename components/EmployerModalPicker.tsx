@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import { Pressable, View, Text } from 'react-native';
 import { useMutation } from 'react-query';
 import { tailwind } from 'tailwind';
-import { updateJobEmployer } from './api';
-import ModalPicker from '../../components/ModalPicker';
-import { Job, Employers } from '../../types';
+import { updateJobEmployer } from '../features/jobs/api';
+import ModalPicker from './ModalPicker';
+import { Job, Employers } from '../types';
 
 export default ({
     job,

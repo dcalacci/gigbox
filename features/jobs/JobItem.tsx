@@ -5,7 +5,7 @@ import { Region, Marker, LatLng } from 'react-native-maps';
 import moment from 'moment';
 import { Employers, Job } from '../../types';
 import { parse } from 'wellknown';
-import TripMap from '../shiftList/TripMap';
+import TripMap from './TripMap';
 import { log } from '../../utils';
 import Swipeable from 'react-native-gesture-handler/Swipeable';
 
@@ -13,7 +13,7 @@ import { useNavigation } from '@react-navigation/core';
 
 import { updateJobEmployer, updateJobValue } from './api';
 import { useMutation } from 'react-query';
-import EmployerModalPicker from './EmployerModalPicker';
+import EmployerModalPicker from '../../components/EmployerModalPicker';
 import JobDetail from './JobDetail';
 import ScreenshotUploader from './ScreenshotPicker';
 import { Screenshots } from './JobDetailScreen';

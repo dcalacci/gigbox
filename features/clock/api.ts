@@ -7,7 +7,6 @@ import { LocationInput, Employers } from '../../types';
 import * as FileSystem from 'expo-file-system';
 import { useQuery } from 'react-query';
 import moment from 'moment';
-import { useNumJobsNeedEntryThisWeek } from '../jobs/api';
 
 export const fetchActiveShift = async () => {
     const client = getClient(store);
