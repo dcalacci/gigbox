@@ -702,7 +702,7 @@ export const JobsList = ({ route }) => {
                         source={require('./loc-img.png')}
                     />
                     <Text style={tailwind('text-lg font-bold text-black p-3')}>
-                        Clock in and drive to automatically track your trips, and then return here
+                        Clock in and drive to automatically track your jobs, and then return here
                         to save your pay.
                     </Text>
                 </View>
@@ -714,7 +714,7 @@ export const JobsList = ({ route }) => {
                 <View style={tailwind('w-full p-1 items-center justify-center')}>
                     <Text style={tailwind('text-lg font-bold text-black p-2')}>No Jobs found!</Text>
                     <Text style={tailwind('text-lg font-bold text-black p-2')}>
-                        Clock in and drive to automatically track your trips, and then return here
+                        Clock in and drive to automatically track your jobs, and then return here
                         to save your pay.
                     </Text>
                     <Image
