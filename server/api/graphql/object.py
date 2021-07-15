@@ -231,18 +231,6 @@ class Location(SQLAlchemyObjectType):
     accuracy = ORMField(model_attr="accuracy")
 
 
-class WeeklySummary(graphene.ObjectType):
-    earnings = graphene.Float()
-    expenses = graphene.Float()
-    miles = graphene.Float()
-    num_jobs = graphene.Int()
-    num_shifts = graphene.Int()
-    mean_pay = graphene.Float()
-    total_pay = graphene.Float()
-    total_tips = graphene.Float()
-    mean_tips = graphene.Float()
-
-
 class BoundingBox(graphene.ObjectType):
     min_lat = graphene.Float()
     min_lng = graphene.Float()
@@ -276,3 +264,15 @@ class AnswerInput(graphene.InputObjectType):
     numericValue = graphene.String(required=False)
     selectValue = graphene.List(String, required=False)
     ynValue = graphene.Boolean(required=False)
+
+
+class WeeklySummary(graphene.ObjectType):
+    earnings = graphene.Float()
+    expenses = graphene.Float()
+    miles = graphene.Float()
+    num_jobs = graphene.Int()
+    num_shifts = graphene.Int()
+    mean_pay = graphene.Float()
+    total_pay = graphene.Float()
+    total_tips = graphene.Float()
+    mean_tips = graphene.Float()

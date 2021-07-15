@@ -1,7 +1,7 @@
 import { StackNavigationProp } from '@react-navigation/stack';
 import { StringValueNode } from 'graphql/language/ast';
 import { LatLng } from 'react-native-maps';
-import { JobFilter } from './features/job/JobList';
+import { JobFilter } from './components/FilterPills';
 
 export type RootStackParamList = {
     Home: undefined;
@@ -13,8 +13,8 @@ export type RootStackParamList = {
 
 export type BottomTabParamList = {
     Home: undefined;
-    Trips: undefined;
-    History: undefined;
+    Jobs: undefined;
+    'Your Stats': undefined;
     Settings: undefined
 };
 

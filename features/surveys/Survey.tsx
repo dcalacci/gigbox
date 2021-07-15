@@ -135,7 +135,7 @@ const SurveyItem = ({ survey, navigation }: { survey: Survey; navigation: any })
         onSuccess: (d) => {
             console.log('Submitted survey!', d);
             queryClient.invalidateQueries(['surveys']);
-            navigation.navigate('TabOneScreen');
+            navigation.navigate('Home');
         },
     });
     useEffect(() => {

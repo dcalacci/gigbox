@@ -76,6 +76,7 @@ from config import get_environment_config
 
 c = get_environment_config()
 
+
 class CreateUser(Mutation):
     """Mutation to create a user. must be given a UID"""
 
@@ -158,6 +159,7 @@ class EndShift(Mutation):
 
             return EndShift(shift=shift)
 
+
 class ExtractJobsFromShift(Mutation):
     """Extract trips from a shift.
 
@@ -171,26 +173,29 @@ class ExtractJobsFromShift(Mutation):
     jobs = Field(lambda: List(JobNode), description="Jobs added")
 
     class Arguments:
-        shift_id = ID(required=True, description="ID of the shift to extract jobs from")
+        shift_id = ID(
+            required=True, description="ID of the shift to extract jobs from")
 
     @login_required
     def mutate(self, info, shift_id):
         shift_id = from_global_id(shift_id)[1]
-        shift = (db.session.query(ShiftModel).filter_by(id=shift_id, user_id=g.user).first())
+        shift = (db.session.query(ShiftModel).filter_by(
+            id=shift_id, user_id=g.user).first())
         jobs = extractJobsFromLocations(shift, shift.locations, info)
 
-        ## don't add any that overlap with existing jobs
+        # don't add any that overlap with existing jobs
         added = []
         overlaps = [list(JobModel.query.filter(and_(
-                JobModel.shift_id == shift.id,
-                JobModel.start_time <= j.end_time, 
-                JobModel.end_time >= j.start_time))) for j in jobs]
+            JobModel.shift_id == shift.id,
+            JobModel.start_time <= j.end_time,
+            JobModel.end_time >= j.start_time))) for j in jobs]
         for n, j in enumerate(jobs):
             if not overlaps[n]:
                 db.session.add(j)
                 added.append(j)
             else:
-                print("overlap:", [(j.start_time, j.end_time) for j in overlaps[n]])
+                print("overlap:", [(j.start_time, j.end_time)
+                                   for j in overlaps[n]])
         db.session.commit()
         return ExtractJobsFromShift(added)
 
@@ -239,14 +244,16 @@ def updateShiftMileageAndGeometry(shift, info):
     current_app.logger.info(f'matched route added to shift...')
     return shift
 
+
 def extractJobsFromLocations(shift, locations, info):
     """ Create job objects from a list of locations and a shift 
     """
     from api.routing.mapmatch import get_trips_from_locations, get_match_for_trajectory
 
     if shift.end_time is not None:
-        locs = [l for l in locations if l.timestamp >= shift.start_time and l.timestamp <= shift.end_time]
-    else: 
+        locs = [l for l in locations if l.timestamp >=
+                shift.start_time and l.timestamp <= shift.end_time]
+    else:
         locs = [l for l in locations if l.timestamp >= shift.start_time]
     trips = get_trips_from_locations(locs)
     jobs = []
@@ -256,11 +263,12 @@ def extractJobsFromLocations(shift, locations, info):
         return jobs
     for traj_df, stops, dist in trips:
         job = JobModel(
-                start_location = {'lat': stops['start'].lat, 'lng': stops['start'].lng},
-                end_location = {'lat': stops['stop'].lat, 'lng': stops['stop'].lng},
-                user_id = shift.user_id,
-                shift_id = shift.id,
-                )
+            start_location={
+                'lat': stops['start'].lat, 'lng': stops['start'].lng},
+            end_location={'lat': stops['stop'].lat, 'lng': stops['stop'].lng},
+            user_id=shift.user_id,
+            shift_id=shift.id,
+        )
 
         match_obj = get_route_distance_and_geometry(traj_df)
         bb = match_obj['geom_obj'][1]
@@ -278,11 +286,13 @@ def extractJobsFromLocations(shift, locations, info):
         jobs.append(job)
     return jobs
 
+
 def createJobsFromLocations(shift, locations, info):
     jobs = extractJobsFromLocations(shift, locations, info)
     for j in jobs:
         db.session.add(j)
     db.session.commit()
+
 
 class AddLocationsToShift(Mutation):
     """Adds a list of locations to a given shift"""
@@ -451,28 +461,35 @@ class CreateJob(Mutation):
     ok = Field(lambda: Boolean)
 
     class Arguments:
-        shift_id = ID(
-            required=True, description="ID of the shift to make a job in")
-
-        start_location = LocationInput()
-        employer = String()
+        tip = Float()
+        totalPay = Float()
+        endTime = DateTime()
+        startTime = DateTime()
+        mileage = Float()
+        employer = graphene.Argument(Enum.from_enum(EmployerNames))
 
     @login_required
-    def mutate(self, info, shift_id, start_location, employer):
-        print("creating job...")
-        shift_id = from_global_id(shift_id)[1]
-        shift = ShiftModel.query.filter_by(id=shift_id, user_id=g.user).first()
+    def mutate(self, info, **kwargs):
+        print("creating job...", kwargs)
+        #shift_id = from_global_id(shift_id)[1]
+        # shift = ShiftModel.query.filter_by(user_id=g.user).first()
 
-        employer = EmployerNames.INSTACART
         job = JobModel(
-            shift_id=shift.id,
-            start_location=start_location,
-            user_id=shift.user_id,
-            employer=employer
+            shift_id=None,
+            user_id=g.user,
+            employer=kwargs['employer'],
         )
-        shift.jobs.append(job)
 
-        db.session.add(shift)
+        job.start_time = kwargs['startTime'],
+        job.end_time = kwargs['endTime'],
+        job.tip = kwargs['tip'],
+        job.total_pay = kwargs['totalPay']
+        job.mileage = kwargs['mileage']
+
+        print("Creating job:", job)
+
+
+        db.session.add(job)
         db.session.commit()
         return CreateJob(job=job, ok=True)
 
@@ -492,8 +509,8 @@ def get_mileage_and_geometry_for_locations(locations):
     locs = sorted(locations, key=lambda l: l.timestamp)
     match_obj = get_route_distance_and_geometry(locs)
 
-    if ('geom_obj' not in match_obj 
-            or not match_obj['geom_obj'] 
+    if ('geom_obj' not in match_obj
+            or not match_obj['geom_obj']
             or match_obj['status'] == 'error'):
         current_app.logger.error("Failed to match a route to job...")
         return job
@@ -627,6 +644,7 @@ class SetJobMileage(Mutation):
         db.session.commit()
         return SetJobMileage(job, True)
 
+
 class SetJobEmployer(Mutation):
     job = Field(lambda: JobNode, description="Job to update")
     ok = Field(lambda: Boolean)
@@ -643,6 +661,7 @@ class SetJobEmployer(Mutation):
         db.session.add(job)
         db.session.commit()
         return SetJobEmployer(job, True)
+
 
 def most_common_employer_or_none(jobs):
     """Returns most common employer 
@@ -661,11 +680,12 @@ def most_common_employer_or_none(jobs):
         most_common = max(set(employers), key=employers.count)
         return most_common
 
+
 def get_all_locations_from_jobs(jobs, start_time, end_time):
     """Return a list of Location objects collected from each job in jobs.
 
     Pulls Location objects from each Job's associated Shift
-    
+
     Location list is sorted by timestamp.
 
     Args:
@@ -687,20 +707,21 @@ def get_all_locations_from_jobs(jobs, start_time, end_time):
         and l.timestamp <= end_time)]
     # job_loc_shapes = [to_shape(l) for l in job_locations]
     # latLngs = [{'lat': shp.y, 'lng': shp.x} for shp in job_loc_shapes]
-    # return latLngs 
+    # return latLngs
     return job_locations
+
 
 class DeleteJob(Mutation):
     ok = Field(lambda: Boolean, description="True if job deleted successfully")
     message = Field(lambda: String, description="Any error or success message")
 
     class Arguments:
-        job_id = List(ID)
+        job_id = graphene.Argument(ID, required=True)
 
     @login_required
     def mutate(self, info, job_id):
-        job_id = from_global_id(job_id)[1]
-        job = JobModel.query.get(id=job_id)
+        id = from_global_id(job_id)[1]
+        job = JobModel.query.get(id)
         if not job:
             return DeleteJob(ok=False, message="Either that job doesn't exist or you don't have access to it.")
         else:
@@ -708,17 +729,23 @@ class DeleteJob(Mutation):
             db.session.commit()
             return DeleteJob(ok=True, message="Job Deleted")
 
+
 class MergeJobs(Mutation):
     ok = Field(lambda: Boolean, description="True if job merged successfully")
-    committed = Field(lambda: Boolean, description="True if Job committed to database successfully")
-    message = Field(lambda: String, description="Associated message. 'success' if operation is successful.")
-    mergedJob = Field(lambda: JobNode, description="Merged Job (if successful). Null otherwise.")
-    class Arguments: 
+    committed = Field(
+        lambda: Boolean, description="True if Job committed to database successfully")
+    message = Field(
+        lambda: String, description="Associated message. 'success' if operation is successful.")
+    mergedJob = Field(
+        lambda: JobNode, description="Merged Job (if successful). Null otherwise.")
+
+    class Arguments:
         job_ids = List(ID)
         dry_run = Boolean(required=False)
         total_pay = Float(required=False)
         tip = Float(required=False)
-        employer = graphene.Argument(graphene.Enum.from_enum(EmployerNames), required=False)
+        employer = graphene.Argument(
+            graphene.Enum.from_enum(EmployerNames), required=False)
 
     @login_required
     def mutate(self, info, job_ids, total_pay=None, tip=None, employer=None, dry_run=False):
@@ -752,20 +779,21 @@ class MergeJobs(Mutation):
         start_loc = to_shape(jobs[0].start_location)
         end_loc = to_shape(jobs[-1].end_location)
         newJob = JobModel(
-            shift_id = jobs[0].shift_id,
-            user_id = g.user,
-            employer = (employer or most_common_employer_or_none(jobs)),
-            start_location = {'lat': start_loc.y, 'lng': start_loc.x},
-            end_location = {'lat': end_loc.y, 'lng': end_loc.x}
+            shift_id=jobs[0].shift_id,
+            user_id=g.user,
+            employer=(employer or most_common_employer_or_none(jobs)),
+            start_location={'lat': start_loc.y, 'lng': start_loc.x},
+            end_location={'lat': end_loc.y, 'lng': end_loc.x}
         )
         newJob.start_time = jobs[0].start_time
         newJob.end_time = jobs[-1].end_time
-        newJob.total_pay = (total_pay or np.sum([(j.total_pay or 0.) for j in jobs]))
+        newJob.total_pay = (total_pay or np.sum(
+            [(j.total_pay or 0.) for j in jobs]))
         newJob.tip = (tip or np.sum([(j.tip or 0.) for j in jobs]))
 
-        job_locations = get_all_locations_from_jobs(jobs, 
-                newJob.start_time, 
-                newJob.end_time)
+        job_locations = get_all_locations_from_jobs(jobs,
+                                                    newJob.start_time,
+                                                    newJob.end_time)
 
         res = get_mileage_and_geometry_for_locations(job_locations)
 
@@ -773,10 +801,11 @@ class MergeJobs(Mutation):
         newJob.mileage = res['distance']
 
         if dry_run:
+            newJob.id = None
             return MergeJobs(ok=True, committed=False, message="(Dry Run) Merged {} trips".format(len(jobs)), mergedJob=newJob)
         try:
             db.session.add(newJob)
-            for job in jobs: 
+            for job in jobs:
                 db.session.delete(job)
         except:
             db.session.rollback()

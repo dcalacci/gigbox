@@ -76,22 +76,34 @@ export default function SettingsScreen({ route }) {
         <SafeAreaView style={tailwind('bg-gray-100 justify-start flex-col')}>
             <StatusBar style="dark" />
             <ScrollView>
-                {/* <Text style={styles.title}>Jobs</Text> */}
                 <View style={tailwind('flex-row p-5 content-start justify-between')}>
                     <Text style={tailwind('text-4xl font-bold ')}>Settings</Text>
                     <Pressable onPress={signOut} style={tailwind('p-2 self-end')}>
                         <Text style={tailwind('text-xl underline')}>Sign Out</Text>
                     </Pressable>
                 </View>
-                <View style={tailwind('flex-row p-5 content-start')}>
-                    <Text style={tailwind('text-2xl font-bold')}>Your Services</Text>
+                <View style={tailwind('flex-row p-2 pl-5 content-start')}>
+                    <View style={tailwind('flex-col')}>
+                        <Text style={tailwind('text-2xl font-bold')}>Your Services</Text>
+                        <Text style={tailwind('text-lg')}>
+                            The services you work for and want Gigbox to help track.
+                        </Text>
+                    </View>
                 </View>
                 <SetEmployersCard />
 
-                <View style={tailwind('flex-row p-5 content-start')}>
-                    <Text style={tailwind('text-2xl font-bold')}>
-                        Consent, Data, and Enrollment
-                    </Text>
+                <View style={tailwind('flex-row border-b w-full mb-5 mt-5')}></View>
+
+                <View style={tailwind('flex-row p-2 pl-5 content-start')}>
+                    <View style={tailwind('flex-col')}>
+                        <Text style={tailwind('text-2xl font-bold')}>
+                            Consent, Data, and Enrollment
+                        </Text>
+                        <Text style={tailwind('text-lg')}>
+                            Change your settings related to the study, being contacted for an
+                            interview, and delete your data + unenroll.
+                        </Text>
+                    </View>
                 </View>
                 <BinarySurveyQuestion
                     onPress={(press) => {

@@ -9,7 +9,7 @@ import jwt
 import pandas as pd
 from datetime import datetime, timedelta
 from flask import current_app, request
-from .utils import ApiTestCase, app, client, gqlClient, token, locs, exodus_locs, active_shift
+from .utils import ApiTestCase, add_locations_to_shift, app, client, end_shift, extract_jobs_from_shift, gqlClient, token, locs, exodus_locs, active_shift
 
 from api import create_app, db
 from api.controllers.errors import custom_errors
@@ -76,113 +76,6 @@ class TestShiftCreation(ApiTestCase):
             print("query result:", res)
             assert res['data']['createShift']['shift']['active']
             self.shift_id = res['data']['createShift']['shift']['id']
-
-
-def add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient,
-        start_n_mins_after_shift=10, trip='default'):
-    """Adds locs to shift active_shift. Adds in same order and time, but begins records
-    `start_n_mins_after_shift` after the shift started.
-    
-    if trip is 'exodus', loads exodus test trip locations
-    """
-    request.headers = {'authorization': token}
-    query = '''mutation AddLocations($ShiftId: ID!, $Locations: [LocationInput]!) {
-    addLocationsToShift(shiftId: $ShiftId, locations: $Locations) {
-        location {
-            geom
-            timestamp
-        }
-        ok
-    }
-}
-    '''
-    if trip == 'exodus':
-        locs = exodus_locs
-    ## add all locations not just first!
-    locations = locs.to_dict(orient='records')
-    locs_to_add = []
-    shift_start = pd.to_datetime(active_shift['startTime'])
-    # shift_start = datetime.strptime(active_shift['startTime'],
-    #         "%Y-%m-%d %H:%M:%S")
-    # this for loop replicates the time difference in our set of recorded locations
-    # but updates the actual time to be consistent with our test 'active_shift'.
-    for n, l in enumerate(locations):
-        ll = {
-                'lat': l['lat'],
-                'lng': l['lng'],
-                'accuracy': 5
-            }
-        if n == 0:
-            # if it's the first, just use 10 mins after shift start
-            ll['timestamp'] = shift_start + timedelta(minutes=start_n_mins_after_shift)
-        else:
-            # otherwise, add calculated time difference to last added loc
-            td = l['time'] - locations[n-1]['time'] # diff from last timestamp
-            ll['timestamp'] = (locs_to_add[-1]['timestamp'] + td)
-        locs_to_add.append(ll)
-
-    # turn into timestamp
-    for l in locs_to_add:
-        l['timestamp'] = l['timestamp'].timestamp() * 1000
-
-    vars = {
-            'ShiftId': active_shift['id'],
-            'Locations': locs_to_add 
-            }
-    res = gqlClient.execute(query, context_value=request, variables=vars)
-    # structure is 'data': 'addLocationsToShift': 'location': 'geom': POINT(lng, lat)
-    return res
-
-def end_shift(token, active_shift, gqlClient):
-    request.headers = {'authorization': token}
-    query = '''mutation EndShift($ShiftId: ID!) {
-        endShift(shiftId: $ShiftId) {
-            shift {
-                id
-                active
-                endTime
-                startTime
-                roadSnappedMiles
-                jobs {
-                    edges {
-                        node {
-                        id
-                        startTime
-                        endTime
-                        mileage
-                        }
-                    }
-                }
-            }
-        }
-    }
-    '''
-    vars = {
-        'ShiftId': active_shift['id']
-    }
-    res = gqlClient.execute(query, context_value=request, variables=vars)
-    return res
-
-def extract_jobs_from_shift(token, active_shift, gqlClient):
-    request.headers = {'authorization': token}
-    query = '''mutation ExtractJobs($ShiftId: ID!) {
-        extractJobsFromShift(shiftId: $ShiftId) {
-                jobs {
-                    id
-                    startTime
-                    endTime
-                    mileage
-                }
-            }
-        }
-    '''
-    vars = {
-        'ShiftId': active_shift['id']
-    }
-    res = gqlClient.execute(query, context_value=request, variables=vars)
-    return res
-
-
 
 
 def test_adding_locations_to_shift_is_ok_and_returns_geometry(app, token, locs, exodus_locs, active_shift, gqlClient):

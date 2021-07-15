@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, StyleSheet, LayoutAnimation } from 'react-native';
+import { View, Text, LayoutAnimation } from 'react-native';
 import { useSelector } from 'react-redux';
 import { tailwind } from 'tailwind';
 
 import Toast from 'react-native-root-toast';
 
-import * as MediaLibrary from 'expo-media-library';
-import { Asset } from 'expo-media-library';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 
-import * as Device from 'expo-device';
 import Tooltip from 'react-native-walkthrough-tooltip';
 
 import { RootState } from '../../store/index';
@@ -24,7 +21,6 @@ import {
 } from '../../tasks';
 import { setShiftEmployers, fetchActiveShift, endShift, createShift } from './api';
 import { log } from '../../utils';
-import EmployerSelector from './EmployerSelector';
 import { Employers } from '../../types';
 import ModalMultiSelect from '../../components/ModalMultiSelect';
 
@@ -124,7 +120,6 @@ export default function TrackingBar() {
         if (activeShift.status == 'success' && activeShift.data.active) {
             let interval = setInterval(() => {
                 const clockInTime = activeShift.data.startTime;
-                /* const startTimestamp = shiftActive() ? clockInTime : null; */
                 setElapsedTime(formatElapsedTime(clockInTime));
             }, 100);
             return () => clearInterval(interval);
@@ -141,7 +136,6 @@ export default function TrackingBar() {
             startGettingBackgroundLocation().catch((err) => {
                 log.error("Couldn't start tracking location");
                 log.error(err);
-                //TODO: modal asking about location settings.
                 Toast.show("Couldn't start tracking location, but clocking you in anyway.");
             });
         } else {
@@ -202,7 +196,6 @@ export default function TrackingBar() {
         };
 
         const [toolTipVisible, setToolTipVisible] = useState<boolean>(false);
-        const [employerTtVisible, setEmployerTtVisible] = useState<boolean>(false);
 
         return (
             <Tooltip
@@ -227,7 +220,7 @@ export default function TrackingBar() {
                         ]}
                     >
                         <Toggle
-                            title={shift.active ? 'Tracking Shift' : 'Clock In'}
+                            title={shift.active ? 'Clocked In' : 'Clock In'}
                             activeText="On"
                             inactiveText="Off"
                             value={shift.active}
@@ -251,7 +244,7 @@ export default function TrackingBar() {
                         options={auth.user?.employers}
                         selected={[]}
                         onSelectOptions={onEmployersSubmitted}
-                        buttonText={"Clock In"}
+                        buttonText={'Clock In'}
                     ></ModalMultiSelect>
                 </View>
             </Tooltip>
@@ -284,29 +277,3 @@ export default function TrackingBar() {
         );
     }
 }
-
-const styles = StyleSheet.create({
-    cardShadow: {
-        shadowOffset: {
-            width: 0,
-            height: 1,
-        },
-        shadowOpacity: 0.22,
-        shadowRadius: 3,
-        elevation: 5,
-    },
-    card: {
-        borderRadius: 10,
-        backgroundColor: '#ffffff',
-    },
-    roundedBottom: {
-        borderBottomLeftRadius: 10,
-        borderBottomRightRadius: 10,
-    },
-    mapTitle: {
-        position: 'absolute',
-        top: 2,
-        left: 10,
-        zIndex: 101,
-    },
-});

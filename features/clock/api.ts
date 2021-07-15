@@ -7,7 +7,6 @@ import { LocationInput, Employers } from '../../types';
 import * as FileSystem from 'expo-file-system';
 import { useQuery } from 'react-query';
 import moment from 'moment';
-import { useNumJobsNeedEntryThisWeek } from '../job/api';
 
 export const fetchActiveShift = async () => {
     const client = getClient(store);
@@ -131,7 +130,7 @@ export const setShiftEmployers = ({
     return client.request(query, {
         shiftId,
         employers,
-    });
+    })
 };
 
 export const addScreenshotToShift = async ({
@@ -192,48 +191,6 @@ export const addScreenshotToShift = async ({
     }
 };
 
-export const createJob = async ({ shiftId, employer }: { shiftId: string; employer: string }) => {
-    const client = getClient(store);
-
-    let location: LocationObject | null = await Location.getLastKnownPositionAsync({
-        maxAge: 5000,
-    });
-
-    if (location == null) {
-        log.error("Couldn't retrieve last known location. getting current location..");
-        // throw new Error("Couldn't retrieve location!");
-        location = await Location.getCurrentPositionAsync();
-    }
-
-    const startLocation: LocationInput = {
-        lat: location.coords.latitude,
-        lng: location.coords.longitude,
-        timestamp: location.timestamp,
-        accuracy: location.coords.accuracy,
-    };
-    console.log('got last known position:', location);
-
-    const variables = {
-        shiftId,
-        employer,
-        startLocation: startLocation,
-    };
-
-    const mutation = gql`
-        mutation mutation($shiftId: ID!, $startLocation: LocationInput!, $employer: String!) {
-            createJob(shiftId: $shiftId, startLocation: $startLocation, employer: $employer) {
-                job {
-                    id
-                    startLocation
-                    employer
-                    startTime
-                }
-                ok
-            }
-        }
-    `;
-    return await client.request(mutation, variables);
-};
 
 export const endJob = async ({ jobId }: { jobId: string }) => {
     const client = getClient(store);

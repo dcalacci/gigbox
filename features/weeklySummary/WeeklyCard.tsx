@@ -8,7 +8,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { fetchWeeklySummary } from './api';
 import { log } from '../../utils';
 import { HomeScreenNavigationProp, Job } from '../../types';
-import { getFilteredJobs } from '../job/api';
+import { getFilteredJobs } from '../jobs/api';
 
 
 const WeeklyCard: FunctionComponent = () => {
