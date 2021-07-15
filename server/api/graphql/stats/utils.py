@@ -6,6 +6,13 @@ IRSMileageDeduction = {
 }
 
 
+def get_IRS_rate(year):
+    if year in IRSMileageDeduction:
+        return IRSMileageDeduction[year]
+    else:
+        return IRSMileageDeduction[2021]
+
+
 def get_mileage_deduction(jobs):
     """Returns the total deduction / cost for miles driven in jobs
 
@@ -16,5 +23,5 @@ def get_mileage_deduction(jobs):
         float: Total deduction for miles tracked in the given list of jobs.
     """
     deduction = sum(
-        [job.mileage * IRSMileageDeduction[job.start_time.year] for job in jobs])
+        [(job.mileage or 0) * get_IRS_rate(job.start_time.year or 2021) for job in jobs])
     return deduction
