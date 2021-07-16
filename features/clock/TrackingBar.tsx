@@ -139,11 +139,13 @@ export default function TrackingBar() {
                 Toast.show("Couldn't start tracking location, but clocking you in anyway.");
             });
         } else {
+            let hasEndedShift = false;
             stopGettingBackgroundLocation()
                 .then(() => {
                     log.info(`Stopped getting background location.`);
                     log.info('Ending shift ', activeShift.data.id);
                     endActiveShift.mutate(activeShift.data.id);
+                    hasEndedShift = true;
                     Toast.show('Successfully clocked out.');
                 })
                 .catch((err) => {
@@ -158,6 +160,10 @@ export default function TrackingBar() {
                                 "Couldn't stop getting background location. Try again soon."
                             );
                         } else {
+                            if (!hasEndedShift) {
+                                endActiveShift.mutate(activeShift.data.id);
+                                hasEndedShift = true;
+                            }
                             Toast.show('Successfully clocked out.');
                         }
                     });
