@@ -22,6 +22,7 @@ import { Job } from '../types';
 import { uri as API_URI } from '../utils';
 import { JobFilter } from '../components/FilterPills';
 import { exportJobs, getFilteredJobs } from '../features/jobs/api';
+import WorkingTimeCard from '../features/history/WorkingTimeCard';
 
 export default function HistoryScreen({ route }) {
     const [refreshing, setRefreshing] = useState(false);
@@ -54,6 +55,7 @@ export default function HistoryScreen({ route }) {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             >
                 <NetPayCard />
+                <WorkingTimeCard />
             </ScrollView>
         </View>
     );
