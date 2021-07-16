@@ -158,7 +158,6 @@ export default function TrackingBar() {
                                 "Couldn't stop getting background location. Try again soon."
                             );
                         } else {
-                            endActiveShift.mutate(activeShift.data.id);
                             Toast.show('Successfully clocked out.');
                         }
                     });

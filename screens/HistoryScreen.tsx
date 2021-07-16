@@ -52,7 +52,6 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
     });
 
     const filteredJobsStatus = useQuery(['filteredJobs', filter], getFilteredJobs, {
-        keepPreviousData: true,
         onSuccess: (data) => {
             console.log('filtered all jobs:', data, filter);
             setAllJobs(data.allJobs);

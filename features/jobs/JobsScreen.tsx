@@ -390,6 +390,7 @@ export const JobsList = ({ route }) => {
             onRefresh();
             setSelectedJobs([]);
             Toast.show('Jobs successfully deleted.');
+            queryClient.invalidateQueries('filteredJobs')
         },
         onError: (err, v) => {
             log.error("Couldn't delete jobs...");
