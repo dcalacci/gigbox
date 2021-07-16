@@ -192,46 +192,6 @@ export const addScreenshotToShift = async ({
 };
 
 
-export const endJob = async ({ jobId }: { jobId: string }) => {
-    const client = getClient(store);
-
-    const mutation = gql`
-        mutation mutation($jobId: ID!, $endLocation: LocationInput!) {
-            endJob(jobId: $jobId, endLocation: $endLocation) {
-                job {
-                    id
-                    startLocation
-                    endLocation
-                    employer
-                    startTime
-                    endTime
-                }
-                ok
-            }
-        }
-    `;
-    const location: LocationObject | null = await Location.getLastKnownPositionAsync({
-        maxAge: 5000,
-    });
-
-    if (location == null) {
-        throw new Error("Couldn't retrieve location!");
-    }
-
-    const endLocation: LocationInput = {
-        lat: location.coords.latitude,
-        lng: location.coords.longitude,
-        timestamp: location.timestamp,
-        accuracy: location.coords.accuracy,
-    };
-
-    const variables = {
-        jobId,
-        endLocation,
-    };
-    return await client.request(mutation, variables);
-};
-
 export const getLatestJob = () => {
     const client = getClient(store);
     const query = gql`
