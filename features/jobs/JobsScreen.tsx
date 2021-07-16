@@ -174,7 +174,7 @@ const JobsScreenHeader = ({
                     onPress={onPress}
                     style={[tailwind('flex-row rounded-lg ml-2 mr-2 p-2 border-2 items-center')]}
                 >
-                    <Text style={tailwind('text-black font-bold')}>Cancel</Text>
+                    <Text style={tailwind('text-black font-bold')}>Done</Text>
                 </Pressable>
             </View>
         ) : (
