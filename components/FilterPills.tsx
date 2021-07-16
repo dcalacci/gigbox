@@ -122,7 +122,7 @@ export const DateRangeFilterPill = ({
                 />
 
                 <Pressable
-                    style={tailwind('justify-self-end rounded-2xl m-2 p-2 bg-red-300')}
+                    style={tailwind('justify-self-end rounded-lg m-2 p-2 bg-red-400')}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         onDateRangeChange({ startDate: null, endDate: null });
@@ -132,11 +132,11 @@ export const DateRangeFilterPill = ({
                     }}
                 >
                     <Text style={tailwind('text-white text-xl font-bold self-center')}>
-                        Clear Filter
+                       Clear 
                     </Text>
                 </Pressable>
                 <Pressable
-                    style={tailwind('justify-self-end rounded-2xl m-2 p-2 bg-green-500')}
+                    style={tailwind('justify-self-end rounded-lg m-2 p-2 bg-black')}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         onDateRangeChange(dates);
