@@ -34,7 +34,7 @@ const NetPayCard = () => {
     });
 
     const { status, data } = useQuery(
-        ['netPay', dates.startDate, dates.endDate],
+        ['stats', 'netPay', dates.startDate, dates.endDate],
         () => getNetPay(dates.startDate, dates.endDate),
         {
             onSuccess: (d) => {

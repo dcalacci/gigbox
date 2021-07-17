@@ -16,7 +16,7 @@ import tailwind from 'tailwind-rn';
 import React, { useState, useEffect } from 'react';
 import { Linking } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useQueryClient, useQuery, useMutation } from 'react-query';
+import { useQueryClient, useQuery, useMutation, useIsFetching } from 'react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { Job } from '../types';
 import { uri as API_URI } from '../utils';
@@ -25,6 +25,7 @@ import { exportJobs, getFilteredJobs } from '../features/jobs/api';
 import WorkingTimeCard from '../features/history/WorkingTimeCard';
 
 export default function HistoryScreen({ route }) {
+    const nFetching = useIsFetching(['stats']);
     const [refreshing, setRefreshing] = useState(false);
     const queryClient = useQueryClient();
     /* let filter: JobFilter | undefined; */
@@ -43,8 +44,12 @@ export default function HistoryScreen({ route }) {
         setRefreshing(true);
         queryClient.invalidateQueries('netPay');
         queryClient.invalidateQueries('filteredJobs');
-        setRefreshing(false);
     };
+
+    useEffect(() => {
+        console.log('n fetching:', nFetching);
+        setRefreshing(nFetching > 0);
+    });
     return (
         <View style={tailwind('bg-gray-100 items-center justify-start flex-col h-full')}>
             <StatusBar style="dark" />
@@ -56,6 +61,7 @@ export default function HistoryScreen({ route }) {
             >
                 <NetPayCard />
                 <WorkingTimeCard />
+                <View style={tailwind('flex-row h-10')}></View>
             </ScrollView>
         </View>
     );

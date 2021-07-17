@@ -90,6 +90,7 @@
         "react-native-screens": "~3.0.0",
         "react-native-signature-capture-view": "^1.0.5",
         "react-native-svg": "12.1.0",
+        "react-native-svg-charts": "^5.4.0",
         "react-native-walkthrough-tooltip": "^1.2.0",
         "react-native-web": "~0.13.12",
         "react-native-webview": "11.2.3",
