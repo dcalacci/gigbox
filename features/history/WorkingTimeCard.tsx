@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Text, View } from 'react-native';
+import { ScrollView, Text, View } from 'react-native';
 import moment, { Moment } from 'moment';
 import { tailwind } from 'tailwind';
 import { useQuery } from 'react-query';
@@ -71,7 +71,7 @@ const WorkingTimeCard = () => {
     };
     return (
         <View style={tailwind('rounded-lg bg-white p-2 w-full flex-col mt-2 mb-2')}>
-            <View style={tailwind('flex-row w-full items-center justify-between')}>
+            <ScrollView horizontal={true} style={tailwind('flex-row w-full')}>
                 <Text style={tailwind('font-bold text-3xl')}>Working Time</Text>
                 <DateRangeFilterPill
                     displayText={'All Time - Select Dates'}
@@ -79,7 +79,7 @@ const WorkingTimeCard = () => {
                     start={dates.startDate}
                     onDateRangeChange={setDates}
                 />
-            </View>
+            </ScrollView>
             <View style={tailwind('flex-row w-full pl-2 pr-2')}>
                 {status == 'success' && (
                     <ProgressBar
