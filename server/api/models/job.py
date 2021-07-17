@@ -57,3 +57,8 @@ class Job(db.Model):
         self.shift_id = shift_id
         self.user_id = user_id
         self.employer = employer
+
+    def __repr__(self):
+        return (
+            f" {self.mileage}mi long Job from {self.start_time} to {self.end_time} for user {self.user_id}"
+        )
