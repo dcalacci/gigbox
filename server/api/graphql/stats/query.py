@@ -135,13 +135,12 @@ class StatsQuery(graphene.ObjectType):
         print("Getting working time from ", start_date, end_date)
         jobs = get_jobs(info, start_date, end_date)
         shifts = get_shifts(info, start_date, end_date)
-
         total_shift_time = [
-            (s.end_time - s.start_time).seconds / 360 for s in shifts] if len(shifts) > 0 else [0]
+            (s.end_time - s.start_time).seconds / 3600 for s in shifts] if len(shifts) > 0 else [0]
 
         total_job_time = [
-            (j.end_time - j.start_time).seconds / 360 for j in jobs] if len(jobs) > 0 else [0]
-
+            (j.end_time - j.start_time).seconds / 3600 for j in jobs] if len(jobs) > 0 else [0]
+        
         return WorkingTime(
             clocked_in_time=sum(total_shift_time),
             job_time=sum(total_job_time),
