@@ -16,9 +16,11 @@ class NetPay(ObjectType):
     start_date = DateTime()
     end_date = DateTime()
 
+
 class DailyHours(ObjectType):
     date = DateTime()
     hrs = Float()
+
 
 class WorkingTime(ObjectType):
     """Working Time Graphql Object
@@ -29,3 +31,6 @@ class WorkingTime(ObjectType):
     clocked_in_time = Float()
     job_time = Float()
     shift_hours_daily = List(lambda: DailyHours)
+    job_hours_daily = List(lambda: DailyHours)
+    start_date = DateTime()
+    end_date = DateTime()
