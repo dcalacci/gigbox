@@ -92,10 +92,10 @@ class Query(StatsQuery, graphene.ObjectType):
                   .filter(
                       ShiftModel.start_time > dt_weekago))
         n_shifts = shifts.count()
-        distances = [shift.road_snapped_miles for shift in shifts]
-        distance_miles = sum(distances)
 
         jobs = list(itertools.chain(*[shift.jobs for shift in shifts]))
+        distances = [job.mileage for job in jobs]
+        distance_miles = sum(distances)
 
         n_jobs = len(jobs)
 
