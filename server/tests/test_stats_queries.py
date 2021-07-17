@@ -19,7 +19,7 @@ def test_net_pay_from_just_added_jobs(app, token, locs, exodus_locs, active_shif
     import numpy as np
     with app.test_request_context():
         _ = add_locations_to_shift(
-            token, locs, exodus_locs, active_shift, gqlClient, trip='exodus')
+            token, exodus_locs, active_shift, gqlClient)
         res = end_shift(token, active_shift, gqlClient)
 
         print("endshift result:", res)
@@ -33,7 +33,6 @@ def test_net_pay_from_just_added_jobs(app, token, locs, exodus_locs, active_shif
         for n, j in enumerate(jobIds):
             res_pay = add_pay_to_job(token, j, pays[n], gqlClient)
             res_tip = add_tip_to_job(token, j, tips[n], gqlClient)
-            print(res_pay, "||||||||||||||", res_tip)
             assert res_pay['data']['setJobTotalPay']['ok']
             assert res_tip['data']['setJobTip']['ok']
 

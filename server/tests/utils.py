@@ -89,7 +89,14 @@ def exodus_locs():
     return pd.read_csv("tests/exodus.csv", index_col=0, parse_dates=['time'])
 
 
-def add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient,
+@pytest.fixture
+def long_stop_test_locs():
+    """test locations from a one-trip drive to Exodus"""
+    import pandas as pd
+    return pd.read_csv("tests/trip_with_lingering_stop.csv", index_col=0, parse_dates=['timestamp']).rename({'timestamp': 'time'}, axis=1)
+
+
+def add_locations_to_shift(token, locs, active_shift, gqlClient,
                            start_n_mins_after_shift=10, trip='default'):
     """Adds locs to shift active_shift. Adds in same order and time, but begins records
     `start_n_mins_after_shift` after the shift started.
@@ -107,8 +114,6 @@ def add_locations_to_shift(token, locs, exodus_locs, active_shift, gqlClient,
     }
 }
     '''
-    if trip == 'exodus':
-        locs = exodus_locs
     # add all locations not just first!
     locations = locs.to_dict(orient='records')
     locs_to_add = []
@@ -210,7 +215,7 @@ def add_pay_to_job(token, job_id, pay, gqlClient):
     '''
     vars = {
         'JobId': job_id,
-        'Pay': pay 
+        'Pay': pay
     }
     res = gqlClient.execute(query, context_value=request, variables=vars)
     return res
