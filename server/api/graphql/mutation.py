@@ -181,7 +181,7 @@ class ExtractJobsFromShift(Mutation):
         shift_id = from_global_id(shift_id)[1]
         shift = (db.session.query(ShiftModel).filter_by(
             id=shift_id, user_id=g.user).first())
-        jobs = extractJobsFromLocations(shift, shift.locations, info)
+        jobs = extractJobsFromLocations(shift, shift.locations)
 
         # don't add any that overlap with existing jobs
         added = []
@@ -245,7 +245,7 @@ def updateShiftMileageAndGeometry(shift, info):
     return shift
 
 
-def extractJobsFromLocations(shift, locations, info):
+def extractJobsFromLocations(shift, locations):
     """ Create job objects from a list of locations and a shift 
     """
     from api.routing.mapmatch import get_trips_from_locations, get_match_for_trajectory
@@ -288,7 +288,7 @@ def extractJobsFromLocations(shift, locations, info):
 
 
 def createJobsFromLocations(shift, locations, info):
-    jobs = extractJobsFromLocations(shift, locations, info)
+    jobs = extractJobsFromLocations(shift, locations)
     for j in jobs:
         db.session.add(j)
     db.session.commit()
