@@ -25,7 +25,7 @@ from graphene import (
 from graphql_relay.node.node import from_global_id
 from shapely import geometry
 from geoalchemy2.shape import to_shape
-from datetime import datetime
+from datetime import datetime, timezone
 from dateutil import parser
 from flask import g, current_app, url_for
 from PIL import Image
@@ -155,9 +155,42 @@ class EndShift(Mutation):
             shift.end_time = end_time
             shift.active = False
             db.session.add(shift)
+            # Also end any stray active shifts. This mostly happens in development and testing
+            stray_active_shifts = [s for s in db.session.query(
+                ShiftModel).filter_by(user_id=g.user, active=True)]
+            for s in stray_active_shifts:
+                s.active = False
+                s.end_time = end_time
+                db.session.add(s)
             db.session.commit()
 
             return EndShift(shift=shift)
+
+
+class UpdateShiftEndTime(Mutation):
+    shift = Field(lambda: ShiftNode, description="Shift that is being edited")
+
+    class Arguments:
+        shift_id = ID(required=True, description="ID of the shift to end")
+        end_time = DateTime(
+            required=True, description="end timestamp for this shift. Must include a value")
+
+    @login_required
+    def mutate(self, info, shift_id, end_time):
+        shift_id = from_global_id(shift_id)[1]
+        shift = ShiftModel.query.get(shift_id)
+
+        print(shift.start_time)
+        end_time = end_time.replace(tzinfo=None)
+        print(end_time)
+        if (shift.start_time >= end_time):
+            raise ShiftInvalidError(
+                "End time needs to be later than the start time")
+
+        shift.end_time = end_time
+        db.session.add(shift)
+        db.session.commit()
+        return UpdateShiftEndTime(shift)
 
 
 class ExtractJobsFromShift(Mutation):
@@ -487,7 +520,6 @@ class CreateJob(Mutation):
         job.mileage = kwargs['mileage']
 
         print("Creating job:", job)
-
 
         db.session.add(job)
         db.session.commit()
@@ -1059,6 +1091,7 @@ class Mutation(ObjectType):
     endShift = EndShift.Field()
     extractJobsFromShift = ExtractJobsFromShift.Field()
     deleteShift = DeleteShift.Field()
+    updateShiftEndTime = UpdateShiftEndTime.Field()
     createJob = CreateJob.Field()
     setJobTotalPay = SetJobTotalPay.Field()
     setJobTip = SetJobTip.Field()
