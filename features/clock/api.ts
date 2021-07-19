@@ -84,6 +84,7 @@ export const endShift = (shiftId: string) => {
                         id
                         endTime
                         active
+                        startTime
                     }
     }
             }`;
