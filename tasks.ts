@@ -110,12 +110,12 @@ export const startGettingBackgroundLocation = async () => {
     await askPermissions();
     return Loc.startLocationUpdatesAsync('gigbox.mileageTracker', {
         accuracy: Loc.Accuracy.Highest,
-        timeInterval: 2000,
-        distanceInterval: 15,
+        timeInterval: 5000,
+        distanceInterval: 30,
         activityType: Loc.ActivityType.AutomotiveNavigation,
         deferredUpdatesDistance: 30,
         pausesUpdatesAutomatically: true,
-    })
+    });
 };
 
 /**
@@ -123,10 +123,22 @@ export const startGettingBackgroundLocation = async () => {
  */
 export const stopGettingBackgroundLocation = async () => {
     log.info('Stopping location updates...');
-    return Loc.stopLocationUpdatesAsync('gigbox.mileageTracker');
+    try {
+        return Loc.stopLocationUpdatesAsync('gigbox.mileageTracker');
+    } catch (e) {
+        console.log('error in stopping background location', e);
+        return false;
+    }
 };
 
 export const isGettingBackgroundLocation = async () => {
-    log.info("Checking if we have a registered location task...")
-    return Loc.hasStartedLocationUpdatesAsync('gigbox.mileageTracker')
-}
+    log.info('Checking if we have a registered location task...');
+    let res = true;
+    try {
+        res = await Loc.hasStartedLocationUpdatesAsync('gigbox.mileageTracker');
+    } catch (e) {
+        console.log(e);
+        res = false;
+    }
+    return res;
+};
