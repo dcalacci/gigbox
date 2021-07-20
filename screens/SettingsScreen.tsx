@@ -73,7 +73,7 @@ export default function SettingsScreen({ route }) {
     return userStatus.isLoading || userStatus.isError ? (
         <LoadingScreen />
     ) : (
-        <SafeAreaView style={tailwind('bg-gray-100 justify-start flex-col')}>
+        <SafeAreaView style={tailwind('bg-gray-100 justify-start flex-col pt-10')}>
             <StatusBar style="dark" />
             <ScrollView>
                 <View style={tailwind('flex-row p-5 content-start justify-between')}>

@@ -25,6 +25,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import moment from 'moment';
 import { RootState } from '@/store';
 import Tooltip from 'react-native-walkthrough-tooltip';
+import { StatusBar } from 'expo-status-bar';
 
 export default function HomeScreen({ navigation }: { navigation: HomeScreenNavigationProp }) {
     const dispatch = useDispatch();
@@ -71,7 +72,8 @@ export default function HomeScreen({ navigation }: { navigation: HomeScreenNavig
     );
     console.log('hint:', hintIndex);
     return (
-        <SafeAreaView style={tailwind('bg-gray-100 h-full mt-10')}>
+        <SafeAreaView style={tailwind('bg-gray-100 h-full pt-10')}>
+            <StatusBar style="dark" />
             <Tooltip
                 isVisible={showClockInHint && (!hintIndex || hintIndex == 0)}
                 useReactNativeModal={false}
