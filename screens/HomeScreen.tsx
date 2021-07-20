@@ -1,9 +1,9 @@
-import React, { FunctionComponent } from 'react';
-import { Pressable, Text, ScrollView, View } from 'react-native';
+import React, { FunctionComponent, useState } from 'react';
+import { Pressable, Text, ScrollView, View, RefreshControl } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { tailwind } from 'tailwind';
-import { useQuery } from 'react-query';
+import { useQuery, useQueryClient } from 'react-query';
 import TrackingBar from '../features/clock/TrackingBar';
 import SurveyCard from '../features/surveys/Surveycard';
 import WeeklyCard from '../features/weeklySummary/WeeklyCard';
@@ -37,10 +37,21 @@ export default function HomeScreen({ navigation }: { navigation: HomeScreenNavig
             select: (d: { allJobs: { edges: { node: Job }[] } }) => d.allJobs.edges.length,
         }
     );
+    const [refreshing, setRefreshing] = useState(false);
+    const queryClient = useQueryClient();
+    const onRefresh = () => {
+        setRefreshing(true);
+        queryClient.invalidateQueries('trackedJobs');
+        queryClient.invalidateQueries('surveys');
+        setRefreshing(false)
+    };
     return (
         <View style={tailwind('bg-gray-100 h-full')}>
             <TrackingBar />
-            <ScrollView style={tailwind('bg-gray-100 h-full')}>
+            <ScrollView
+                style={tailwind('bg-gray-100 h-full')}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            >
                 <SurveyCard />
                 <Pressable style={[tailwind('bg-white m-2 p-5 rounded-2xl flex-col')]}>
                     <Text style={tailwind('text-green-500 text-3xl font-bold underline')}>

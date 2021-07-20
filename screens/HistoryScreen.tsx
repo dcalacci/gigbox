@@ -1,4 +1,12 @@
-import { LayoutAnimation, StyleSheet, View, Text, ScrollView, Pressable } from 'react-native';
+import {
+    LayoutAnimation,
+    StyleSheet,
+    View,
+    Text,
+    ScrollView,
+    Pressable,
+    RefreshControl,
+} from 'react-native';
 
 import moment from 'moment';
 
@@ -8,14 +16,18 @@ import tailwind from 'tailwind-rn';
 import React, { useState, useEffect } from 'react';
 import { Linking } from 'react-native';
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
-import { useQueryClient, useQuery, useMutation } from 'react-query';
+import { useQueryClient, useQuery, useMutation, useIsFetching } from 'react-query';
 import { Ionicons } from '@expo/vector-icons';
 import { Job } from '../types';
 import { uri as API_URI } from '../utils';
-import { defaultFilter, JobFilter } from '../components/FilterPills';
+import { JobFilter } from '../components/FilterPills';
 import { exportJobs, getFilteredJobs } from '../features/jobs/api';
+import WorkingTimeCard from '../features/history/WorkingTimeCard';
 
 export default function HistoryScreen({ route }) {
+    const nFetching = useIsFetching(['stats']);
+    const [refreshing, setRefreshing] = useState(false);
+    const queryClient = useQueryClient();
     /* let filter: JobFilter | undefined; */
     const filter = route.params?.filters
         ? {
@@ -26,18 +38,43 @@ export default function HistoryScreen({ route }) {
               endDate: route.params.filters?.endDate ? moment(route.params.filters?.endDate) : null,
           }
         : undefined;
-    console.log('filters for history:', filter);
+
+    console.log('history filter in params:', route.params?.filters);
+    const onRefresh = () => {
+        setRefreshing(true);
+        queryClient.invalidateQueries('netPay');
+        queryClient.invalidateQueries('filteredJobs');
+    };
+
+    useEffect(() => {
+        console.log('n fetching:', nFetching);
+        setRefreshing(nFetching > 0);
+    });
     return (
         <View style={tailwind('bg-gray-100 items-center justify-start flex-col h-full')}>
             <StatusBar style="dark" />
             {/* <Text style={styles.title}>Jobs</Text> */}
             <JobFilterList inputFilters={filter} />
-            <ScrollView style={tailwind('p-2 m-0 flex-col flex w-full')}>
+            <ScrollView
+                style={tailwind('p-2 m-0 flex-col flex w-full')}
+                refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
+            >
                 <NetPayCard />
+                <WorkingTimeCard />
+                <View style={tailwind('flex-row h-10')}></View>
             </ScrollView>
         </View>
     );
 }
+
+const defaultFilter: JobFilter = {
+    startDate: moment().startOf('year'),
+    endDate: moment().endOf('day'),
+    minTotalPay: undefined,
+    minTip: undefined,
+    minMileage: undefined,
+    sort: undefined,
+};
 
 export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) => {
     // routing gives us dates as strings, so convert them

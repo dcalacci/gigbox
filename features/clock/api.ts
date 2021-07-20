@@ -76,6 +76,24 @@ export const useNumTrackedShifts = () => {
         }
     );
 };
+
+export const updateShiftEndTime = ({ shiftId, endTime }: { shiftId: string; endTime: Date }) => {
+    const client = getClient(store);
+    const query = gql`
+        mutation mutation($shiftId: ID!, $endTime: DateTime!) {
+            updateShiftEndTime(shiftId: $shiftId, endTime: $endTime) {
+                shift {
+                    id
+                    endTime
+                    active
+                    startTime
+                }
+            }
+        }
+    `;
+    return client.request(query, {shiftId, endTime});
+};
+
 export const endShift = (shiftId: string) => {
     const client = getClient(store);
     const query = gql`mutation {
@@ -84,6 +102,7 @@ export const endShift = (shiftId: string) => {
                         id
                         endTime
                         active
+                        startTime
                     }
     }
             }`;
@@ -130,7 +149,7 @@ export const setShiftEmployers = ({
     return client.request(query, {
         shiftId,
         employers,
-    })
+    });
 };
 
 export const addScreenshotToShift = async ({
@@ -190,7 +209,6 @@ export const addScreenshotToShift = async ({
         });
     }
 };
-
 
 export const getLatestJob = () => {
     const client = getClient(store);

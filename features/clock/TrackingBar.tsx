@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, LayoutAnimation } from 'react-native';
+import { View, Text, LayoutAnimation, Pressable } from 'react-native';
 import { useSelector } from 'react-redux';
 import { tailwind } from 'tailwind';
 
 import Toast from 'react-native-root-toast';
-
+import Modal from 'react-native-modal';
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 
 import Tooltip from 'react-native-walkthrough-tooltip';
@@ -12,6 +12,7 @@ import Tooltip from 'react-native-walkthrough-tooltip';
 import { RootState } from '../../store/index';
 import Toggle from '../../components/Toggle';
 
+import DateTimeModalPicker from '../../components/DateTimeModalPicker';
 import { AuthState } from '../auth/authSlice';
 import { formatElapsedTime } from '../../utils';
 import {
@@ -19,10 +20,18 @@ import {
     startGettingBackgroundLocation,
     stopGettingBackgroundLocation,
 } from '../../tasks';
-import { setShiftEmployers, fetchActiveShift, endShift, createShift } from './api';
+import {
+    setShiftEmployers,
+    fetchActiveShift,
+    endShift,
+    createShift,
+    updateShiftEndTime,
+} from './api';
 import { log } from '../../utils';
-import { Employers } from '../../types';
+import { Employers, Shift } from '../../types';
 import ModalMultiSelect from '../../components/ModalMultiSelect';
+import moment from 'moment';
+import { variants } from '@/tailwind.config';
 
 export default function TrackingBar() {
     const queryClient = useQueryClient();
@@ -43,6 +52,9 @@ export default function TrackingBar() {
             log.error('Could not fetch shift');
         },
     });
+    const [longShiftModalVisible, setLongShiftModalVisible] = useState(false);
+    const [shiftLength, setShiftLength] = useState(0);
+    const [endedShift, setEndedShift] = useState<Shift>();
     const endActiveShift = useMutation(endShift, {
         onSuccess: async (data, variables, context) => {
             queryClient.invalidateQueries('activeShift');
@@ -71,9 +83,16 @@ export default function TrackingBar() {
         },
         onSettled: async (d, error) => {
             // if the shift is inactive, stop our location updates.
-            if (d == undefined || d.endShift.shift.active == false) {
-                const res = await stopGettingBackgroundLocation();
-                log.info(`Stopped getting background location.`);
+            log.info('on settled mutation...', d, error);
+            const shiftLength = moment(d.endShift.shift.endTime).diff(
+                moment(d.endShift.shift.startTime),
+                'hours'
+            );
+            console.log('Shift length:', shiftLength);
+            setShiftLength(shiftLength);
+            setEndedShift(d.endShift.shift);
+            if (shiftLength > 8) {
+                setLongShiftModalVisible(true);
             }
         },
     });
@@ -101,6 +120,16 @@ export default function TrackingBar() {
         },
         onSettled: () => {
             queryClient.invalidateQueries('activeShift');
+        },
+    });
+
+    const updateShiftEnd = useMutation(updateShiftEndTime, {
+        onSuccess: (d, v, c) => {
+            log.info('Updated shift end time:', d);
+        },
+        onError: (err) => {
+            log.error(`Problem updating shift end time: ${err.message}`);
+            Toast.show(`Sorry, ${err.message}`);
         },
     });
 
@@ -139,11 +168,16 @@ export default function TrackingBar() {
                 Toast.show("Couldn't start tracking location, but clocking you in anyway.");
             });
         } else {
-            stopGettingBackgroundLocation()
+            let hasEndedShift = false;
+            isGettingBackgroundLocation()
+                .then((res) => {
+                    return res ? stopGettingBackgroundLocation() : Promise.resolve();
+                })
                 .then(() => {
                     log.info(`Stopped getting background location.`);
                     log.info('Ending shift ', activeShift.data.id);
                     endActiveShift.mutate(activeShift.data.id);
+                    hasEndedShift = true;
                     Toast.show('Successfully clocked out.');
                 })
                 .catch((err) => {
@@ -158,6 +192,11 @@ export default function TrackingBar() {
                                 "Couldn't stop getting background location. Try again soon."
                             );
                         } else {
+                            if (!hasEndedShift) {
+                                console.log("hasn't ended shift, trying end again:", hasEndedShift);
+                                endActiveShift.mutate(activeShift.data.id);
+                                hasEndedShift = true;
+                            }
                             Toast.show('Successfully clocked out.');
                         }
                     });
@@ -196,6 +235,7 @@ export default function TrackingBar() {
 
         const [toolTipVisible, setToolTipVisible] = useState<boolean>(false);
 
+        const [manualShiftEndDate, setManualShiftEndDate] = useState<Date | null>(null);
         return (
             <Tooltip
                 isVisible={toolTipVisible}
@@ -230,6 +270,71 @@ export default function TrackingBar() {
                             <Text style={textStyle}>{elapsedTime}</Text>
                         </View>
                     </View>
+                    <Modal
+                        style={tailwind('flex-col justify-end items-center')}
+                        onDismiss={() => setLongShiftModalVisible(false)}
+                        isVisible={longShiftModalVisible}
+                        hasBackdrop={true}
+                        onBackdropPress={() => {
+                            console.log('backdrop pressed');
+                            Toast.show('Clocked out!');
+                            setLongShiftModalVisible(false);
+                        }}
+                        backdropOpacity={0.9}
+                        presentationStyle={'overFullScreen'}
+                        useNativeDriverForBackdrop={true}
+                        swipeDirection={'down'}
+                        onSwipeComplete={() => setLongShiftModalVisible(false)}
+                        onModalWillHide={() => {}}
+                    >
+                        <View style={tailwind('rounded-lg bg-white items-center p-5')}>
+                            <Text style={tailwind('text-xl font-bold')}>Forgot to clock out?</Text>
+                            <Text style={tailwind('text-base')}>
+                                You just ended a {shiftLength} hour long shift. If you meant to
+                                clock out earlier, no worries - just enter when you think you
+                                stopped working.
+                            </Text>
+                            <Text style={tailwind('text-sm text-gray-500 font-bold p-1')}>
+                                Hint: You last clocked in at{' '}
+                                {moment.utc(endedShift?.startTime).local().format('LT')} on{' '}
+                                {moment.utc(endedShift?.startTime).local().format('L')}
+                            </Text>
+                            <View style={tailwind('flex-row items-center justify-evenly ')}>
+                                <Text style={tailwind('text-lg font-bold')}>Ended at:</Text>
+                                <DateTimeModalPicker
+                                    defaultDate={moment.utc(endedShift?.endTime).local()}
+                                    onSetDate={(d) => {
+                                        console.log('setting date to:', d);
+                                        setManualShiftEndDate(d);
+                                    }}
+                                />
+                            </View>
+                        </View>
+                        <Pressable
+                            style={tailwind('bg-black rounded-lg p-5 m-2 w-full items-center')}
+                            onPress={() => {
+                                console.log(
+                                    'Updating date on shift:',
+                                    endedShift,
+                                    manualShiftEndDate || endedShift?.endTime
+                                );
+                                if (endedShift == undefined) {
+                                    return;
+                                }
+                                updateShiftEnd
+                                    .mutateAsync({
+                                        shiftId: endedShift.id,
+                                        endTime: manualShiftEndDate || endedShift.endTime,
+                                    })
+                                    .then(() => {
+                                        Toast.show('Clocked out!');
+                                        setLongShiftModalVisible(false);
+                                    });
+                            }}
+                        >
+                            <Text style={tailwind('text-white font-bold')}>Clock Out</Text>
+                        </Pressable>
+                    </Modal>
 
                     <ModalMultiSelect
                         isOpen={shift.active && !shift.employers}

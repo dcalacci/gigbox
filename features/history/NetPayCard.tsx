@@ -34,7 +34,7 @@ const NetPayCard = () => {
     });
 
     const { status, data } = useQuery(
-        ['netPay', dates.startDate, dates.endDate],
+        ['stats', 'netPay', dates.startDate, dates.endDate],
         () => getNetPay(dates.startDate, dates.endDate),
         {
             onSuccess: (d) => {
@@ -54,7 +54,7 @@ const NetPayCard = () => {
     const netPay = data && data.pay + data.tip - data.mileageDeduction;
 
     return (
-        <View style={tailwind('rounded-lg bg-white p-2 w-full flex-col')}>
+        <View style={tailwind('rounded-lg bg-white p-2 w-full flex-col mt-2 mb-2')}>
             <View style={tailwind('flex-row w-full items-center justify-between')}>
                 <Text style={tailwind('font-bold text-3xl')}>Pay</Text>
                 <DateRangeFilterPill

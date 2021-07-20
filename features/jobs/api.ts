@@ -99,6 +99,7 @@ export const createFilterString = (filters: JobFilter): string => {
     if (filters.needsEntry) {
         or_filters.push(`{totalPayIsNull: true}`);
         or_filters.push(`{tipIsNull: true}`);
+        or_filters.push(`{totalPay: 0}`);
     }
 
     if (filters.saved) {

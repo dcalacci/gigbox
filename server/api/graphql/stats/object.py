@@ -1,4 +1,4 @@
-from graphene import Float, ObjectType, DateTime
+from graphene import Float, ObjectType, DateTime, List
 
 
 class NetPay(ObjectType):
@@ -13,5 +13,24 @@ class NetPay(ObjectType):
     mileage_deduction = Float()
     tip = Float()
     pay = Float()
+    start_date = DateTime()
+    end_date = DateTime()
+
+
+class DailyHours(ObjectType):
+    date = DateTime()
+    hrs = Float()
+
+
+class WorkingTime(ObjectType):
+    """Working Time Graphql Object
+
+    Args:
+        ObjectType ([type]): [description]
+    """
+    clocked_in_time = Float()
+    job_time = Float()
+    shift_hours_daily = List(lambda: DailyHours)
+    job_hours_daily = List(lambda: DailyHours)
     start_date = DateTime()
     end_date = DateTime()

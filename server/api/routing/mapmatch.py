@@ -4,6 +4,7 @@ from geoalchemy2.shape import to_shape
 import logging
 from .osrmapi import get_match_distance, get_match_geometry, match
 
+
 def _get_trajectory_from_location_objects(locations):
     from geoalchemy2.shape import to_shape
     import numpy as np
@@ -21,8 +22,10 @@ def _get_trajectory_from_location_objects(locations):
     traj = np.array(sorted(records, key=lambda r: r[2]))
     data = pd.DataFrame(np.vstack((traj.T)).T)
     data.columns = ['lat', 'lng', 'timestamp']
-    data.timestamp = pd.to_datetime(data.timestamp, unit='s') # timestamps in DB are seconds
+    # timestamps in DB are seconds
+    data.timestamp = pd.to_datetime(data.timestamp, unit='s')
     return data
+
 
 def clean_trajectory(locs):
     """ Returns a trajectory dataframe from an array of Location database objects that has
@@ -35,19 +38,22 @@ def clean_trajectory(locs):
     # filter and compress our location dataset
     tdf = TrajDataFrame(data, datetime='timestamp')
     ftdf = filtering.filter(tdf, max_speed_kmh=500.)
-    print("filtered {} locs from trajectory of length {}".format(len(tdf) - len(ftdf), len(tdf)))
+    print("filtered {} locs from trajectory of length {}".format(
+        len(tdf) - len(ftdf), len(tdf)))
     ctdf = compression.compress(tdf, spatial_radius_km=0.05)
     print("compressed trajectory is length {}".format(len(ctdf)))
-    return ftdf
+    return ctdf
+
 
 def get_match_for_locations(locations):
-    # I put clean_trajectory here because it's cheap to store more 
+    # I put clean_trajectory here because it's cheap to store more
     # location data and processing it is not too expensive.
     traj_df = clean_trajectory(locations)
     coords = traj_df[['lat', 'lng']].to_dict(orient='records')
     print("Sending {} coords to match api...".format(len(coords)))
     res = match(coords).json()
     return res
+
 
 def get_match_for_trajectory(traj_df):
     coords = traj_df[['lat', 'lng']].to_dict(orient='records')
@@ -86,7 +92,6 @@ def get_route_distance_and_geometry(locs_or_traj):
                 "geom_obj": geom_obj}
 
 
-
 ############ Stops and trips
 
 def clean_and_get_stops(locations):
@@ -98,6 +103,16 @@ def clean_and_get_stops(locations):
 
 
 def _merge_short_trips(trips, trip_bookends, min_distance_mi=0.5):
+    """Merges short (under min_distance_mi) trips
+
+    Args:
+        trips (tuple: (traj_df, stop_df, [distances])): 3-tuple list of trips already extracted from a trajectory.
+        trip_bookends ([type]): [description]
+        min_distance_mi (float, optional): [description]. Defaults to 0.5.
+
+    Returns:
+        (tuple: (traj_df, stop_df, [distances])): 3-tuple list of merged trips extracted from a trajectory.
+    """
     from api.routing.osrmapi import get_match_distance
     import pandas as pd
     matches = [get_match_for_trajectory(trip) for n, trip in enumerate(trips)]
@@ -109,12 +124,15 @@ def _merge_short_trips(trips, trip_bookends, min_distance_mi=0.5):
             continue
         elif d <= min_distance_mi and n > 0:
             newtrip = pd.concat([trips[n-1], trips[n]])
-            newtrip_bookends = {'start': trip_bookends[n-1]['start'], 'stop': trip_bookends[n]['stop']}
-            merged_trips = merged_trips[:-1] # remove last entry
-            merged_trips.append((newtrip, newtrip_bookends, d + dists[n-1])) # replace it
+            newtrip_bookends = {
+                'start': trip_bookends[n-1]['start'], 'stop': trip_bookends[n]['stop']}
+            merged_trips = merged_trips[:-1]  # remove last entry
+            merged_trips.append(
+                (newtrip, newtrip_bookends, d + dists[n-1]))  # replace it
         elif d <= min_distance_mi and n == 0:
             newtrip = pd.concat([trips[n], trips[n+1]])
-            newtrip_bookends = {'start': trip_bookends[n]['start'], 'stop': trip_bookends[n+1]['stop']}
+            newtrip_bookends = {
+                'start': trip_bookends[n]['start'], 'stop': trip_bookends[n+1]['stop']}
             merged_trips.append((newtrip, newtrip_bookends, d + dists[n+1]))
         else:
             merged_trips.append((trips[n], trip_bookends[n], d))
@@ -138,50 +156,65 @@ def split_into_trips(traj_df, stop_df, min_trip_dist_mi=0.5):
     """
     trips = []
     trip_bookends = []
-    
+
     start = traj_df.iloc[0]
     start['leaving_datetime'] = start.datetime
     end = traj_df.iloc[-1]
     end['leaving_datetime'] = end.datetime
 
     print("total number of stops: {}".format(len(stop_df)))
-    
+
     if len(stop_df) == 0:
-        # no stops, just a trip
+        # no stops, just a trip, so return the first location and last location of
+        # our trajectory as "stops"
         print("No stops, returning one trip")
         trip_bookends.append({'start': start, 'stop': end})
         trips.append(traj_df)
     else:
-        for n, dt in enumerate(stop_df.datetime):
-            if n == 0:
-                first_trip = traj_df[(traj_df.datetime <= dt) & (traj_df.datetime >= start.datetime)]
-                trips.append(first_trip)
-                trip_bookends.append({'start': start, 'stop': stop_df.iloc[n]})
-            else:
-                trip = traj_df[(traj_df.datetime <= dt) & (traj_df.datetime >= stop_df.iloc[n-1].datetime)]
-                trips.append(trip)
-                trip_bookends.append({'start': stop_df.iloc[n-1], 'stop': stop_df.iloc[n]})
+        # Otherwise, extract between-stop trajectories and stops ("bookends").
+        # datetime is the beginning of a stop, while leaving_datetime is the end of a stop.
+        # we don't include points within a stop in our final trajectory because we don't
+        # want to include points in a "stop" for map matching.
 
-        ## add final trip (from last stop to last location)
-        final_trip = traj_df[(traj_df.datetime >= stop_df.iloc[-1].datetime)]
+        # dt is
+        for n, time_arrived_at_stop in enumerate(stop_df.datetime):
+            if n == 0:
+                first_trip = traj_df[(traj_df.datetime <= time_arrived_at_stop) & (
+                    traj_df.datetime >= start.datetime)]
+                trips.append(first_trip)
+                trip_bookends.append({
+                    'start': start,
+                    'stop': stop_df.iloc[n]})
+            else:
+                trip = traj_df[(traj_df.datetime <= time_arrived_at_stop) & (
+                    traj_df.datetime >= stop_df.iloc[n-1].leaving_datetime)]
+                trips.append(trip)
+                trip_bookends.append({
+                    'start': stop_df.iloc[n-1],
+                    'stop': stop_df.iloc[n]})
+
+        # add final trip (from last stop to last location)
+        final_trip = traj_df[(traj_df.datetime >=
+                              stop_df.iloc[-1].leaving_datetime)]
         trip_bookends.append({'start': stop_df.iloc[-1], 'stop': end})
         trips.append(final_trip)
 
     if len(trips) > 1 and len(trip_bookends) > 1:
-        merged_trips = _merge_short_trips(trips, trip_bookends, min_trip_dist_mi)
+        merged_trips = _merge_short_trips(
+            trips, trip_bookends, min_trip_dist_mi)
         logging.info("Merged trips df:")
         logging.info(merged_trips)
         return merged_trips
     else:
         match = get_match_for_trajectory(trips[0])
-        dist = get_match_distance(match) 
+        dist = get_match_distance(match)
         return list(zip(trips, trip_bookends, [dist]))
 
 
-def get_trips_from_locations(locations, 
-        min_trip_dist_mi=1., 
-        minutes_for_stop=5,
-        no_data_for_minutes=120):
+def get_trips_from_locations(locations,
+                             min_trip_dist_mi=1.,
+                             minutes_for_stop=5,
+                             no_data_for_minutes=120):
     """ Returns trips in a 2-tuple, each a list of:
     - trajectory_df
     - {'stop', 'start'} (lat, lng, datetime series)
@@ -191,10 +224,10 @@ def get_trips_from_locations(locations,
     traj_df = clean_trajectory(locations)
 
     stop_df = detection.stops(traj_df,
-                minutes_for_a_stop=minutes_for_stop,
-                no_data_for_minutes=no_data_for_minutes)
+                              minutes_for_a_stop=minutes_for_stop,
+                              no_data_for_minutes=no_data_for_minutes)
 
     return split_into_trips(
-            traj_df, 
-            stop_df,
-            min_trip_dist_mi=min_trip_dist_mi)
+        traj_df,
+        stop_df,
+        min_trip_dist_mi=min_trip_dist_mi)

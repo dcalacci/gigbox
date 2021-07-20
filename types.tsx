@@ -97,6 +97,7 @@ export type Shift = {
     id: string;
     active: boolean;
     startTime: Date;
+    endTime: Date;
     roadSnappedMiles: number;
     snappedGeometry: string | MapLine;
     employers: Employers[];

@@ -10,7 +10,6 @@ import { log } from '../../utils';
 import { HomeScreenNavigationProp, Job } from '../../types';
 import { getFilteredJobs } from '../jobs/api';
 
-
 const WeeklyCard: FunctionComponent = () => {
     const navigation = useNavigation<HomeScreenNavigationProp>();
     const weeklySummary = useQuery(['trackedJobs', 'weeklySummary'], fetchWeeklySummary);
@@ -82,10 +81,13 @@ const WeeklyCard: FunctionComponent = () => {
                     style={[tailwind('flex-row p-2'), { justifyContent: 'space-between' }]}
                     onPress={() =>
                         navigation.navigate('Jobs', {
-                            filters: {
-                                startDate: moment().startOf('week'),
-                                endDate: moment().endOf('day'),
-                                needsEntry: true,
+                            screen: 'Tracked Jobs',
+                            params: {
+                                filters: {
+                                    startDate: moment().startOf('week'),
+                                    endDate: moment().endOf('day'),
+                                    needsEntry: true,
+                                },
                             },
                         })
                     }
