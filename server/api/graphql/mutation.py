@@ -304,16 +304,22 @@ def extractJobsFromLocations(shift, locations):
         )
 
         match_obj = get_route_distance_and_geometry(traj_df)
-        bb = match_obj['geom_obj'][1]
-        geometries = match_obj['geom_obj'][0]
+        try:
+            bb = match_obj['geom_obj'][1]
+            geometries = match_obj['geom_obj'][0]
 
-        bounding_box = {'minLat': bb[1],
-                        'minLng': bb[0],
-                        'maxLat': bb[3],
-                        'maxLng': bb[2]}
-        matched = {'geometries': geometries, 'bounding_box': bounding_box}
-        job.snapped_geometry = matched
-        job.mileage = match_obj['distance']
+            bounding_box = {'minLat': bb[1],
+                            'minLng': bb[0],
+                            'maxLat': bb[3],
+                            'maxLng': bb[2]}
+            matched = {'geometries': geometries, 'bounding_box': bounding_box}
+            job.snapped_geometry = matched
+            job.mileage = match_obj['distance']
+        except Exception as e:
+            print("Exception:", e)
+            job.snapped_geometry = None
+            job.mileage = 0.0
+
         job.end_time = stops['stop'].leaving_datetime
         job.start_time = stops['start'].datetime
         jobs.append(job)
