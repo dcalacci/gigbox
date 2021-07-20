@@ -6,6 +6,7 @@ import {
     ScrollView,
     Pressable,
     RefreshControl,
+    Platform,
 } from 'react-native';
 
 import moment from 'moment';
@@ -23,8 +24,15 @@ import { uri as API_URI } from '../utils';
 import { JobFilter } from '../components/FilterPills';
 import { exportJobs, getFilteredJobs } from '../features/jobs/api';
 import WorkingTimeCard from '../features/history/WorkingTimeCard';
+import Tooltip from 'react-native-walkthrough-tooltip';
+import { useDispatch, useSelector } from 'react-redux';
+import { RootState } from '@/store';
+import { incrementHintIndex } from '../features/history/OnboardingSlice';
+import { useNavigation } from '@react-navigation/native';
 
 export default function HistoryScreen({ route }) {
+    const dispatch = useDispatch();
+    const navigation = useNavigation();
     const nFetching = useIsFetching(['stats']);
     const [refreshing, setRefreshing] = useState(false);
     const queryClient = useQueryClient();
@@ -50,11 +58,45 @@ export default function HistoryScreen({ route }) {
         console.log('n fetching:', nFetching);
         setRefreshing(nFetching > 0);
     });
+    const hintIndex = useSelector(
+        (state: RootState): number => state.onboarding.onboardingHintIndex
+    );
+    console.log("hint index:" + hintIndex);
     return (
         <View style={tailwind('bg-gray-100 items-center justify-start flex-col h-full')}>
             <StatusBar style="dark" />
             {/* <Text style={styles.title}>Jobs</Text> */}
-            <JobFilterList inputFilters={filter} />
+            <Tooltip
+                isVisible={hintIndex == 3}
+                backgroundColor={'rgba(0,0,0,0.2)'}
+                allowChildInteraction={false}
+                childrenWrapperStyle={Platform.OS == 'android' && tailwind('-mt-6')}
+                childContentSpacing={Platform.OS == 'android' ? 8 : 4}
+                onClose={() => null}
+                content={
+                    <View style={tailwind('flex-col')}>
+                        <Text style={tailwind('text-base')}>
+                            Once you've tracked some jobs, come back here to check on your stats,
+                            like your total pay, tip history, and net pay. You can export your data
+                            at any time by tapping 'Export' above.
+                        </Text>
+                        <Pressable
+                            style={tailwind('bg-black p-1 m-2 rounded-lg items-center')}
+                            onPress={() => {
+                                dispatch(incrementHintIndex());
+                                navigation.navigate('Home');
+                            }}
+                        >
+                            <Text style={tailwind('text-white text-base font-bold')}>
+                                Start Using Gigbox
+                            </Text>
+                        </Pressable>
+                    </View>
+                }
+                placement="bottom"
+            >
+                <JobFilterList inputFilters={filter} />
+            </Tooltip>
             <ScrollView
                 style={tailwind('p-2 m-0 flex-col flex w-full')}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}

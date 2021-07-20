@@ -149,6 +149,7 @@ function HomeRoot() {
                 options={{
                     headerTitle: 'Home',
                     headerStyle: tailwind('bg-white'),
+                    headerShown: false,
                 }}
             />
             <HomeStack.Screen

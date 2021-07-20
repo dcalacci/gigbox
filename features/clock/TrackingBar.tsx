@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, LayoutAnimation, Pressable } from 'react-native';
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { tailwind } from 'tailwind';
 
 import Toast from 'react-native-root-toast';
@@ -36,6 +36,7 @@ import { variants } from '@/tailwind.config';
 export default function TrackingBar() {
     const queryClient = useQueryClient();
     const auth = useSelector((state: RootState): AuthState => state.auth);
+
     const activeShift = useQuery('activeShift', fetchActiveShift, {
         refetchInterval: 1000,
         // refetchIntervalInBackground: true,
@@ -233,125 +234,110 @@ export default function TrackingBar() {
             });
         };
 
-        const [toolTipVisible, setToolTipVisible] = useState<boolean>(false);
-
         const [manualShiftEndDate, setManualShiftEndDate] = useState<Date | null>(null);
         return (
-            <Tooltip
-                isVisible={toolTipVisible}
-                content={
-                    <Text>
-                        When you start a shift, clock in here. Your mileage and time will
-                        automatically be tracked while you work.
-                    </Text>
-                }
-                placement="bottom"
-                onClose={() => setToolTipVisible(false)}
-            >
-                <View style={[tailwind('flex flex-col')]}>
-                    <View
-                        style={[
-                            { zIndex: 100 },
-                            tailwind(
-                                'flex-shrink flex-row justify-around items-center p-3 border-green-600 h-16 bg-white'
-                            ),
-                            shift.active ? tailwind('bg-green-500') : null,
-                        ]}
-                    >
-                        <Toggle
-                            title={shift.active ? 'Clocked In' : 'Clock In'}
-                            activeText="On"
-                            inactiveText="Off"
-                            value={shift.active}
-                            onToggle={onTogglePress}
-                        />
-                        <View style={tailwind('flex-grow-0')}>
-                            <Text style={[textStyle, { alignSelf: 'flex-end' }]}>{nMiles}mi</Text>
-                            <Text style={textStyle}>{elapsedTime}</Text>
+            <View style={[tailwind('flex flex-col w-full')]}>
+                <View
+                    style={[
+                        { zIndex: 100 },
+                        tailwind(
+                            'flex-shrink flex-row justify-around items-center p-3 border-green-600 h-16 bg-gray-100'
+                        ),
+                        shift.active ? tailwind('border-b-2 border-green-500') : null,
+                    ]}
+                >
+                    <Toggle
+                        title={shift.active ? 'Clocked In' : 'Clock In'}
+                        activeText="On"
+                        inactiveText="Off"
+                        value={shift.active}
+                        onToggle={onTogglePress}
+                    />
+                    <View style={tailwind('flex-grow-0')}>
+                        <Text style={[textStyle, { alignSelf: 'flex-end' }]}>{nMiles}mi</Text>
+                        <Text style={textStyle}>{elapsedTime}</Text>
+                    </View>
+                </View>
+                <Modal
+                    style={tailwind('flex-col justify-end items-center')}
+                    onDismiss={() => setLongShiftModalVisible(false)}
+                    isVisible={longShiftModalVisible}
+                    hasBackdrop={true}
+                    onBackdropPress={() => {
+                        console.log('backdrop pressed');
+                        Toast.show('Clocked out!');
+                        setLongShiftModalVisible(false);
+                    }}
+                    backdropOpacity={0.9}
+                    presentationStyle={'overFullScreen'}
+                    useNativeDriverForBackdrop={true}
+                    swipeDirection={'down'}
+                    onSwipeComplete={() => setLongShiftModalVisible(false)}
+                    onModalWillHide={() => {}}
+                >
+                    <View style={tailwind('rounded-lg bg-white items-center p-5')}>
+                        <Text style={tailwind('text-xl font-bold')}>Forgot to clock out?</Text>
+                        <Text style={tailwind('text-base')}>
+                            You just ended a {shiftLength} hour long shift. If you meant to clock
+                            out earlier, no worries - just enter when you think you stopped working.
+                        </Text>
+                        <Text style={tailwind('text-sm text-gray-500 font-bold p-1')}>
+                            Hint: You last clocked in at{' '}
+                            {moment.utc(endedShift?.startTime).local().format('LT')} on{' '}
+                            {moment.utc(endedShift?.startTime).local().format('L')}
+                        </Text>
+                        <View style={tailwind('flex-row items-center justify-evenly ')}>
+                            <Text style={tailwind('text-lg font-bold')}>Ended at:</Text>
+                            <DateTimeModalPicker
+                                defaultDate={moment.utc(endedShift?.endTime).local()}
+                                onSetDate={(d) => {
+                                    console.log('setting date to:', d);
+                                    setManualShiftEndDate(d);
+                                }}
+                            />
                         </View>
                     </View>
-                    <Modal
-                        style={tailwind('flex-col justify-end items-center')}
-                        onDismiss={() => setLongShiftModalVisible(false)}
-                        isVisible={longShiftModalVisible}
-                        hasBackdrop={true}
-                        onBackdropPress={() => {
-                            console.log('backdrop pressed');
-                            Toast.show('Clocked out!');
-                            setLongShiftModalVisible(false);
+                    <Pressable
+                        style={tailwind('bg-black rounded-lg p-5 m-2 w-full items-center')}
+                        onPress={() => {
+                            console.log(
+                                'Updating date on shift:',
+                                endedShift,
+                                manualShiftEndDate || endedShift?.endTime
+                            );
+                            if (endedShift == undefined) {
+                                return;
+                            }
+                            updateShiftEnd
+                                .mutateAsync({
+                                    shiftId: endedShift.id,
+                                    endTime: manualShiftEndDate || endedShift.endTime,
+                                })
+                                .then(() => {
+                                    Toast.show('Clocked out!');
+                                    setLongShiftModalVisible(false);
+                                });
                         }}
-                        backdropOpacity={0.9}
-                        presentationStyle={'overFullScreen'}
-                        useNativeDriverForBackdrop={true}
-                        swipeDirection={'down'}
-                        onSwipeComplete={() => setLongShiftModalVisible(false)}
-                        onModalWillHide={() => {}}
                     >
-                        <View style={tailwind('rounded-lg bg-white items-center p-5')}>
-                            <Text style={tailwind('text-xl font-bold')}>Forgot to clock out?</Text>
-                            <Text style={tailwind('text-base')}>
-                                You just ended a {shiftLength} hour long shift. If you meant to
-                                clock out earlier, no worries - just enter when you think you
-                                stopped working.
-                            </Text>
-                            <Text style={tailwind('text-sm text-gray-500 font-bold p-1')}>
-                                Hint: You last clocked in at{' '}
-                                {moment.utc(endedShift?.startTime).local().format('LT')} on{' '}
-                                {moment.utc(endedShift?.startTime).local().format('L')}
-                            </Text>
-                            <View style={tailwind('flex-row items-center justify-evenly ')}>
-                                <Text style={tailwind('text-lg font-bold')}>Ended at:</Text>
-                                <DateTimeModalPicker
-                                    defaultDate={moment.utc(endedShift?.endTime).local()}
-                                    onSetDate={(d) => {
-                                        console.log('setting date to:', d);
-                                        setManualShiftEndDate(d);
-                                    }}
-                                />
-                            </View>
-                        </View>
-                        <Pressable
-                            style={tailwind('bg-black rounded-lg p-5 m-2 w-full items-center')}
-                            onPress={() => {
-                                console.log(
-                                    'Updating date on shift:',
-                                    endedShift,
-                                    manualShiftEndDate || endedShift?.endTime
-                                );
-                                if (endedShift == undefined) {
-                                    return;
-                                }
-                                updateShiftEnd
-                                    .mutateAsync({
-                                        shiftId: endedShift.id,
-                                        endTime: manualShiftEndDate || endedShift.endTime,
-                                    })
-                                    .then(() => {
-                                        Toast.show('Clocked out!');
-                                        setLongShiftModalVisible(false);
-                                    });
-                            }}
-                        >
-                            <Text style={tailwind('text-white font-bold')}>Clock Out</Text>
-                        </Pressable>
-                    </Modal>
+                        <Text style={tailwind('text-white font-bold')}>Clock Out</Text>
+                    </Pressable>
+                </Modal>
 
-                    <ModalMultiSelect
-                        isOpen={shift.active && !shift.employers}
-                        onClose={() => {
-                            endActiveShift.mutate(activeShift.data.id);
-                            console.log('closed');
-                        }}
-                        promptText={
-                            "Select any apps you're working for (looking for jobs on) during this shift."
-                        }
-                        options={auth.user?.employers}
-                        selected={[]}
-                        onSelectOptions={onEmployersSubmitted}
-                        buttonText={'Clock In'}
-                    ></ModalMultiSelect>
-                </View>
-            </Tooltip>
+                <ModalMultiSelect
+                    isOpen={shift.active && !shift.employers}
+                    onClose={() => {
+                        endActiveShift.mutate(activeShift.data.id);
+                        console.log('closed');
+                    }}
+                    promptText={
+                        "Select any apps you're working for (looking for jobs on) during this shift."
+                    }
+                    options={auth.user?.employers}
+                    selected={[]}
+                    onSelectOptions={onEmployersSubmitted}
+                    buttonText={'Clock In'}
+                ></ModalMultiSelect>
+            </View>
         );
     } else {
         return (
