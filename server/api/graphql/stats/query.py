@@ -50,7 +50,7 @@ def _agg_mileage_by_day(records):
     df = pd.DataFrame(records)
     if len(df) == 0:
         return []
-    df['hrs'] = [d.seconds / 360 for d in (df.end_time - df.start_time)]
+    df['hrs'] = [d.seconds / 3600 for d in (df.end_time - df.start_time)]
     df['date'] = df['start_time'].dt.date
     agged = df.groupby('date').agg(
         {'mileage': sum, 'hrs': lambda h: min(sum(h), 24)}).reset_index()
