@@ -25,7 +25,7 @@ const PhoneEntry: React.FC = (props) => {
     useEffect(() => {
         if (errormsg != '')
             //TODO: figure out how to type this
-            Toast.show(errormsg);
+            Toast.show(`${errormsg} - Try getting a new code`, { position: Toast.positions.TOP});
         dispatch(clearErrorMessage());
     }, [errormsg]);
 
@@ -86,7 +86,9 @@ const PhoneEntry: React.FC = (props) => {
                     <Pressable
                         style={tailwind('items-center rounded-md py-2 w-full mt-6 bg-gray-800')}
                         onPress={() => {
-                            Toast.show(`Sending code to ${submittedPhone}`);
+                            Toast.show(`Sending code to ${submittedPhone}`, {
+                                position: Toast.positions.TOP,
+                            });
                             dispatch(requestOtp(submittedPhone));
                         }}
                     >
@@ -136,7 +138,9 @@ const PhoneEntry: React.FC = (props) => {
                         ]}
                         disabled={!phoneIsValid}
                         onPress={() => {
-                            Toast.show(`Sending code to ${phone}`);
+                            Toast.show(`Sending code to ${phone}`, {
+                                position: Toast.positions.TOP,
+                            });
                             dispatch(requestOtp(phone));
                         }}
                     >
