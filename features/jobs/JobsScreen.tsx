@@ -7,6 +7,7 @@ import {
     Pressable,
     ViewStyle,
     LayoutAnimation,
+    Platform,
 } from 'react-native';
 import { useDispatch, useSelector } from 'react-redux';
 import Toast from 'react-native-root-toast';
@@ -31,7 +32,11 @@ import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view
 import BinaryFilterPill from '../../components/BinaryFilterPill';
 import { DateRangeFilterPill, JobFilter } from '../../components/FilterPills';
 import { RootState } from '../../store';
-import { dismissCombineHint, dismissJobListHint } from '../history/OnboardingSlice';
+import {
+    dismissCombineHint,
+    dismissJobListHint,
+    incrementHintIndex,
+} from '../history/OnboardingSlice';
 import Tooltip from 'react-native-walkthrough-tooltip';
 
 import { useNavigation } from '@react-navigation/core';
@@ -85,12 +90,15 @@ const JobsScreenHeader = ({
     deleteEnabled: boolean;
     combineEnabled: boolean;
 }) => {
+    const dispatch = useDispatch();
     const dismissedCombineHint = useSelector(
         (state: RootState): boolean => state.onboarding.dismissedCombineHint || false
     );
     const [showCombineHint, setShowCombineHint] = useState(true);
-    const dispatch = useDispatch();
     const navigation = useNavigation();
+    const hintIndex = useSelector(
+        (state: RootState): number => state.onboarding.onboardingHintIndex
+    );
     console.log('dismissed hint:', dismissedCombineHint, showCombineHint);
     const EditButton = () =>
         isEditing ? (
@@ -178,22 +186,58 @@ const JobsScreenHeader = ({
                 </Pressable>
             </View>
         ) : (
-            <View style={tailwind('flex-row justify-around')}>
-                <Pressable
-                    onPress={onPress}
-                    style={[tailwind('flex-row rounded-lg p-2 bg-black items-center ml-1 mr-1')]}
-                >
-                    <Text style={tailwind('text-white font-bold')}>Edit</Text>
-                    <Ionicons name="create" color="white" size={16} style={tailwind('p-1')} />
-                </Pressable>
-                <Pressable
-                    onPress={() => navigation.navigate('Add Job')}
-                    style={[tailwind('flex-row rounded-lg p-2 bg-black items-center ml-1 mr-1')]}
-                >
-                    <Text style={tailwind('text-white font-bold')}>New</Text>
-                    <Ionicons name="add-circle" color="white" size={16} style={tailwind('p-1')} />
-                </Pressable>
-            </View>
+            <Tooltip
+                isVisible={hintIndex == 2}
+                backgroundColor={'rgba(0,0,0,0.2)'}
+                allowChildInteraction={false}
+                childrenWrapperStyle={Platform.OS == 'android' && tailwind('-mt-6')}
+                childContentSpacing={Platform.OS == 'android' ? 12 : 4}
+                onClose={() => null}
+                content={
+                    <View style={tailwind('flex-col')}>
+                        <Text style={tailwind('text-base')}>
+                            Forget to clock in, or need to change an automatically-tracked job? No
+                            worries. Just edit tracked jobs or add a new job here.
+                        </Text>
+                        <Pressable
+                            style={tailwind('bg-black p-1 m-2 rounded-lg items-center')}
+                            onPress={() => {
+                                dispatch(incrementHintIndex());
+                                navigation.navigate('Your Stats');
+                            }}
+                        >
+                            <Text style={tailwind('text-white text-base font-bold')}>Next</Text>
+                        </Pressable>
+                    </View>
+                }
+                placement="bottom"
+            >
+                <View style={tailwind('flex-row justify-around')}>
+                    <Pressable
+                        onPress={onPress}
+                        style={[
+                            tailwind('flex-row rounded-lg p-2 bg-black items-center ml-1 mr-1'),
+                        ]}
+                    >
+                        <Text style={tailwind('text-white font-bold')}>Edit</Text>
+                        <Ionicons name="create" color="white" size={16} style={tailwind('p-1')} />
+                    </Pressable>
+                    <Pressable
+                        onPress={() => navigation.navigate('Add Job')}
+                        style={[
+                            tailwind('flex-row rounded-lg p-2 bg-black items-center ml-1 mr-1'),
+                        ]}
+                    >
+                        <Text style={tailwind('text-white font-bold')}>New</Text>
+                        <Ionicons
+                            name="add-circle"
+                            color="white"
+                            size={16}
+                            style={tailwind('p-1')}
+                        />
+                    </Pressable>
+                </View>
+            </Tooltip>
         );
     return (
         <View style={tailwind('flex-row p-2 mt-5 justify-between items-center h-24')}>
@@ -390,7 +434,7 @@ export const JobsList = ({ route }) => {
             onRefresh();
             setSelectedJobs([]);
             Toast.show('Jobs successfully deleted.');
-            queryClient.invalidateQueries('filteredJobs')
+            queryClient.invalidateQueries('filteredJobs');
         },
         onError: (err, v) => {
             log.error("Couldn't delete jobs...");
