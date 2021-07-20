@@ -40,11 +40,11 @@ const WeeklyCard: FunctionComponent = () => {
         const summary = weeklySummary.data.getWeeklySummary;
         return (
             <View style={[tailwind('flex-1 m-2 p-5 rounded-xl bg-white flex-col')]}>
-                <Text style={tailwind('text-green-500 text-3xl font-bold underline')}>
-                    This week
+                <Text style={tailwind('text-black text-xl font-bold')}>
+                    This Week
                 </Text>
 
-                <View style={tailwind('border-b border-green-500 -mr-5 ml-5 p-0 pt-1 pb-2')}></View>
+                <View style={tailwind('border-b border-green-500 mr-5 -ml-5 p-0 pt-1 pb-2')}></View>
                 <View style={tailwind('flex-row flex-wrap items-start content-around mt-5 pb-5')}>
                     <View style={tailwind('flex-col items-start w-1/3 flex-auto')}>
                         <Text style={tailwind('ml-1')}>jobs</Text>
