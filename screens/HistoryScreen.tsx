@@ -230,7 +230,6 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
                     </Text>
                     <Text style={tailwind('text-xl font-bold')}> Tips</Text>
                 </View>
-                <View style={tailwind('flex-row p-2')}>{avgTime(allJobs.edges)}</View>
                 <View style={tailwind('flex-row p-2')}>{totalTime(allJobs.edges)}</View>
             </View>
         </View>

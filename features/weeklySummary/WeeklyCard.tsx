@@ -94,8 +94,8 @@ const WeeklyCard: FunctionComponent = () => {
                 >
                     <Text style={tailwind('text-gray-800 text-lg font-bold')}>
                         {jobsNeedEntryStatus.isLoading || jobsNeedEntryStatus.isError
-                            ? '... jobs that need entry'
-                            : `${jobsNeedEntryStatus.data} jobs that need entry`}
+                            ? '... jobs have no pay data'
+                            : `${jobsNeedEntryStatus.data} jobs need pay data`}
                     </Text>
                     <Ionicons name="caret-forward-outline" size={24} color="black" />
                 </Pressable>
