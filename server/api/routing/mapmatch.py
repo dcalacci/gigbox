@@ -16,14 +16,17 @@ def _get_trajectory_from_location_objects(locations):
     """
     records = []
     for l in locations:
-        coords = to_shape(l.geom)
-        records.append([coords.y, coords.x, int(l.timestamp.timestamp())])
+        try:
+            coords = to_shape(l.geom)
+            records.append([coords.y, coords.x, pd.to_datetime(l.timestamp)])
+        except Exception as e:
+            print("Problem translating location into shape. Location:",
+                  l, ". Exception:", e)
     # sort by timestamp
     traj = np.array(sorted(records, key=lambda r: r[2]))
+    print("trajectory of length: ", len(traj))
     data = pd.DataFrame(np.vstack((traj.T)).T)
     data.columns = ['lat', 'lng', 'timestamp']
-    # timestamps in DB are seconds
-    data.timestamp = pd.to_datetime(data.timestamp, unit='s')
     return data
 
 
@@ -65,10 +68,12 @@ def get_match_for_trajectory(traj_df):
 
 def get_route_distance_and_geometry(locs_or_traj):
     from skmob.core import trajectorydataframe
+    import pandas as pd
 
     print("getting match for", len(locs_or_traj), "locations...")
     try:
-        if (type(locs_or_traj) == trajectorydataframe.TrajDataFrame):
+        if (type(locs_or_traj) == trajectorydataframe.TrajDataFrame or
+                type(locs_or_traj) == pd.DataFrame):
             res = get_match_for_trajectory(locs_or_traj)
         else:
             res = get_match_for_locations(locs_or_traj)
@@ -98,7 +103,7 @@ def clean_and_get_stops(locations):
     from skmob.preprocessing import detection
     ctdf = clean_trajectory(locations)
 
-    stdf = detection.stops(ctdf, minutes_for_a_stop=2, no_data_for_minutes=120)
+    stdf = detection.stops(ctdf, minutes_for_a_stop=3, no_data_for_minutes=120)
     return (ctdf, stdf)
 
 
@@ -154,6 +159,7 @@ def _match_path_and_stops(trips, trip_bookends):
 def split_into_trips(traj_df, stop_df, min_trip_dist_mi=0.5):
     """Returns a list of (traj_df, [{'start', 'stop}]) tuples
     """
+    import pandas as pd
     trips = []
     trip_bookends = []
 
@@ -177,17 +183,26 @@ def split_into_trips(traj_df, stop_df, min_trip_dist_mi=0.5):
         # want to include points in a "stop" for map matching.
 
         # dt is
-        for n, time_arrived_at_stop in enumerate(stop_df.datetime):
+        for n, stop in stop_df.iterrows():
+            time_arrived_at_stop = stop.datetime
             if n == 0:
                 first_trip = traj_df[(traj_df.datetime <= time_arrived_at_stop) & (
                     traj_df.datetime >= start.datetime)]
+                # add stop location to end of traj df
+                first_trip = pd.concat(
+                    [first_trip, pd.DataFrame(stop.drop('leaving_datetime')).T])
                 trips.append(first_trip)
                 trip_bookends.append({
                     'start': start,
-                    'stop': stop_df.iloc[n]})
+                    'stop': stop})
             else:
                 trip = traj_df[(traj_df.datetime <= time_arrived_at_stop) & (
                     traj_df.datetime >= stop_df.iloc[n-1].leaving_datetime)]
+                trip = pd.concat([
+                    pd.DataFrame(stop_df.iloc[n-1].drop('leaving_datetime')).T,
+                    trip,
+                    pd.DataFrame(stop.drop('leaving_datetime')).T
+                ])
                 trips.append(trip)
                 trip_bookends.append({
                     'start': stop_df.iloc[n-1],
@@ -196,6 +211,10 @@ def split_into_trips(traj_df, stop_df, min_trip_dist_mi=0.5):
         # add final trip (from last stop to last location)
         final_trip = traj_df[(traj_df.datetime >=
                               stop_df.iloc[-1].leaving_datetime)]
+        final_trip = pd.concat([
+            pd.DataFrame(stop_df.iloc[-1].drop('leaving_datetime')).T,
+            final_trip
+        ])
         trip_bookends.append({'start': stop_df.iloc[-1], 'stop': end})
         trips.append(final_trip)
 
@@ -213,8 +232,8 @@ def split_into_trips(traj_df, stop_df, min_trip_dist_mi=0.5):
 
 def get_trips_from_locations(locations,
                              min_trip_dist_mi=1.,
-                             minutes_for_stop=5,
-                             no_data_for_minutes=120):
+                             minutes_for_stop=3,
+                             no_data_for_minutes=360):
     """ Returns trips in a 2-tuple, each a list of:
     - trajectory_df
     - {'stop', 'start'} (lat, lng, datetime series)
@@ -225,6 +244,7 @@ def get_trips_from_locations(locations,
 
     stop_df = detection.stops(traj_df,
                               minutes_for_a_stop=minutes_for_stop,
+                              spatial_radius_km=0.5,
                               no_data_for_minutes=no_data_for_minutes)
 
     return split_into_trips(
