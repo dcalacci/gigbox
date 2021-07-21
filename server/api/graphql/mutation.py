@@ -288,6 +288,7 @@ def extractJobsFromLocations(shift, locations):
                 shift.start_time and l.timestamp <= shift.end_time]
     else:
         locs = [l for l in locations if l.timestamp >= shift.start_time]
+
     trips = get_trips_from_locations(locs)
     jobs = []
 
@@ -735,17 +736,16 @@ def get_all_locations_from_jobs(jobs, start_time, end_time):
         [Location]: List of Location objects. 
     """
     import itertools
+    import pandas as pd
+    start_time, end_time = pd.to_datetime(start_time), pd.to_datetime(end_time)
     unique_shift_ids = set([job.shift_id for job in jobs])
     shifts = [ShiftModel.query.get(shift_id) for shift_id in unique_shift_ids]
-    all_locations = itertools.chain(*[s.locations for s in shifts])
+    all_locations = list(itertools.chain(*[s.locations for s in shifts]))
     sorted_locs = sorted(all_locations, key=lambda l: l.timestamp)
     job_locations = [l for l in sorted_locs if (
         l.timestamp is not None
         and l.timestamp >= start_time
         and l.timestamp <= end_time)]
-    # job_loc_shapes = [to_shape(l) for l in job_locations]
-    # latLngs = [{'lat': shp.y, 'lng': shp.x} for shp in job_loc_shapes]
-    # return latLngs
     return job_locations
 
 
