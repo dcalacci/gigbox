@@ -15,6 +15,9 @@ class NetPay(ObjectType):
     pay = Float()
     start_date = DateTime()
     end_date = DateTime()
+    clocked_in_time = Float()
+    job_time = Float()
+
 
 
 class DailyHours(ObjectType):
