@@ -61,7 +61,7 @@ export default function HistoryScreen({ route }) {
     const hintIndex = useSelector(
         (state: RootState): number => state.onboarding.onboardingHintIndex
     );
-    console.log("hint index:" + hintIndex);
+    console.log('hint index:' + hintIndex);
     return (
         <View style={tailwind('bg-gray-100 items-center justify-start flex-col h-full')}>
             <StatusBar style="dark" />
@@ -94,13 +94,12 @@ export default function HistoryScreen({ route }) {
                     </View>
                 }
                 placement="bottom"
-            >
-                <JobFilterList inputFilters={filter} />
-            </Tooltip>
+            ></Tooltip>
             <ScrollView
                 style={tailwind('p-2 m-0 flex-col flex w-full')}
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             >
+                <JobFilterList inputFilters={filter} />
                 <NetPayCard />
                 <WorkingTimeCard />
                 <View style={tailwind('flex-row h-10')}></View>
@@ -183,61 +182,63 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
             </>
         );
     };
+
+    const JobHeaderStats = (
+        <View style={tailwind('flex-row flex-wrap p-2')}>
+            <View style={tailwind('flex-row p-2')}>
+                <Text style={tailwind('text-xl text-green-500 font-bold')}>
+                    {allJobs.edges
+                        .map((n) => n.node.mileage)
+                        .reduce((a, b) => a + b, 0)
+                        .toFixed(1)}
+                </Text>
+                <Text style={tailwind('text-xl font-bold')}> Miles</Text>
+            </View>
+            <View style={tailwind('flex-row p-2')}>
+                <Text style={tailwind('text-xl text-green-500 font-bold')}>
+                    $
+                    {allJobs.edges
+                        .map((n) => (n.node.totalPay ? n.node.totalPay : 0))
+                        .reduce((a, b) => a + b, 0)
+                        .toFixed(1)}
+                </Text>
+                <Text style={tailwind('text-xl font-bold')}> Total pay</Text>
+            </View>
+            <View style={tailwind('flex-row p-2')}>
+                <Text style={tailwind('text-xl text-green-500 font-bold')}>
+                    $
+                    {allJobs.edges
+                        .map((n) => (n.node.tip ? n.node.tip : 0))
+                        .reduce((a, b) => a + b, 0)
+                        .toFixed(1)}
+                </Text>
+                <Text style={tailwind('text-xl font-bold')}> Tips</Text>
+            </View>
+            <View style={tailwind('flex-row p-2')}>{totalTime(allJobs.edges)}</View>
+        </View>
+    );
+
     const JobFilterListHeader = (
-        <View style={tailwind('flex-col w-full')}>
-            <View style={tailwind('flex-row items-center justify-between mt-5')}>
-                <View style={tailwind('flex-row justify-start')}>
-                    <Text style={tailwind('text-4xl font-bold')}>Your Stats</Text>
-                </View>
-                <Pressable
-                    style={tailwind('rounded-lg bg-green-500 p-2 flex-row')}
-                    onPress={() => {
-                        exportSelection.mutate({ ids: allJobs.edges.map(({ node }) => node.id) });
-                        console.log('Exporting data...');
-                    }}
-                >
-                    <Ionicons name="download" color="white" size={20} />
-                    <Text style={tailwind('text-lg font-bold text-white')}>Export</Text>
-                </Pressable>
+        <View style={tailwind('flex-row items-center justify-between w-full')}>
+            <View style={tailwind('flex-grow justify-start')}>
+                <Text style={tailwind('text-4xl font-bold')}>Your Stats</Text>
             </View>
-            <View style={tailwind('flex-row flex-wrap p-2')}>
-                <View style={tailwind('flex-row p-2')}>
-                    <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                        {allJobs.edges
-                            .map((n) => n.node.mileage)
-                            .reduce((a, b) => a + b, 0)
-                            .toFixed(1)}
-                    </Text>
-                    <Text style={tailwind('text-xl font-bold')}> Miles</Text>
-                </View>
-                <View style={tailwind('flex-row p-2')}>
-                    <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                        $
-                        {allJobs.edges
-                            .map((n) => (n.node.totalPay ? n.node.totalPay : 0))
-                            .reduce((a, b) => a + b, 0)
-                            .toFixed(1)}
-                    </Text>
-                    <Text style={tailwind('text-xl font-bold')}> Total pay</Text>
-                </View>
-                <View style={tailwind('flex-row p-2')}>
-                    <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                        $
-                        {allJobs.edges
-                            .map((n) => (n.node.tip ? n.node.tip : 0))
-                            .reduce((a, b) => a + b, 0)
-                            .toFixed(1)}
-                    </Text>
-                    <Text style={tailwind('text-xl font-bold')}> Tips</Text>
-                </View>
-                <View style={tailwind('flex-row p-2')}>{totalTime(allJobs.edges)}</View>
-            </View>
+            <Pressable
+                style={tailwind('rounded-lg bg-green-500 p-2 flex-row')}
+                onPress={() => {
+                    exportSelection.mutate({ ids: allJobs.edges.map(({ node }) => node.id) });
+                    console.log('Exporting data...');
+                }}
+            >
+                <Ionicons name="download" color="white" size={20} />
+                <Text style={tailwind('text-lg font-bold text-white')}>Export</Text>
+            </Pressable>
         </View>
     );
 
     return (
         <>
-            <View style={tailwind('p-5 pt-10 flex-col')}>{JobFilterListHeader}</View>
+            <View style={tailwind('pt-10 m-2 flex-col justify-center')}>{JobFilterListHeader}</View>
         </>
     );
 };
