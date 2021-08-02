@@ -63,7 +63,7 @@ const NetPayCard = () => {
     return (
         <View style={tailwind('rounded-lg bg-white p-2 w-full flex-col mt-2 mb-2')}>
             <View style={tailwind('flex-row w-full items-center justify-between')}>
-                <Text style={tailwind('font-bold text-2xl')}>Summary</Text>
+                <Text style={tailwind('font-bold text-3xl')}>Summary</Text>
                 <DateRangeFilterPill
                     displayText={'Past Week - Select Dates'}
                     end={dates.endDate}
@@ -77,6 +77,7 @@ const NetPayCard = () => {
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         setHelpButtonPressed(!helpButtonPressed);
+                        setActiveHelpButtonPressed(false);
                         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
                     }}
                 >
@@ -84,7 +85,7 @@ const NetPayCard = () => {
                         <View style={tailwind('flex-row justify-between')}>
                             <Text style={tailwind('font-bold text-xl')}>
                                 {status == 'success'
-                                    ? `$${((netPay / data.clockedInTime) || 0).toFixed(2)}`
+                                    ? `$${(netPay / data.clockedInTime || 0).toFixed(2)}`
                                     : '...'}
                             </Text>
                             <Ionicons
@@ -101,15 +102,15 @@ const NetPayCard = () => {
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         setActiveHelpButtonPressed(!activeHelpButtonPressed);
+                        setHelpButtonPressed(false);
                         LayoutAnimation.configureNext(LayoutAnimation.Presets.easeInEaseOut);
-                        
                     }}
                 >
                     <View style={tailwind('flex-col rounded-lg p-1 bg-gray-100')}>
                         <View style={tailwind('flex-row justify-between')}>
                             <Text style={tailwind('font-bold text-xl')}>
                                 {status == 'success'
-                                    ? `$${((netPay / data.jobTime) || 0).toFixed(2)}`
+                                    ? `$${(netPay / data.jobTime || 0).toFixed(2)}`
                                     : '...'}
                             </Text>
                             <Ionicons
@@ -131,7 +132,7 @@ const NetPayCard = () => {
                             <Text style={tailwind('text-base')}>
                                 You clocked{' '}
                                 <Text style={tailwind('font-bold')}>
-                                    {data.clockedInTime.toFixed(1)}
+                                    {data.clockedInTime.toFixed(0)}
                                 </Text>{' '}
                                 hours, and you made...
                             </Text>
@@ -139,7 +140,7 @@ const NetPayCard = () => {
                     ) : (
                         <View style={tailwind('flex-row bg-gray-100 p-2 m-2 rounded-xl')}>
                             <Text style={tailwind('text-base')}>
-                                <Text style={tailwind('font-bold')}>{data.jobTime.toFixed(1)}</Text>{' '}
+                                <Text style={tailwind('font-bold')}>{data.jobTime.toFixed(0)}</Text>{' '}
                                 of your hours were "active" (in a job), and you made...
                             </Text>
                         </View>

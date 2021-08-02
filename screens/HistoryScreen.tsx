@@ -63,7 +63,7 @@ export default function HistoryScreen({ route }) {
     );
     console.log('hint index:' + hintIndex);
     return (
-        <View style={tailwind('bg-gray-100 items-center justify-start flex-col h-full')}>
+        <View style={tailwind('pt-10 bg-gray-100 items-center justify-start flex-col h-full')}>
             <StatusBar style="dark" />
             {/* <Text style={styles.title}>Jobs</Text> */}
             <Tooltip
@@ -238,7 +238,7 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
 
     return (
         <>
-            <View style={tailwind('pt-10 m-2 flex-col justify-center')}>{JobFilterListHeader}</View>
+            <View style={tailwind('m-2 flex-col justify-center')}>{JobFilterListHeader}</View>
         </>
     );
 };
