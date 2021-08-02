@@ -125,8 +125,8 @@ export const DateRangeFilterPill = ({
                     style={tailwind('justify-self-end rounded-lg m-2 p-2 bg-red-400')}
                     onPress={() => {
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                        onDateRangeChange({ startDate: null, endDate: null });
-                        setDates({ startDate: null, endDate: null });
+                        onDateRangeChange({ startDate: null, endDate: moment()});
+                        setDates({ startDate: null, endDate: moment()});
                         setOpen(false);
                         LayoutAnimation.configureNext(LayoutAnimation.Presets.spring);
                     }}

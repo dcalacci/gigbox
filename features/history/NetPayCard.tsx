@@ -65,7 +65,7 @@ const NetPayCard = () => {
             <View style={tailwind('flex-row w-full items-center justify-between')}>
                 <Text style={tailwind('font-bold text-3xl')}>Summary</Text>
                 <DateRangeFilterPill
-                    displayText={'Past Week - Select Dates'}
+                    displayText={'All Time - Select Dates'}
                     end={dates.endDate}
                     start={dates.startDate}
                     onDateRangeChange={setDates}
