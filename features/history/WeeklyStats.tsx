@@ -4,9 +4,9 @@ import { gql } from 'graphql-request';
 import moment, { Moment } from 'moment';
 import React, { useState } from 'react';
 import { Dimensions, View, ScrollView, Text } from 'react-native';
-import { StackedBarChart, BarChart } from 'react-native-chart-kit';
 import { useQuery } from 'react-query';
 import { tailwind } from 'tailwind';
+import { StackedBarChart, Grid, XAxis, YAxis } from 'react-native-svg-charts';
 
 const getDailyStats = (startDate: Moment | null, endDate: Moment | null) => {
     const client = getClient(store);
@@ -29,92 +29,116 @@ const getDailyStats = (startDate: Moment | null, endDate: Moment | null) => {
         }
     `;
     const vars = { startDate, endDate };
-    console.log('sending query w vars:', vars);
     const res = client.request(query, vars);
     return res;
 };
 
-export const WeeklyStats = () => {
-    const [chartData, setChartData] = useState(null);
-    const [startDate, setStartDate] = useState(moment().startOf('week'));
-    const [endDate, setEndDate] = useState(moment());
+export const WeeklyStats = ({
+    dates = { startDate: moment().startOf('week'), endDate: moment().endOf('week') },
+}: {
+    dates: { startDate: Moment | null; endDate: Moment | null };
+}) => {
     const { status, data } = useQuery(
-        ['stats', 'weeklyStats', startDate, endDate],
-        () => getDailyStats(startDate, endDate),
+        ['stats', 'weeklyStats', dates.startDate, dates.endDate],
+        () => getDailyStats(dates.startDate, dates.endDate),
         {
             onError: (err) => {
                 console.log('error:', err);
             },
             select: (data) => {
-                console.log('Successfully got weekly stats:', data);
                 const d = data.getDailyStats.data;
 
-                const cd = {
-                    labels: d.map((d) => moment(d.date).format('dd')),
-                    legend: ['Base Pay', 'Tip'],
-                    // data: [
-                    //     [10, 2],
-                    //     [14, 3],
-                    // ],
-                    datasets: [
-                        {
-                            data: 
-                                d.map(
-                                (d) => Math.floor((Math.random() + 1) * 10)
-                                // Math.floor((Math.random() + 1) * 5),
-                                ),
-                        }
-                    ],
-                    barColors: ['#dfe4ea', '#a4b0be'],
-                };
-                console.log('Setting chart data:', cd);
-                return cd;
+                const chartData = d.map((item) => {
+                    return {
+                        label: moment(item.date).format('dd'),
+                        // tip: Math.floor((Math.random() + 1) * 10),
+                        // basePay: Math.floor((Math.random() + 1) * 10),
+                        tip: item.tip,
+                        basePay: item.basePay,
+                    };
+                });
+                return chartData;
             },
         }
     );
     const screenWidth = Dimensions.get('window').width;
 
-    const chartConfig = {
-        backgroundColor: '#ffffff',
-        backgroundGradientFrom: '#ffffff',
-        withInnerLines: false,
-        backgroundGradientTo: '#ffffff',
-        barRadius: 10,
-        showBarTops: false,
-        color: (opacity = 1) => `rgba(80, 80, 80, 1)`,
-        strokeWidth: 3, // optional, default 3
-        barPercentage: 0.5,
-        yAxisLabel: "$",
-        fromZero: true,
-        useShadowColorFromDataset: false, // optional
-    };
+    const colors = ['#212121', '#757575bd'];
+    const keys = ['basePay', 'tip'];
+    const contentInset = { left: 10, top: 10, bottom: 10 };
 
-    console.log('chart data:', chartData);
+    //TODO: if no data, show some random bars and a message on top
+    console.log('rendering chart for week:', dates.startDate.format('L'));
+    const sumPay = data?.reduce((a, b) => a + b.basePay, 0);
+
     return (
-        <View style={tailwind('rounded-lg bg-white p-2 w-full flex-col mt-2 mb-2')}>
-            <Text style={tailwind('font-bold text-3xl')}>This Week</Text>
+        <View style={tailwind('rounded-lg p-2 w-full flex-col mt-2 mb-2')}>
             <View style={tailwind('flex-row rounded-lg ')}>
-                <ScrollView style={tailwind('flex-row w-full m-2')} horizontal={true}>
-                    {status == 'success' && (
-                        <BarChart
-                            style={{
-                                borderColor: 'black',
-                                borderWidth: 0,
-                                borderRadius: 4,
-                                width: 400,
-                            }}
-                            withInnerLines={false}
-                            flatColor={true}
-                            showBarTops={false}
-                            showValuesOnTopOfBars={true}
-                            fromZero={true}
+                {status == 'success' && (
+                    <View style={tailwind('flex-row')}>
+                        {sumPay == 0 && (
+                            <View style={tailwind('flex-col w-full absolute bg-gray-200 p-5 rounded-lg self-start justify-self-center')}>
+                                <Text style={tailwind('text-lg')}>
+                                    No pay recorded for this week. Clock in to track your pay and see stats!
+                                </Text>
+                            </View>
+                        )}
+                        <YAxis
                             data={data}
-                            width={screenWidth * 0.9}
-                            height={175}
-                            chartConfig={chartConfig}
+                            numberOfTicks={3}
+                            svg={{ fontSize: 12, fill: 'black' }}
+                            style={{ marginVertical: 20 }}
+                            yAccessor={({ index }) => data[index].basePay + data[index].tip}
+                            formatLabel={(value) => {
+                                return `$${value}`;
+                            }}
+                            contentInset={contentInset}
+                            spacingInner={10}
                         />
-                    )}
-                </ScrollView>
+
+                        <View style={tailwind('flex-col')}>
+                            <StackedBarChart
+                                style={{ height: 200, width: screenWidth * 0.75 }}
+                                keys={keys}
+                                svg={{
+                                    strokeLinecap: 'round',
+                                    strokeLinejoin: 'bevel',
+                                    strokeWidth: 10,
+                                }}
+                                colors={colors}
+                                data={data}
+                                showGrid={false}
+                                animate={true}
+                                contentInset={contentInset}
+                            >
+                                <Grid />
+                            </StackedBarChart>
+                            <XAxis
+                                data={data}
+                                style={{ marginHorizontal: 20 }}
+                                xAccessor={({ index }) => index}
+                                contentInset={contentInset}
+                                spacingInner={10}
+                                formatLabel={(value, index) => data[value].label}
+                                svg={{ fontSize: 12, fill: 'black' }}
+                            />
+                        </View>
+                    </View>
+                )}
+            </View>
+            <View style={tailwind('flex-row')}>
+                <View style={tailwind('flex-row items-center pl-1 pr-1')}>
+                    <View
+                        style={[tailwind('rounded w-4 h-4'), { backgroundColor: '#212121' }]}
+                    ></View>
+                    <Text style={tailwind('text-base p-1 ')}>Base Pay</Text>
+                </View>
+                <View style={tailwind('flex-row items-center pl-1 pr-1')}>
+                    <View
+                        style={[tailwind('rounded w-4 h-4'), { backgroundColor: '#757575bd' }]}
+                    ></View>
+                    <Text style={tailwind('text-base p-1 ')}>Tips</Text>
+                </View>
             </View>
         </View>
     );

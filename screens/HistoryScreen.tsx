@@ -103,7 +103,6 @@ export default function HistoryScreen({ route }) {
             >
                 <JobFilterList inputFilters={filter} />
 
-                <WeeklyStats />
                 <NetPayCard />
                 <WorkingTimeCard />
                 <View style={tailwind('flex-row h-10')}></View>
