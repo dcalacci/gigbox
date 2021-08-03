@@ -113,11 +113,6 @@ const NetPayCard = () => {
         <View style={tailwind('rounded-lg bg-white w-full flex-col mt-2 mb-2 pb-5')}>
             <View style={tailwind('flex-row w-full p-2 items-center justify-between')}>
                 <Text style={tailwind('font-bold text-3xl')}>Summary</Text>
-                <View style={tailwind('rounded-lg p-2')}>
-                    <Text style={tailwind('font-bold text-sm')}>
-                        {dates.startDate.format('l')} - {dates.endDate.format('l')}
-                    </Text>
-                </View>
             </View>
 
             <View style={tailwind('flex-row p-2 justify-around items-center')}>
@@ -267,7 +262,7 @@ const NetPayCard = () => {
                                     <Pressable onPress={() => incrementWeek()}>
                                         <Ionicons
                                             name={'arrow-back-circle'}
-                                            size={32}
+                                            size={40}
                                             color={'gray'}
                                         />
                                     </Pressable>
@@ -278,7 +273,7 @@ const NetPayCard = () => {
                                     <Pressable onPress={() => decrementWeek()}>
                                         <Ionicons
                                             name={'arrow-forward-circle'}
-                                            size={32}
+                                            size={40}
                                             color={'gray'}
                                         />
                                     </Pressable>
