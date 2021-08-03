@@ -29,6 +29,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { incrementHintIndex } from '../features/history/OnboardingSlice';
 import { useNavigation } from '@react-navigation/native';
+import { WeeklyStats } from '../features/history/WeeklyStats';
 
 export default function HistoryScreen({ route }) {
     const dispatch = useDispatch();
@@ -50,13 +51,14 @@ export default function HistoryScreen({ route }) {
     console.log('history filter in params:', route.params?.filters);
     const onRefresh = () => {
         setRefreshing(true);
-        queryClient.invalidateQueries('netPay');
-        queryClient.invalidateQueries('filteredJobs');
+        queryClient.invalidateQueries('stats');
+        // queryClient.invalidateQueries('netPay');
+        // queryClient.invalidateQueries('filteredJobs');
     };
 
     useEffect(() => {
         console.log('n fetching:', nFetching);
-        setRefreshing(nFetching > 0);
+        // setRefreshing(nFetching > 0);
     });
     const hintIndex = useSelector(
         (state: RootState): number => state.onboarding.onboardingHintIndex
@@ -100,6 +102,8 @@ export default function HistoryScreen({ route }) {
                 refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} />}
             >
                 <JobFilterList inputFilters={filter} />
+
+                <WeeklyStats />
                 <NetPayCard />
                 <WorkingTimeCard />
                 <View style={tailwind('flex-row h-10')}></View>
