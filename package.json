@@ -72,6 +72,7 @@
         "graphql-request": "^3.4.0",
         "libphonenumber-js": "^1.9.14",
         "moment": "^2.29.1",
+        "moment-range": "^4.0.2",
         "node-fetch": "^2.6.1",
         "postcss": "^7",
         "react": "16.13.1",
