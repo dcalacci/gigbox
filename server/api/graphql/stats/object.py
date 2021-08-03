@@ -1,6 +1,21 @@
 from graphene import Float, ObjectType, DateTime, List
 
 
+class DayStats(ObjectType):
+    date = DateTime()
+    base_pay = Float()
+    tip = Float()
+    expenses = Float()
+    mileage = Float()
+    active_time = Float()
+    clocked_in_time = Float()
+    hourly_pay = Float()
+    hourly_pay_active = Float()
+
+class DailyStats(ObjectType):
+    n_days = Float()
+    data = List(DayStats)
+
 class NetPay(ObjectType):
     """Net Pay Graphql Object. 
     mileage_deduction: Float, indicating total amount deductible from mileage traveled. 

@@ -10,7 +10,7 @@ from api.controllers.auth.decorators import login_required
 from api.models import Job as JobModel, Shift as ShiftModel
 from api.graphql.object import JobNode, ShiftNode
 
-from .object import NetPay, WorkingTime
+from .object import DailyStats, NetPay, DayStats, WorkingTime
 
 
 def get_jobs(info, start_date, end_date):
@@ -62,10 +62,11 @@ def _get_shift_hours_daily(shifts):
     """Returns a list of records detailing the date and number of hours "clocked in" to a shift.
 
     Args:
-        shifts (List(Shift)): List of shifts to calculate for 
+        shifts (List(Shift)): List of shifts to calculate for
 
     Returns:
-        [{date: Datetime, hrs: Float}]: Records for each day the user clocked in detailing total # of hours clocked
+        # of hours clocked
+        [{date: Datetime, hrs: Float}]: Records for each day the user clocked in detailing total
     """
     shift_dicts = [{'start_time': s.start_time, 'end_time': s.end_time,
                     'mileage': s.road_snapped_miles} for s in shifts]
@@ -76,10 +77,11 @@ def _get_job_hours_daily(jobs):
     """Returns a list of records detailing the date and number of hours tracked for jobs
 
     Args:
-        shifts (List(Job)): List of jobs to calculate for 
+        shifts (List(Job)): List of jobs to calculate for
 
     Returns:
-        [{date: Datetime, hrs: Float}]: Records for each day the user worked, detailing total # of hours spent on a job.
+        # of hours spent on a job.
+        [{date: Datetime, hrs: Float}]: Records for each day the user worked, detailing total
     """
     job_dicts = [{'start_time': j.start_time, 'end_time': j.end_time,
                   'mileage': j.mileage} for j in jobs]
@@ -90,11 +92,48 @@ def get_total_time(shifts_or_jobs):
     return [(s.end_time - s.start_time).seconds / 3600 for s in shifts_or_jobs] if len(shifts_or_jobs) > 0 else [0]
 
 
+def _get_stats_for_day(info, date):
+    from .utils import get_mileage_deduction
+    start_date = pendulum.instance(date).start_of('day')
+    end_date = pendulum.instance(date).end_of('day')
+    jobs = get_jobs(info, start_date, end_date)
+    shifts = get_shifts(info, start_date, end_date)
+    deduction = get_mileage_deduction(jobs)
+    tip = sum(filter(None, [j.tip for j in jobs]))
+    pay = sum(filter(None, [j.total_pay for j in jobs]))
+    miles = sum(filter(None, [j.mileage for j in jobs]))
+    total_shift_time = sum(get_total_time(shifts))
+    total_job_time = sum(get_total_time(jobs))
+
+    return {
+        "date": date,
+        "base_pay": pay,
+        "tip": tip,
+        "expenses": deduction,
+        "mileage": miles,
+        "active_time": total_job_time,
+        "clocked_in_time": total_shift_time,
+        "hourly_pay_active": (pay + tip - deduction) / total_job_time if total_job_time > 0 else 0,
+        "hourly_pay": (pay + tip - deduction) / total_shift_time if total_shift_time > 0 else 0
+    }
+
+
 class StatsQuery(graphene.ObjectType):
     getNetPay = graphene.Field(
         NetPay, start_date=graphene.DateTime(), end_date=graphene.DateTime())
     getWorkingTime = graphene.Field(
         WorkingTime, start_date=graphene.DateTime(), end_date=graphene.DateTime())
+    getDailyStats = graphene.Field(
+        DailyStats, start_date=graphene.DateTime(), end_date=graphene.DateTime()
+    )
+
+    @login_required
+    def resolve_getDailyStats(self, info, start_date=None, end_date=pendulum.now()):
+        import datetime
+        days = [start_date + datetime.timedelta(days=x)
+                for x in range((end_date-start_date).days + 1)]
+        daily_stats = [_get_stats_for_day(info, day) for day in days]
+        return DailyStats(n_days=len(daily_stats), data=daily_stats)
 
     @login_required
     def resolve_getNetPay(self, info, start_date=None, end_date=pendulum.now()):
