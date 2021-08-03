@@ -81,7 +81,8 @@ const NetPayCard = () => {
     const screenWidth = Dimensions.get('window').width;
 
     const viewabilityConfig = {
-        viewAreaCoveragePercentThreshold: 0.75,
+        itemVisiblePercentThreshold: 0.75,
+        minimumViewTime: 100,
     };
 
     const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -226,11 +227,13 @@ const NetPayCard = () => {
             <FlatList
                 style={[tailwind('w-full pr-2')]}
                 ref={flatList}
-                pagingEnabled={true}
                 data={weeks}
                 horizontal={true}
                 initialNumToRender={5}
                 inverted={true}
+                snapToInterval={screenWidth * 0.95}
+                snapToAlignment={'center'}
+                decelerationRate={'fast'}
                 keyExtractor={(week, index) => week.startDate.format('L')}
                 viewabilityConfig={viewabilityConfig}
                 viewabilityConfigCallbackPairs={viewabilityConfigCallbackPairs.current}
