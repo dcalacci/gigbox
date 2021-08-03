@@ -266,7 +266,7 @@ const NetPayCard = () => {
                                         <Ionicons
                                             name={'arrow-back-circle'}
                                             size={40}
-                                            color={'gray'}
+                                            color={'black'}
                                         />
                                     </Pressable>
                                     <Text style={tailwind('font-bold text-xl pl-2 pr-2')}>
@@ -277,7 +277,7 @@ const NetPayCard = () => {
                                         <Ionicons
                                             name={'arrow-forward-circle'}
                                             size={40}
-                                            color={'gray'}
+                                            color={'black'}
                                         />
                                     </Pressable>
                                 </View>
