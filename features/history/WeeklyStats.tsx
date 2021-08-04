@@ -68,7 +68,6 @@ export const WeeklyStats = ({
     const contentInset = { left: 10, top: 10, bottom: 10 };
 
     //TODO: if no data, show some random bars and a message on top
-    console.log('rendering chart for week:', dates.startDate.format('L'));
     const sumPay = data?.reduce((a, b) => a + b.basePay, 0);
 
     return (

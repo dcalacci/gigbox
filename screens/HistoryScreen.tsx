@@ -58,7 +58,7 @@ export default function HistoryScreen({ route }) {
 
     useEffect(() => {
         console.log('n fetching:', nFetching);
-        // setRefreshing(nFetching > 0);
+        setRefreshing(nFetching > 0);
     });
     const hintIndex = useSelector(
         (state: RootState): number => state.onboarding.onboardingHintIndex
