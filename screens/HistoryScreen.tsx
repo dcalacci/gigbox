@@ -29,7 +29,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { incrementHintIndex } from '../features/history/OnboardingSlice';
 import { useNavigation } from '@react-navigation/native';
-import { WeeklyStats } from '../features/history/WeeklyStats';
 
 export default function HistoryScreen({ route }) {
     const dispatch = useDispatch();
@@ -104,6 +103,7 @@ export default function HistoryScreen({ route }) {
                 <JobFilterList inputFilters={filter} />
 
                 <NetPayCard />
+
                 <WorkingTimeCard />
                 <View style={tailwind('flex-row h-10')}></View>
             </ScrollView>
@@ -185,41 +185,6 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
             </>
         );
     };
-
-    const JobHeaderStats = (
-        <View style={tailwind('flex-row flex-wrap p-2')}>
-            <View style={tailwind('flex-row p-2')}>
-                <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                    {allJobs.edges
-                        .map((n) => n.node.mileage)
-                        .reduce((a, b) => a + b, 0)
-                        .toFixed(1)}
-                </Text>
-                <Text style={tailwind('text-xl font-bold')}> Miles</Text>
-            </View>
-            <View style={tailwind('flex-row p-2')}>
-                <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                    $
-                    {allJobs.edges
-                        .map((n) => (n.node.totalPay ? n.node.totalPay : 0))
-                        .reduce((a, b) => a + b, 0)
-                        .toFixed(1)}
-                </Text>
-                <Text style={tailwind('text-xl font-bold')}> Total pay</Text>
-            </View>
-            <View style={tailwind('flex-row p-2')}>
-                <Text style={tailwind('text-xl text-green-500 font-bold')}>
-                    $
-                    {allJobs.edges
-                        .map((n) => (n.node.tip ? n.node.tip : 0))
-                        .reduce((a, b) => a + b, 0)
-                        .toFixed(1)}
-                </Text>
-                <Text style={tailwind('text-xl font-bold')}> Tips</Text>
-            </View>
-            <View style={tailwind('flex-row p-2')}>{totalTime(allJobs.edges)}</View>
-        </View>
-    );
 
     const JobFilterListHeader = (
         <View style={tailwind('flex-row items-center justify-between w-full')}>

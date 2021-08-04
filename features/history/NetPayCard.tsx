@@ -50,7 +50,7 @@ const NetPayCard = () => {
     });
 
     const { status, data } = useQuery(
-        ['stats', 'netPay', dates.startDate, dates.endDate],
+        ['netPay', dates.startDate, dates.endDate],
         () => getNetPay(dates.startDate, dates.endDate),
         {
             onSuccess: (d) => {
@@ -176,7 +176,7 @@ const NetPayCard = () => {
                             <Text style={tailwind('text-base')}>
                                 You clocked{' '}
                                 <Text style={tailwind('font-bold')}>
-                                    {data.clockedInTime.toFixed(0)}
+                                    {data.clockedInTime > 1 ? data.clockedInTime.toFixed(0) : data.clockedInTime.toFixed(1)}
                                 </Text>{' '}
                                 hours, and you made...
                             </Text>
@@ -184,6 +184,7 @@ const NetPayCard = () => {
                     ) : (
                         <View style={tailwind('flex-row bg-gray-100 p-2 m-2 rounded-xl')}>
                             <Text style={tailwind('text-base')}>
+                                <Text style={tailwind('font-bold')}>{data.jobTime > 1 ? data.jobTime.toFixed(0) : data.jobTime.toFixed(1)}</Text>{' '}
                                 <Text style={tailwind('font-bold')}>{data.jobTime.toFixed(0)}</Text>{' '}
                                 of your hours were "active" (in a job), and you made...
                             </Text>
@@ -243,7 +244,6 @@ const NetPayCard = () => {
                     index,
                 })}
                 renderItem={({ item, index, seps }) => {
-                    console.log('rendering item:', item.startDate.format('L'));
                     return (
                         <View
                             style={[
