@@ -29,7 +29,6 @@ import { useDispatch, useSelector } from 'react-redux';
 import { RootState } from '@/store';
 import { incrementHintIndex } from '../features/history/OnboardingSlice';
 import { useNavigation } from '@react-navigation/native';
-import { WeeklyStats } from '../features/history/WeeklyStats';
 
 export default function HistoryScreen({ route }) {
     const dispatch = useDispatch();

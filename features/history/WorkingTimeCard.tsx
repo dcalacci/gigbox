@@ -3,17 +3,9 @@ import { Dimensions, Text, View } from 'react-native';
 import moment, { Moment } from 'moment';
 import { tailwind } from 'tailwind';
 
-import { useQuery } from 'react-query';
-import { store } from '../../store/store';
-import { getClient } from '../../utils';
-import { gql } from 'graphql-request';
-import { DateRangeFilterPill } from '../../components/FilterPills';
-import { ContributionGraph, ProgressChart } from 'react-native-chart-kit';
 import ProgressBar from './ProgressBar';
-import { LinearGradient } from 'expo-linear-gradient';
 
 import { Ionicons } from '@expo/vector-icons';
-import ProgressBar from './ProgressBar';
 import { useWorkingTime } from '../../hooks/api';
 import { ClockedInCalendar } from '../adjustHours/AdjustHoursCard';
 
