@@ -30,6 +30,7 @@ import { RootState } from '@/store';
 import { incrementHintIndex } from '../features/history/OnboardingSlice';
 import { useNavigation } from '@react-navigation/native';
 import { WeeklyStats } from '../features/history/WeeklyStats';
+import AdjustHoursCard from '../features/adjustHours/AdjustHoursCard';
 
 export default function HistoryScreen({ route }) {
     const dispatch = useDispatch();
@@ -104,6 +105,7 @@ export default function HistoryScreen({ route }) {
                 <JobFilterList inputFilters={filter} />
 
                 <NetPayCard />
+
                 <WorkingTimeCard />
                 <View style={tailwind('flex-row h-10')}></View>
             </ScrollView>
