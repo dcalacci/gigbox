@@ -32,7 +32,17 @@ const WorkingTimeCard = () => {
     return (
         <View style={tailwind('rounded-lg bg-white p-2 w-full flex-col mt-2 mb-2')}>
             <Text style={tailwind('font-bold text-3xl')}>Working Time</Text>
-            <Text style={tailwind('text-sm')}>Stats on how long you've worked and waited.</Text>
+            <ScrollView
+                horizontal={true}
+                style={tailwind('border-t border-b border-gray-100 flex-row w-full')}
+            >
+                <DateRangeFilterPill
+                    displayText={'All Time - Select Dates'}
+                    end={dates.endDate}
+                    start={dates.startDate}
+                    onDateRangeChange={setDates}
+                />
+            </ScrollView>
 
             {status == 'success' && (data.clockedInTime == 0 || data.jobTime == 0) && (
                 <View style={tailwind('flex-row w-full p-2')}>
