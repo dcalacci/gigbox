@@ -36,7 +36,7 @@ by PhD student [Dan Calacci](https://twitter.com/dcalacci).
      <td>Get insights about your work habits and pay</td>
   </tr>
   <tr>
-    <td><img src="screenshots/job-list.PNG" width=200></td>
+    <td><img src="screenshots/job-tracking.PNG" width=200></td>
     <td><img src="screenshots/stats-1.PNG" width=200></td>
     <td><img src="screenshots/stats-2.PNG" width=200></td>
   </tr>
