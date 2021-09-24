@@ -20,5 +20,5 @@ jobs:
         with:
           expo-version: 4.x
           expo-token: ${{ secrets.EXPO_TOKEN }}
-      - run: cd app & yarn install
-      - run: cd app & expo publish --release-channel=staging
+      - run: cd app && yarn install
+      - run: cd app && expo publish --release-channel=staging
