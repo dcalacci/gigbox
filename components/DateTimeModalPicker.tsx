@@ -69,9 +69,9 @@ export default ({
                 </View>
                 <Pressable
                     onPress={() => setShowModal(false)}
-                    style={tailwind('bg-black rounded-lg p-2 w-full items-center')}
+                    style={tailwind('bg-black rounded-lg p-2 m-2 w-full items-center')}
                 >
-                    <Text style={tailwind('font-bold text-white m-1')}>Done</Text>
+                    <Text style={tailwind('font-bold p-2 text-white')}>Done</Text>
                 </Pressable>
             </Modal>
             <View style={tailwind('flex-row w-full items-center')}>

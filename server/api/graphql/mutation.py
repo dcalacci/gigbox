@@ -193,6 +193,30 @@ class UpdateShiftEndTime(Mutation):
         return UpdateShiftEndTime(shift)
 
 
+class UpdateShiftStartTime(Mutation):
+    shift = Field(lambda: ShiftNode, description="Shift that is being edited")
+
+    class Arguments:
+        shift_id = ID(required=True, description="ID of the shift to end")
+        start_time = DateTime(
+            required=True, description="end timestamp for this shift. Must include a value")
+
+    @login_required
+    def mutate(self, info, shift_id, start_time):
+        shift_id = from_global_id(shift_id)[1]
+        shift = ShiftModel.query.get(shift_id)
+
+        start_time = start_time.replace(tzinfo=None)
+        if (shift.end_time <= start_time):
+            raise ShiftInvalidError(
+                "End time needs to be later than the start time")
+
+        shift.start_time = start_time
+        db.session.add(shift)
+        db.session.commit()
+        return UpdateShiftStartTime(shift)
+
+
 class ExtractJobsFromShift(Mutation):
     """Extract trips from a shift.
 
@@ -1098,6 +1122,7 @@ class Mutation(ObjectType):
     extractJobsFromShift = ExtractJobsFromShift.Field()
     deleteShift = DeleteShift.Field()
     updateShiftEndTime = UpdateShiftEndTime.Field()
+    updateShiftStartTime = UpdateShiftStartTime.Field()
     createJob = CreateJob.Field()
     setJobTotalPay = SetJobTotalPay.Field()
     setJobTip = SetJobTip.Field()

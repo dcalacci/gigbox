@@ -91,7 +91,30 @@ export const updateShiftEndTime = ({ shiftId, endTime }: { shiftId: string; endT
             }
         }
     `;
-    return client.request(query, {shiftId, endTime});
+    return client.request(query, { shiftId, endTime });
+};
+
+export const updateShiftStartTime = ({
+    shiftId,
+    startTime,
+}: {
+    shiftId: string;
+    startTime: Date;
+}) => {
+    const client = getClient(store);
+    const query = gql`
+        mutation mutation($shiftId: ID!, $startTime: DateTime!) {
+            updateShiftStartTime(shiftId: $shiftId, startTime: $startTime) {
+                shift {
+                    id
+                    endTime
+                    active
+                    startTime
+                }
+            }
+        }
+    `;
+    return client.request(query, { shiftId, startTime });
 };
 
 export const endShift = (shiftId: string) => {
