@@ -30,6 +30,7 @@ import { RootState } from '@/store';
 import { incrementHintIndex } from '../features/history/OnboardingSlice';
 import { useNavigation } from '@react-navigation/native';
 
+
 export default function HistoryScreen({ route }) {
     const dispatch = useDispatch();
     const navigation = useNavigation();
@@ -191,6 +192,7 @@ export const JobFilterList = ({ inputFilters }: { inputFilters?: JobFilter }) =>
             <View style={tailwind('flex-grow justify-start')}>
                 <Text style={tailwind('text-4xl font-bold')}>Your Stats</Text>
             </View>
+
             <Pressable
                 style={tailwind('rounded-lg bg-green-500 p-2 flex-row')}
                 onPress={() => {

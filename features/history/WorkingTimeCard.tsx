@@ -5,6 +5,7 @@ import moment, { Moment } from 'moment';
 import { tailwind } from 'tailwind';
 
 import ProgressBar from './ProgressBar';
+import { LinearGradient } from 'expo-linear-gradient';
 
 import { Ionicons } from '@expo/vector-icons';
 import { useWorkingTime } from '../../hooks/api';
@@ -34,6 +35,7 @@ const WorkingTimeCard = () => {
         <View style={tailwind('rounded-lg bg-white p-2 w-full flex-col mt-2 mb-2')}>
             <Text style={tailwind('font-bold text-3xl')}>Working Time</Text>
 
+
             {status == 'success' && (data.clockedInTime == 0 || data.jobTime == 0) && (
                 <View style={tailwind('flex-row w-full p-2')}>
                     <Text style={tailwind('text-lg')}>
@@ -42,11 +44,13 @@ const WorkingTimeCard = () => {
                     </Text>
                 </View>
             )}
+
             <View style={tailwind('flex-col w-full pr-2 border-t-2 border-gray-100 mt-2 pt-2')}>
                 <View style={tailwind('justify-start flex-row items-center')}>
                     <Ionicons style={tailwind('mr-2')} size={24} name="stopwatch-outline" />
                     <Text style={tailwind('text-lg font-bold')}>Waiting Time</Text>
                 </View>
+
                 {status == 'success' && data.clockedInTime > 0 && data.jobTime > 0 && (
                     <ProgressBar
                         bgcolor={'#000000'}
@@ -71,6 +75,7 @@ const WorkingTimeCard = () => {
                     <View style={tailwind('justify-start flex-row items-center')}>
                         <Ionicons style={tailwind('p-2')} size={24} name="calendar" />
                         <Text style={tailwind('text-lg font-bold')}>Calendar</Text>
+
                     </View>
                     <Text style={tailwind('text-black text-base m-2 pb-2 ')}>
                         Darker blocks show days you worked more hours. Tap on a day to change when
