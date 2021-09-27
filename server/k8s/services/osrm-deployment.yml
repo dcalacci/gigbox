@@ -34,7 +34,7 @@ spec:
           image: osrm/osrm-backend:v5.24.0
           resources:
               requests:
-                  memory: 45G
+                  memory: 30G
 
           ports:
               - containerPort: 5000
@@ -51,5 +51,5 @@ spec:
       restartPolicy: Always
       volumes:
         - name: osrm-data
-          persistentVolumeClaim: 
-            claimName: osrm-claim
+          hostPath:
+            path: /home/dcalacci/osrm

@@ -1,7 +1,0 @@
-apiVersion: networking.gke.io/v1
-kind: ManagedCertificate
-metadata:
-  name: gigbox-cert
-spec:
-  domains:
-    - api.gigbox.app

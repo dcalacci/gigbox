@@ -1,0 +1,23 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: gigbox
+  annotations: 
+    kubernetes.io/ingress.class: public
+    cert-manager.io/issuer: "letsencrypt-prod"
+spec:
+  tls:
+  - hosts:
+    - gigbox-osrm.media.mit.edu
+    secretName: quickstart-example-tls
+  rules:
+  - host: gigbox-osrm.media.mit.edu
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: gigbox-server
+            port:
+              number: 80
