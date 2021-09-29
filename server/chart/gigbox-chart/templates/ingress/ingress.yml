@@ -8,10 +8,10 @@ metadata:
 spec:
   tls:
   - hosts:
-    - gigbox-osrm.media.mit.edu
+    - {{ .Values.apiHostname }}
     secretName: quickstart-example-tls
   rules:
-  - host: gigbox-osrm.media.mit.edu
+  - host: {{ .Values.apiHostname }}
     http:
       paths:
       - path: /

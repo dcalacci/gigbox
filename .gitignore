@@ -20,3 +20,7 @@ app/package-lock.json
 *__pycache__
 *.env
 *.vscode
+.env
+.vscode/settings.json
+*values.yaml
+*values.yml

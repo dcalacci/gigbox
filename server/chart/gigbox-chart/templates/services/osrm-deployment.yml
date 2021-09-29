@@ -52,4 +52,4 @@ spec:
       volumes:
         - name: osrm-data
           hostPath:
-            path: /home/dcalacci/osrm
+            path: {{ .Values.hostOSRMPath }}
