@@ -1,5 +1,4 @@
 name: 'CI/CD'
-on: ['deployment']
 on: 
   push: 
     branches: 
