@@ -108,7 +108,7 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
         with:
-          exec: helm install --upgrade gigbox ./server/chart/gigbox-chart --install --wait --atomic --namespace=${{ github.head_ref }} --values=${{ steps.write_values.outputs.filePath }}
+          exec: helm upgrade --install gigbox ./server/chart/gigbox-chart --install --wait --atomic --namespace=${{ github.head_ref }} --values=${{ steps.write_values.outputs.filePath }}
           kubeconfig: '${{ secrets.KUBECONFIG }}'
   build-review-app:
     name: Build and publish expo review app
