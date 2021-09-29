@@ -9,7 +9,7 @@ metadata:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
     meta.helm.sh/release-name: {{ .Release.Name }}
-    meta.helm.sh/release-namespace: {{ .Release.Service }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 
 spec:
   ports:
@@ -29,7 +29,7 @@ metadata:
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/managed-by: {{ .Release.Service }}
       meta.helm.sh/release-name: {{ .Release.Name }}
-      meta.helm.sh/release-namespace: {{ .Release.Service }}
+      meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1
   selector:
