@@ -85,9 +85,9 @@ jobs:
         uses: WyriHaximus/github-action-helm3@v2
         with:
           exec: helm lint ./server/chart/gigbox-chart
-  deploy-review-server:
+  deploy-server:
     runs-on: 'ubuntu-latest'
-    if: github.event_name == 'pull_request'
+    if: github.event_name == 'push'
     needs: 
       - lint-helm
     steps:
