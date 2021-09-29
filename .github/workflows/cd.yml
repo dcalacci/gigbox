@@ -98,7 +98,7 @@ jobs:
           cat ./server/chart/gigbox-chart/Chart.old.yaml | grep -v appVersion > ./server/chart/gigbox-chart/Chart.yaml &&
           echo -e "\r\nappVersion: v${GITHUB_REF##*/}\r\n" >> ./server/chart/gigbox-chart/Chart.yaml &&
           cat ./server/chart/gigbox-chart/Chart.yaml
-      - uses: timheuer/base64-to-file@v1
+      - uses: timheuer/base64-to-file@v1.1
         id: write_values
         name: Decrypt values to file
         with:
