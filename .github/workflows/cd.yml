@@ -13,7 +13,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  Build Server:
+  build-server:
       name: Build and push to Docker Hub
       if: ${{ github.event_name == 'push' && $GITHUB_REF == 'refs/heads/master' || $GITHUB_REF == 'refs/heads/develop' }}
       runs-on: ubuntu-latest
@@ -48,7 +48,7 @@ jobs:
           name: Image digest
           run: echo ${{ steps.docker_build.outputs.digest }}
 
-  Build Expo Review App:
+  build-review-app:
     name: Build and publish expo review app
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
@@ -70,7 +70,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           msg: App is ready for review, you can [see it here](https://expo.io/@dcalacci/gigbox?release-channel=pr-${{ github.event.number }}).
-  Build Expo Dev App:
+  build-dev-app:
     name: Publish App to Development Release Channel
     runs-on: ubuntu-latest
     env: 
