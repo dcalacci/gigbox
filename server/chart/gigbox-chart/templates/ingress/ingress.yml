@@ -2,6 +2,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: gigbox
+  namespace: {{ .Release.Namespace }}
   annotations: 
     kubernetes.io/ingress.class: public
     cert-manager.io/issuer: "letsencrypt-prod"
