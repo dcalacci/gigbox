@@ -18,12 +18,7 @@ jobs:
       runs-on: ubuntu-latest
       steps:
         - name: Set docker image tag
-          run: |
-          if [[ $GITHUB_REF == 'refs/heads/master' ]]; then
-              echo "DOCKER_IMAGE_TAG=latest" >> "$GITHUB_ENV"
-          else
-              echo "DOCKER_IMAGE_TAG=develop" >> "$GITHUB_ENV"
-          fi
+          run: echo ${{ $GITHUB_REF == "refs/heads/master" && "DOCKER_IMAGE_TAG=latest" || "DOCKER_IMAGE_TAG=develop" }} >> "$GITHUB_ENV"
         - 
           name: Checkout
           uses: actions/checkout@master
