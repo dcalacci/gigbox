@@ -89,7 +89,6 @@ jobs:
     runs-on: 'ubuntu-latest'
     needs: 
       - lint-helm
-      - build-dev-server
     steps:
       - uses: actions/checkout@v1
       - name: Prep helm chart
