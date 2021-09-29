@@ -103,6 +103,7 @@ jobs:
         name: Decrypt values to file
         with:
           fileName: 'values.yaml'
+          fileDir: './server/'
           encodedString: ${{ secrets.HELM_VALUES }}
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
