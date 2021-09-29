@@ -4,6 +4,9 @@ metadata:
   name: gigbox-server
   labels:
       app: gigbox-server
+  annotations:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   type: NodePort
   ports:
@@ -21,6 +24,9 @@ metadata:
   labels:
     app: gigbox-server
     tier: server
+  annotations:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: {{ .Release.Service }}
 spec:
   replicas: 3
   selector:
