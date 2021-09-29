@@ -87,6 +87,7 @@ jobs:
           exec: helm lint ./server/chart/gigbox-chart
   deploy-review-server:
     runs-on: 'ubuntu-latest'
+    if: github.event_name == 'pull_request'
     needs: 
       - lint-helm
     steps:
@@ -107,7 +108,7 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
         with:
-          exec: helm upgrade gigbox ./server/chart/gigbox-chart --install --wait --atomic --namespace=gigbox-develop --values=${{ steps.write_values.outputs.filePath }}
+          exec: helm install --upgrade gigbox ./server/chart/gigbox-chart --install --wait --atomic --namespace=${{ github.head_ref }} --values=${{ steps.write_values.outputs.filePath }}
           kubeconfig: '${{ secrets.KUBECONFIG }}'
   build-review-app:
     name: Build and publish expo review app
