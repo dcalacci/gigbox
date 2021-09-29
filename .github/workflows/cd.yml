@@ -2,12 +2,14 @@ name: 'CI/CD'
 on: 
   push: 
     branches: 
+      - k8s-refactor
       - master
       - development
   pull_request:
     branches: 
       - master
       - development
+      - k8s-refactor
   workflow_dispatch:
 
 jobs:
