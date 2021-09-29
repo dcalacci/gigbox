@@ -15,11 +15,11 @@ on:
 jobs:
   build-server:
       name: Build and push to Docker Hub
-      if: ${{ github.event_name == 'push' && env.GITHUB_REF == 'refs/heads/master' || env.GITHUB_REF == 'refs/heads/develop' }}
+      if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' || github.ref == 'refs/heads/develop' }}
       runs-on: ubuntu-latest
       steps:
         - name: Set docker image tag
-          run: echo ${{ env.GITHUB_REF == "refs/heads/master" && "DOCKER_IMAGE_TAG=latest" || "DOCKER_IMAGE_TAG=develop" }} >> "$GITHUB_ENV"
+          run: echo ${{ $GITHUB_REF == "refs/heads/master" && "DOCKER_IMAGE_TAG=latest" || "DOCKER_IMAGE_TAG=develop" }} >> "$GITHUB_ENV"
         - 
           name: Checkout
           uses: actions/checkout@master
@@ -51,6 +51,7 @@ jobs:
   build-review-app:
     name: Build and publish expo review app
     if: github.event_name == 'pull_request'
+    needs: [build-server]
     runs-on: ubuntu-latest
     env: 
       DEV_API_URL: ${{ secrets.DEV_API_URL }}
@@ -73,6 +74,7 @@ jobs:
   build-dev-app:
     name: Publish App to Development Release Channel
     runs-on: ubuntu-latest
+    needs: [build-server]
     env: 
       DEV_API_URL: ${{ secrets.DEV_API_URL }}
     steps:
