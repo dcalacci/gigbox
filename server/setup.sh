@@ -1,31 +1,46 @@
 #!/bin/bash
+# Setting HOSTNAME
+HOSTNAME=$1
+EMAIL=$2
 
-# Install kubeadm, kubernetes
-sudo apt-get update
-sudo apt-get install -y apt-transport-https ca-certificates curl
+######################################################
+# install microk8s
+echo "> Installing microk8s..."
+#sudo snap install microk8s --classic
+#sudo usermod -a -G microk8s $USER
+#sudo chown -f -R $USER ~/.kube
+#newgrp microk8s # enable microk8s usage
 
-sudo curl -fsSLo /usr/share/keyrings/kubernetes-archive-keyring.gpg https://packages.cloud.google.com/apt/doc/apt-key.gpg
+echo "> Enabling plugins..."
+# enable helm, dns, dashboard, storage, and ingress
+microk8s enable helm3 dns dashboard storage ingress
 
-echo "deb [signed-by=/usr/share/keyrings/kubernetes-archive-keyring.gpg] https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee /etc/apt/sources.list.d/kubernetes.list
+echo "> Adding helm repos.."
+# add necessary repos (ingress, cert-manager)
+microk8s helm3 repo add jetstack https://charts.jetstack.io 
+microk8s helm3 repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
 
-sudo apt-get update
-sudo apt-get install -y kubelet kubeadm kubectl
-sudo apt-mark hold kubelet kubeadm kubectl
+# create our ingress
+microk8s helm3 repo update 
+microk8s helm3 install quickstart ingress-nginx/ingress-nginx 
+
+# Install cert-manager
+
+echo "> Installing cert-manager..."
+microk8s helm3 install \
+  cert-manager jetstack/cert-manager \
+  --namespace cert-manager \
+  --create-namespace \
+  --version v1.5.3 \
+  --set installCRDs=true
+
+echo "> Installing gigbox chart using values.yml...."
+microk8s helm3 install --upgrade gigbox k8s/helm/gigbox-chart \
+    -f values.yml
 
 #######################################################
 # Start NFS service for signatures, images, other data
-sudo mkdir -p /data/gigbox
-docker-compose -f nfs-compose.yml up -d
-CURRENT_IP=$(hostname -I | awk '{print $1}')
-echo "Created an NFS share at this machine at ${CURRENT_IP}:2049"
-
-#######################################################
-# Create cluster, assign IPs
-sudo kubeadm init --ignore-preflight-errors=swap --pod-network-cidr=192.168.0.0/16
-mkdir -p $HOME/.kube
-sudo cp -i /etc/kubernetes/admin.conf $HOME/.kube/config
-sudo chown $(id -u):$(id -g) $HOME/.kube/config
-
-#######################################################
-# Install kube-router
-kubectl apply -f https://raw.githubusercontent.com/cloudnativelabs/kube-router/master/daemonset/kubeadm-kuberouter.yaml
+#sudo mkdir -p /data/gigbox
+#docker-compose -f nfs-compose.yml up -d
+#CURRENT_IP=$(hostname -I | awk '{print $1}')
+#echo "Created an NFS share at this machine at ${CURRENT_IP}:2049"

@@ -1,0 +1,32 @@
+Thank you for installing {{ .Chart.Name }}.
+
+Your release is named {{ .Release.Name }}.
+
+To learn more about the release, try:
+
+  $ helm status {{ .Release.Name }}
+  $ helm get all {{ .Release.Name }}
+
+
+  You should be soon be able to send an HTTPS request to {{ .Values.apiHostname }}/graphql to access the Gigbox API.
+
+  To test if requests are working properly, you can run:
+
+  curl -L https://{{ .Values.apiHostname }}
+
+  You should get back "go to /graphql" as a response.
+
+
+  This chart relies on two directories on the host machine:
+
+  - {{ .Values.hostOSRMPath }}
+  - /data/gigbox
+
+
+The first is the path you specified in `values.yml` that hosts the extracted OSRM data for your region.
+
+The second stores consent signatures.
+
+In solidarity,
+
+-dc

@@ -40,8 +40,15 @@ spec:
           imagePullPolicy: Always
           envFrom:
               - secretRef:
-                  name: env
+                  name: {{ .Release.Name }}-secrets
           ports:
             - containerPort: 80
           resources: {}
+          volumeMounts:
+              - name: gigbox-data
+                mountPath: /data
       restartPolicy: Always
+      volumes:
+        - name: gigbox-data
+          hostPath:
+            path: {{ .Values.hostGigboxDataPath }}

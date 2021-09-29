@@ -1,0 +1,12 @@
+# We used 'authorization' as our header for a while so this is a stopgap. 
+# In the future need to change to a real auth header w/ basic auth. 
+# This is still secure, but it requires us to have this headers file and the configmap,
+# so that ingress-nginx knows to pass the `authorization` header to the server
+# without this, users cannot log in.
+apiVersion: v1
+data:
+  X-Using-Nginx-Controller: "true"
+  authorization: Allow
+kind: ConfigMap
+metadata:
+  name: custom-headers
