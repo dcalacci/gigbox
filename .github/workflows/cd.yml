@@ -85,9 +85,9 @@ jobs:
         uses: WyriHaximus/github-action-helm3@v2
         with:
           exec: helm lint ./server/chart/gigbox-chart
-  deploy-server:
+  deploy-review-server:
     runs-on: 'ubuntu-latest'
-    if: github.event_name == 'push'
+    if: github.event_name == 'pull_request'
     needs: 
       - lint-helm
     steps:
@@ -108,7 +108,34 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
         with:
-          exec: helm upgrade --install gigbox ./server/chart/gigbox-chart --install --wait --atomic --namespace=${{ github.head_ref }} --values=${{ steps.write_values.outputs.filePath }}
+          exec: helm upgrade --install gigbox ./server/chart/gigbox-chart --install --wait --atomic --namespace=${{ github.event.number }} --values=${{ steps.write_values.outputs.filePath }} --set apiHostname=pr-${{github.event.number}}.gigbox.app
+          kubeconfig: '${{ secrets.KUBECONFIG }}'
+  deploy-branch-server:
+    runs-on: 'ubuntu-latest'
+    if: github.event_name == 'push'
+    needs: 
+      - lint-helm
+    steps:
+      - uses: actions/checkout@v1
+      - name: Prep helm chart
+        run: |
+          mv ./server/chart/gigbox-chart/Chart.yaml ./server/chart/gigbox-chart/Chart.old.yaml &&
+          cat ./server/chart/gigbox-chart/Chart.old.yaml | grep -v appVersion > ./server/chart/gigbox-chart/Chart.yaml &&
+          echo -e "\r\nappVersion: v${GITHUB_REF##*/}\r\n" >> ./server/chart/gigbox-chart/Chart.yaml &&
+          cat ./server/chart/gigbox-chart/Chart.yaml
+      - uses: timheuer/base64-to-file@v1.1
+        id: write_values
+        name: Decrypt values to file
+        with:
+          fileName: 'values.yaml'
+          fileDir: './server/'
+          encodedString: ${{ secrets.HELM_VALUES }}
+      - name: Set env.BRANCH
+        run: echo "BRANCH=$(echo $GITHUB_REF | cut -d'/' -f 3)" >> $GITHUB_ENV
+      - name: Deploy
+        uses: WyriHaximus/github-action-helm3@v2
+        with:
+          exec: helm upgrade --install gigbox ./server/chart/gigbox-chart --install --wait --atomic --namespace=${{ env.BRANCH }} --values=${{ steps.write_values.outputs.filePath }} --set apiHostname=pr-${{ env.BRANCH }}.gigbox.app
           kubeconfig: '${{ secrets.KUBECONFIG }}'
   build-review-app:
     name: Build and publish expo review app
