@@ -15,11 +15,11 @@ on:
 jobs:
   build-server:
       name: Build and push to Docker Hub
-      if: ${{ github.event_name == 'push' && $GITHUB_REF == 'refs/heads/master' || $GITHUB_REF == 'refs/heads/develop' }}
+      if: ${{ github.event_name == 'push' && env.GITHUB_REF == 'refs/heads/master' || env.GITHUB_REF == 'refs/heads/develop' }}
       runs-on: ubuntu-latest
       steps:
         - name: Set docker image tag
-          run: echo ${{ $GITHUB_REF == "refs/heads/master" && "DOCKER_IMAGE_TAG=latest" || "DOCKER_IMAGE_TAG=develop" }} >> "$GITHUB_ENV"
+          run: echo ${{ env.GITHUB_REF == "refs/heads/master" && "DOCKER_IMAGE_TAG=latest" || "DOCKER_IMAGE_TAG=develop" }} >> "$GITHUB_ENV"
         - 
           name: Checkout
           uses: actions/checkout@master
