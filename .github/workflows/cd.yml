@@ -99,6 +99,7 @@ jobs:
           echo -e "\r\nappVersion: v${GITHUB_REF##*/}\r\n" >> ./server/chart/gigbox-chart/Chart.yaml &&
           cat ./server/chart/gigbox-chart/Chart.yaml
       - uses: timheuer/base64-to-file@v1
+        id: write_values
         name: Decrypt values to file
         with:
           fileName: 'values.yaml'
@@ -106,7 +107,7 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
         with:
-          exec: helm upgrade gigbox ./server/chart/gigbox-chart --install --wait --atomic --namespace=gigbox-develop --values=${{ steps.write_file.outputs.filePath }}
+          exec: helm upgrade gigbox ./server/chart/gigbox-chart --install --wait --atomic --namespace=gigbox-develop --values=${{ steps.write_values.outputs.filePath }}
           kubeconfig: '${{ secrets.KUBECONFIG }}'
   build-review-app:
     name: Build and publish expo review app
