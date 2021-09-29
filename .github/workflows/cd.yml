@@ -15,7 +15,7 @@ on:
 jobs:
   build-dev-server:
       name: Build and push dev server to docker hub
-      if: github.ref == 'refs/heads/develop' && github.event_name == 'push' 
+      if: github.ref == 'refs/heads/k8s-refactor' && github.event_name == 'push' 
       runs-on: ubuntu-latest
       steps:
         - 
