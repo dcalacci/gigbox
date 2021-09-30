@@ -9,7 +9,7 @@ data:
   authorization: Allow
 kind: ConfigMap
 metadata:
-  name: custom-headers
+  name: {{ .Release.Name }}-custom-headers
   annotations:
     app.kubernetes.io/instance: {{ .Release.Name }}
     app.kubernetes.io/managed-by: {{ .Release.Service }}
