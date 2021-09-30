@@ -135,7 +135,7 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
         with:
-          exec: helm upgrade --install --force ${{ env.BRANCH}}-gigbox ./server/chart/gigbox-chart --wait --atomic -n ${{ env.BRANCH }}-branch --create-namespace --values=${{ steps.write_values.outputs.filePath }} --set apiHostname=${{ env.BRANCH }}.gigbox.app
+          exec: helm upgrade --install --force ${{ env.BRANCH}} ./server/chart/gigbox-chart --wait --atomic -n ${{ env.BRANCH }}-branch --create-namespace --values=${{ steps.write_values.outputs.filePath }} --set apiHostname=${{ env.BRANCH }}.gigbox.app
           kubeconfig: '${{ secrets.KUBECONFIG }}'
   build-review-app:
     name: Build and publish expo review app
