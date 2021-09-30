@@ -6,6 +6,10 @@ metadata:
   annotations: 
     kubernetes.io/ingress.class: public
     cert-manager.io/issuer: "letsencrypt-prod"
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
 spec:
   tls:
   - hosts:
