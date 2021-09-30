@@ -225,7 +225,7 @@ jobs:
           expo-version: 4.x
           expo-token: ${{ secrets.EXPO_TOKEN }}
       - run: cd app && yarn install
-      - run: cd app && expo publish --release-channel=${{ env.BRANCH }}
+      - run: cd app && expo publish --release-channel=rc-${{ env.BRANCH }}
   build-prod-app:
     name: Publish App to Staging Release Channel
     runs-on: ubuntu-latest
