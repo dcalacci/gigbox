@@ -1,7 +1,7 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: gigbox
+  name: {{ .Release.Name }}-gigbox
   namespace: {{ .Release.Namespace }}
   annotations: 
     kubernetes.io/ingress.class: public

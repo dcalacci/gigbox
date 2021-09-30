@@ -1,7 +1,7 @@
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: letsencrypt-prod
+  name: {{ .Release.Name }}-letsencrypt-prod
 spec:
   acme:
     # The ACME server URL

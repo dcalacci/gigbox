@@ -3,7 +3,7 @@ data:
   proxy-set-headers: "ingress-nginx/custom-headers"
 kind: ConfigMap
 metadata:
-  name: ingress-nginx-controller
+  name: {{ .Release.Name }}-ingress-nginx-controller
   labels:
     app.kubernetes.io/name: ingress-nginx
     app.kubernetes.io/part-of: ingress-nginx

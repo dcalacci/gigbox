@@ -1,7 +1,7 @@
 apiVersion: cert-manager.io/v1
 kind: Issuer
 metadata:
-  name: letsencrypt-staging
+  name: {{ .Release.Name }}-letsencrypt-staging
 spec:
   acme:
     # The ACME server URL

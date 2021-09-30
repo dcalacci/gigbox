@@ -1,7 +1,7 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: gigbox-server
+  name: {{ .Release.Name }}-gigbox-server
   namespace: {{ .Release.Namespace }}
   labels:
       app: gigbox-server
@@ -23,7 +23,7 @@ spec:
 kind: Deployment
 apiVersion: apps/v1
 metadata:
-  name: gigbox-server
+  name: {{ .Release.Name }}-gigbox-server
   namespace: {{ .Release.Namespace }}
   labels:
     app: gigbox-server
