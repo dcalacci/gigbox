@@ -9,7 +9,7 @@ on:
 
 jobs:
   build-prod-server:
-      name: Build and push to Docker Hub
+      name: Build Prod Server
       if: github.ref == 'refs/heads/master' && github.event_name == 'push' 
       runs-on: ubuntu-latest
       steps:
@@ -41,7 +41,7 @@ jobs:
           name: Image digest
           run: echo ${{ steps.docker_build.outputs.digest }}
   build-branch-server:
-      name: Build and push review app server to docker hub on a new tag
+      name: Build Branch Server
       if: github.event_name == 'push' && github.ref != 'refs/heads/master'
       runs-on: ubuntu-latest
       steps:
@@ -75,7 +75,7 @@ jobs:
           name: Image digest
           run: echo ${{ steps.docker_build.outputs.digest }}
   build-review-server:
-      name: Build and push review app server to docker hub on a new tag
+      name: Build PR Review Server
       if: github.event_name == 'pull_request'
       runs-on: ubuntu-latest
       steps:
@@ -109,6 +109,7 @@ jobs:
           name: Image digest
           run: echo ${{ steps.docker_build.outputs.digest }}
   lint-helm:
+    name: Lint Helm Chart
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v1
@@ -199,7 +200,7 @@ jobs:
     name: Build and publish latest branch expo app
     if: github.event_name == 'pull_request' || github.event_name == 'push'
     needs: 
-      - deploy-review-server
+      - deploy-branch-server
     runs-on: ubuntu-latest
     steps:
       - name: Set env.BRANCH
