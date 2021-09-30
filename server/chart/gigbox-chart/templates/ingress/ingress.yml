@@ -14,7 +14,7 @@ spec:
   tls:
   - hosts:
     - {{ .Values.apiHostname }}
-    secretName: {{ .Release.Name }}-quickstart-example-tls
+    secretName: {{ .Release.Name }}-tls
   rules:
   - host: {{ .Values.apiHostname }}
     http:
