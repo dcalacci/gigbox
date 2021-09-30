@@ -23,6 +23,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: gigbox-server
+            name: {{ .Release.Name }}-gigbox-server
             port:
               number: 80
