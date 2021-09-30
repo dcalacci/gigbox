@@ -108,7 +108,7 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
         with:
-          exec: helm upgrade --install --force gigbox ./server/chart/gigbox-chart --wait --atomic --namespace=${{ github.event.number }} --create-namespace --values=${{ steps.write_values.outputs.filePath }} --set apiHostname=pr-${{github.event.number}}.gigbox.app
+          exec: helm upgrade --install --force ${{ github.event.number}}-gigbox ./server/chart/gigbox-chart --wait --atomic --namespace=${{ github.event.number }} --create-namespace --values=${{ steps.write_values.outputs.filePath }} --set apiHostname=pr-${{github.event.number}}.gigbox.app
           kubeconfig: '${{ secrets.KUBECONFIG }}'
   deploy-branch-server:
     runs-on: 'ubuntu-latest'
@@ -135,7 +135,7 @@ jobs:
       - name: Deploy
         uses: WyriHaximus/github-action-helm3@v2
         with:
-          exec: helm upgrade --install --force gigbox ./server/chart/gigbox-chart --wait --atomic --namespace=${{ env.BRANCH }} --create-namespace --values=${{ steps.write_values.outputs.filePath }} --set apiHostname=${{ env.BRANCH }}.gigbox.app
+          exec: helm upgrade --install --force ${{ env.BRANCH}}-gigbox ./server/chart/gigbox-chart --wait --atomic --namespace=${{ env.BRANCH }} --create-namespace --values=${{ steps.write_values.outputs.filePath }} --set apiHostname=${{ env.BRANCH }}.gigbox.app
           kubeconfig: '${{ secrets.KUBECONFIG }}'
   build-review-app:
     name: Build and publish expo review app
