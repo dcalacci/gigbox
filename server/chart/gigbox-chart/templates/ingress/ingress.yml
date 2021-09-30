@@ -1,0 +1,28 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: {{ .Release.Name }}-gigbox
+  namespace: {{ .Release.Namespace }}
+  annotations: 
+    kubernetes.io/ingress.class: public
+    cert-manager.io/issuer: {{ .Release.Name }}-letsencrypt-prod
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}
+spec:
+  tls:
+  - hosts:
+    - {{ .Values.apiHostname }}
+    secretName: {{ .Release.Name }}-tls
+  rules:
+  - host: {{ .Values.apiHostname }}
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: {{ .Release.Name }}-gigbox-server
+            port:
+              number: 80

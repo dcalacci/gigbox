@@ -1,0 +1,27 @@
+
+# Automatic deployment to a staging environment on every push to master.
+staging:
+  auto_deploy_on: refs/heads/master
+  required_contexts: ["build"]
+  environment: staging
+  description: 'Staging'
+  payload:
+    release: staging-gigbox
+    namespace: gigbox-staging
+    track: stable
+    values: |
+      apiHostname: ${{ API_HOSTNAME }}
+      certEmail: ${{ CERT_EMAIL }}
+      hostOSRMPath: /home/dcalacci/osrm-data
+      hostGigboxDataPath: /home/dcalacci/gigbox-data
+      twilioNumber: ${{TWILIO_NUMBEr}}
+      twilioSid: ${{TWILIO_SID}}
+      twilioToken: ${{TWILIO_TOKEN}}
+      dbHost: ${{DB_HOST}}
+      dbPort: ${{DB_PORT}}
+      postgresUser: gigbox
+      postgresPassword: ${{POSTGRES_PASSWORD}}
+      postgresDbName: gigbox-staging
+      secretKey: ${{SECRET_KEY}}
+      imageTag: develop
+      env: PRODUCTION

@@ -1,20 +1,26 @@
-node_modules/**/*
-.expo/*
-npm-debug.*
+app/node_modules/**/*
+app/.expo/*
+app/npm-debug.*
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
 *.orig.*
-web-build/
+app/web-build/
 
 # macOS
-.DS_Store
-ios
-package-lock.json
+*.DS_Store
+app/ios
+
+# use yarn
+app/package-lock.json
 
 # server
 *__pycache__
+*.env
+*.vscode
 .env
 .vscode/settings.json
+*values.yaml
+*values.yml
