@@ -1,50 +1,13 @@
 name: 'CI/CD'
 on: 
   push: 
-    branches: 
-      - k8s-refactor
-      - master
-      - development
   pull_request:
     branches: 
       - master
       - development
-      - k8s-refactor
   workflow_dispatch:
 
 jobs:
-  build-dev-server:
-      name: Build and push dev server to docker hub
-      if: github.ref == 'refs/heads/k8s-refactor' && github.event_name == 'push' 
-      runs-on: ubuntu-latest
-      steps:
-        - 
-          name: Checkout
-          uses: actions/checkout@master
-        -
-          name: Set up QEMU
-          uses: docker/setup-qemu-action@v1
-        -
-          name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v1
-        -
-          name: Login to DockerHub
-          uses: docker/login-action@v1 
-          with:
-            username: ${{ secrets.DOCKERHUB_USERNAME }}
-            password: ${{ secrets.DOCKERHUB_TOKEN }}
-        -
-          name: Build and push
-          id: docker_build
-          uses: docker/build-push-action@v2
-          with:
-            push: true
-            context: ./server
-            file: ./server/Dockerfile
-            tags: gigbox/gigbox-server:develop
-        -
-          name: Image digest
-          run: echo ${{ steps.docker_build.outputs.digest }}
   build-prod-server:
       name: Build and push to Docker Hub
       if: github.ref == 'refs/heads/master' && github.event_name == 'push' 
@@ -77,6 +40,74 @@ jobs:
         -
           name: Image digest
           run: echo ${{ steps.docker_build.outputs.digest }}
+  build-branch-server:
+      name: Build and push review app server to docker hub on a new tag
+      if: github.event_name == 'push' && github.ref != 'refs/heads/master'
+      runs-on: ubuntu-latest
+      steps:
+        - 
+          name: Checkout
+          uses: actions/checkout@master
+        -
+          name: Set up QEMU
+          uses: docker/setup-qemu-action@v1
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+        -
+          name: Login to DockerHub
+          uses: docker/login-action@v1 
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+        - name: Set env.BRANCH
+          run: echo "BRANCH=$(echo $GITHUB_REF | cut -d'/' -f 3)" >> $GITHUB_ENV
+        -
+          name: Build and push
+          id: docker_build
+          uses: docker/build-push-action@v2
+          with:
+            push: true
+            context: ./server
+            file: ./server/Dockerfile
+            tags: gigbox/gigbox-server:${{ env.BRANCH }}
+        -
+          name: Image digest
+          run: echo ${{ steps.docker_build.outputs.digest }}
+  build-review-server:
+      name: Build and push review app server to docker hub on a new tag
+      if: github.event_name == 'pull_request'
+      runs-on: ubuntu-latest
+      steps:
+        - 
+          name: Checkout
+          uses: actions/checkout@master
+        -
+          name: Set up QEMU
+          uses: docker/setup-qemu-action@v1
+        -
+          name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v1
+        -
+          name: Login to DockerHub
+          uses: docker/login-action@v1 
+          with:
+            username: ${{ secrets.DOCKERHUB_USERNAME }}
+            password: ${{ secrets.DOCKERHUB_TOKEN }}
+        - name: Set env.BRANCH
+          run: echo "BRANCH=$(echo $GITHUB_REF | cut -d'/' -f 3)" >> $GITHUB_ENV
+        -
+          name: Build and push
+          id: docker_build
+          uses: docker/build-push-action@v2
+          with:
+            push: true
+            context: ./server
+            file: ./server/Dockerfile
+            tags: gigbox/gigbox-server:pr-${{github.event.number}}
+        -
+          name: Image digest
+          run: echo ${{ steps.docker_build.outputs.digest }}
   lint-helm:
     runs-on: ubuntu-latest
     steps:
@@ -90,6 +121,7 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: 
       - lint-helm
+        build-review-server
     steps:
       - uses: actions/checkout@v1
       - name: Prep helm chart
@@ -115,6 +147,8 @@ jobs:
     if: github.event_name == 'push'
     needs: 
       - lint-helm
+        build-branch-server
+
     steps:
       - uses: actions/checkout@v1
       - name: Prep helm chart
@@ -140,10 +174,11 @@ jobs:
   build-review-app:
     name: Build and publish expo review app
     if: github.event_name == 'pull_request'
-    needs: [build-dev-server]
+    needs: 
+      - deploy-review-server
     runs-on: ubuntu-latest
     env: 
-      DEV_API_URL: ${{ secrets.DEV_API_URL }}
+      DEV_API_URL: pr-${{github.event.number}}.gigbox.app
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -160,11 +195,37 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           msg: App is ready for review, you can [see it here](https://expo.io/@dcalacci/gigbox?release-channel=pr-${{ github.event.number }}).
-  build-dev-app:
-    name: Publish App to Development Release Channel
+  build-branch-app:
+    name: Build and publish latest branch expo app
+    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    needs: 
+      - deploy-review-server
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set env.BRANCH
+        run: echo "BRANCH=$(echo $GITHUB_REF | cut -d'/' -f 3)" >> $GITHUB_ENV
+      - name: Set env.DEV_API_URL
+        run: echo "DEV_API_URL=$(echo $GITHUB_REF | cut -d'/' -f 3).gigbox.app" >> $GITHUB_ENV
+      - uses: actions/checkout@v2
+      - uses: actions/setup-node@v1
+        with:
+          node-version: 14.x
+      - uses: expo/expo-github-action@v5
+        with:
+          expo-version: 4.x
+          expo-token: ${{ secrets.EXPO_TOKEN }}
+      - run: cd app && yarn install
+      - run: cd app && expo publish --release-channel=pr-${{ github.event.number }}
+      - uses: unsplash/comment-on-pr@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          msg: App is ready for review, you can [see it here](https://expo.io/@dcalacci/gigbox?release-channel=pr-${{ github.event.number }}).
+  build-prod-app:
+    name: Publish App to Staging Release Channel
     runs-on: ubuntu-latest
     needs: [build-dev-server]
-    if: github.ref == 'refs/heads/develop' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     env: 
       DEV_API_URL: ${{ secrets.DEV_API_URL }}
     steps:
@@ -177,4 +238,4 @@ jobs:
           expo-version: 4.x
           expo-token: ${{ secrets.EXPO_TOKEN }}
       - run: cd app && yarn install
-      - run: cd app && expo publish --release-channel=develop
+      - run: cd app && expo publish --release-channel=staging
