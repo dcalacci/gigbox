@@ -184,7 +184,7 @@ jobs:
       - deploy-review-server
     runs-on: ubuntu-latest
     env: 
-      DEV_API_URL: pr-${{github.event.number}}.gigbox.app
+      DEV_API_URL: https://pr-${{github.event.number}}.gigbox.app
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
@@ -194,6 +194,8 @@ jobs:
         with:
           expo-version: 4.x
           expo-token: ${{ secrets.EXPO_TOKEN }}
+      - name: Check API URL
+        run: echo ${{ env.DEV_API_URL }}
       - run: cd app && yarn install
       - run: cd app && expo publish --release-channel=pr-${{ github.event.number }}
       - uses: unsplash/comment-on-pr@master
@@ -203,7 +205,7 @@ jobs:
           msg: App is ready for review, you can [see it here](https://expo.io/@dcalacci/gigbox?release-channel=pr-${{ github.event.number }}).
   build-branch-app:
     name: Build and publish latest branch expo app
-    if: github.event_name == 'pull_request' || github.event_name == 'push'
+    if: github.event_name == 'push'
     needs: 
       - deploy-branch-server
     runs-on: ubuntu-latest
@@ -211,11 +213,13 @@ jobs:
       - name: Set env.BRANCH
         run: echo "BRANCH=$(echo $GITHUB_REF | cut -d'/' -f 3)" >> $GITHUB_ENV
       - name: Set env.DEV_API_URL
-        run: echo "DEV_API_URL=$(echo $GITHUB_REF | cut -d'/' -f 3).gigbox.app" >> $GITHUB_ENV
+        run: echo "DEV_API_URL=https://$(echo $GITHUB_REF | cut -d'/' -f 3).gigbox.app" >> $GITHUB_ENV
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
         with:
           node-version: 14.x
+      - name: Check API URL
+        run: echo ${{ env.DEV_API_URL }}
       - uses: expo/expo-github-action@v5
         with:
           expo-version: 4.x
