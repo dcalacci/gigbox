@@ -147,7 +147,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          msg: Server deployed and cert is being provisioned. URL: [https://pr-${{github.event.number}}.gigbox.app](https://pr-${{github.event.number}}.gigbox.app)
+          msg: Server deployed and cert is being provisioned at [https://pr-${{github.event.number}}.gigbox.app](https://pr-${{github.event.number}}.gigbox.app)
   deploy-branch-server:
     runs-on: 'ubuntu-latest'
     if: github.event_name == 'push'
