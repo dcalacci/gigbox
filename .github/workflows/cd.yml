@@ -121,7 +121,7 @@ jobs:
     if: github.event_name == 'pull_request'
     needs: 
       - lint-helm
-        build-review-server
+      - build-review-server
     steps:
       - uses: actions/checkout@v1
       - name: Prep helm chart
@@ -147,7 +147,7 @@ jobs:
     if: github.event_name == 'push'
     needs: 
       - lint-helm
-        build-branch-server
+      - build-branch-server
 
     steps:
       - uses: actions/checkout@v1
