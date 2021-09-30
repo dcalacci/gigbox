@@ -1,4 +1,4 @@
-{{ if .Release.Namespace == develop }}
+{{ if .Release.Namespace == 'develop' }}
 apiVersion: v1
 kind: Service
 metadata:
