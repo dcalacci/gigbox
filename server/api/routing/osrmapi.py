@@ -27,7 +27,7 @@ def match(coordinates):
     # We don't include timestamps because they aren't really needed
     payload = {
         "geometries": "geojson",
-#        "gaps": "ignore",
+        "gaps": "ignore",
         "overview": "full",
         "tidy": "true"}
     MATCH_URI = f'{OSRM_URI}/match/v1/car/{coord_str}'
