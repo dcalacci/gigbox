@@ -232,8 +232,8 @@ def split_into_trips(traj_df, stop_df, min_trip_dist_mi=0.5):
 
 def get_trips_from_locations(locations,
                              min_trip_dist_mi=1.,
-                             minutes_for_stop=3,
-                             no_data_for_minutes=360):
+                             minutes_for_stop=10.,
+                             no_data_for_minutes=60):
     """ Returns trips in a 2-tuple, each a list of:
     - trajectory_df
     - {'stop', 'start'} (lat, lng, datetime series)
@@ -243,8 +243,10 @@ def get_trips_from_locations(locations,
     traj_df = clean_trajectory(locations)
 
     stop_df = detection.stops(traj_df,
+                              min_speed_kmh=20,
+                              stop_radius_factor=0.5,
                               minutes_for_a_stop=minutes_for_stop,
-                              spatial_radius_km=0.5,
+                              spatial_radius_km=3.,
                               no_data_for_minutes=no_data_for_minutes)
 
     return split_into_trips(
