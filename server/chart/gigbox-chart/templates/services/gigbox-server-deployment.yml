@@ -10,7 +10,6 @@ metadata:
       app.kubernetes.io/managed-by: {{ .Release.Service }}
       meta.helm.sh/release-name: {{ .Release.Name }}
       meta.helm.sh/release-namespace: {{ .Release.Service }}
-      rollme: {{ randAlphaNum 5 | quote }}
 spec:
   type: NodePort
   ports:
@@ -30,6 +29,7 @@ metadata:
     app: gigbox-server
     tier: server
   annotations:
+      rollme: {{ randAlphaNum 5 | quote }}
       app.kubernetes.io/instance: {{ .Release.Name }}
       app.kubernetes.io/managed-by: {{ .Release.Service }}
       meta.helm.sh/release-name: {{ .Release.Name }}
