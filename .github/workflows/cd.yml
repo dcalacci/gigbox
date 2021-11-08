@@ -185,7 +185,6 @@ jobs:
     needs: 
       - lint-helm
       - build-branch-server
-
     steps:
       - uses: actions/checkout@v1
       - name: Prep helm chart
@@ -266,7 +265,6 @@ jobs:
     if: github.ref == 'refs/heads/master' && github.event_name == 'push'
     env: 
       PROD_API_URL: https://prod.gigbox.app
-      DEV_API_URL: ${{ env.DEV_API_URL }}
     steps:
       - uses: actions/checkout@v2
       - uses: actions/setup-node@v1
