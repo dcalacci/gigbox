@@ -1,4 +1,7 @@
 
+def meters_to_miles(x):
+    return x * 0.0006213712
+
 def _get_trajectory_from_location_objects(locations):
     from geoalchemy2.shape import to_shape
     import numpy as np

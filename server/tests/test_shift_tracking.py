@@ -107,7 +107,7 @@ def test_adding_locations_to_shift_is_ok_and_returns_geometry(app, token, locs, 
         assert res['data']['addLocationsToShift']['ok']
 
 
-def test_extracts_one_jobs_from_example_shift(app, token, locs, active_shift, gqlClient):
+def test_extracts_two_jobs_from_example_shift(app, token, locs, active_shift, gqlClient):
     import numpy as np
     with app.test_request_context():
         _ = add_locations_to_shift(token, locs, active_shift, gqlClient)
@@ -115,7 +115,7 @@ def test_extracts_one_jobs_from_example_shift(app, token, locs, active_shift, gq
 
         print("endshift result:", res)
         assert not res['data']['endShift']['shift']['active']
-        assert len(res['data']['endShift']['shift']['jobs']['edges']) == 1
+        assert len(res['data']['endShift']['shift']['jobs']['edges']) == 2
         jobs = res['data']['endShift']['shift']['jobs']['edges']
         endTimes = [j['node']['endTime'] for j in jobs]
         startTimes = [j['node']['startTime'] for j in jobs]
@@ -136,10 +136,6 @@ def test_extracts_one_jobs_from_example_shift(app, token, locs, active_shift, gq
         # all start times greater than shift start
         assert np.all([s >= res['data']['endShift']['shift']
                        ['startTime'] for s in startTimes])
-
-        # mileage less than or equal
-        assert np.sum(
-            miles) <= res['data']['endShift']['shift']['roadSnappedMiles']
 
 
 def test_doesnt_extract_already_extracted_jobs(app, token, locs, active_shift, gqlClient):
@@ -166,7 +162,7 @@ def test_extracts_jobs_if_not_already_exist(app, token, locs, active_shift, gqlC
                                    start_n_mins_after_shift=120)
         res = extract_jobs_from_shift(token, active_shift, gqlClient)
         print("extract result:", res)
-        assert len(res['data']['extractJobsFromShift']['jobs']) == 1
+        assert len(res['data']['extractJobsFromShift']['jobs']) == 2
 
         res2 = extract_jobs_from_shift(token, active_shift, gqlClient)
         assert len(res2['data']['extractJobsFromShift']['jobs']) == 0

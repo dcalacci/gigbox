@@ -4,7 +4,7 @@ from api.models import Location as LocationModel
 from geoalchemy2.shape import to_shape
 from collections import namedtuple
 import logging
-from .utils import bounding_box, clean_trajectory
+from .utils import bounding_box, clean_trajectory, meters_to_miles
 from .osrmapi import get_match_distance, get_match_geometry, match, route
 
 MatchResult = namedtuple(
@@ -16,7 +16,7 @@ A matched route result.
 
 trajectory - a matched trajectory as a TrajDataFrame
 geometry - the matched trajectory as a list of x,y coordinates [[x,y], ...]
-distance - the total distance of the matched trajectory
+distance - the total distance of the matched trajectory, in miles
 bbox - bounding box of matched trajectory
 '''
 
@@ -32,6 +32,46 @@ message - Error message if unsuccessful, 'Success' otherwise
 '''
 
 ############ Stops and trips
+
+def _get_trips_from_trajectory(traj_df, min_trip_dist_mi=1.,
+                             minutes_for_stop=5,
+                             no_data_for_minutes=60):
+    from skmob.preprocessing import detection
+    import pandas as pd
+    stop_df = detection.stops(traj_df,
+                              min_speed_kmh=20.,
+                              stop_radius_factor=0.75,
+                              minutes_for_a_stop=minutes_for_stop,
+                              spatial_radius_km=1.,
+                              no_data_for_minutes=no_data_for_minutes)
+
+    sdf = pd.concat([
+        pd.DataFrame(
+            traj_df.iloc[0][['lat', 'lng', 'datetime']].rename({'datetime': 'leaving_datetime'})).T,
+        stop_df,
+        pd.DataFrame(
+            traj_df.iloc[-1][['lat', 'lng', 'datetime']]).T]).reset_index(drop=True)
+
+
+    shifted_df = sdf.copy()
+    shifted_df.leaving_datetime = sdf.leaving_datetime.shift()
+    intervals = shifted_df[['datetime', 'leaving_datetime']].values
+
+    # extract trajectories within intervals
+    trajectories = [TrajDataFrame(
+        pd.concat([
+            # only include stop in beginning if it's not the first
+            # first stop has a leaving_datetime but not a arrival
+            pd.DataFrame(
+                sdf.iloc[n-1][['lat', 'lng', 'leaving_datetime']]).T.rename(columns={"leaving_datetime": "datetime"}) if n > 0 else None,
+            # intermediate trajectory
+            traj_df.set_index('datetime')[i[1]:i[0]].reset_index(),
+            # and the stop that ends this segment
+            pd.DataFrame(sdf.iloc[n][['lat', 'lng', 'datetime']]).T]).reset_index(drop=True))
+        for n, i in enumerate(intervals)
+                   if len(traj_df.set_index('datetime')[i[1]:i[0]]) > 1]
+
+    return {'trajectories': trajectories, 'stops': TrajDataFrame(sdf)}
 
 def get_trips_from_locations(locations,
                              min_trip_dist_mi=1.,
@@ -61,43 +101,10 @@ def get_trips_from_locations(locations,
     list
         list of 2-tuples of the form [(TrajDataFrame, StopDataFrame), ...]
     """
-    from skmob.preprocessing import detection
-    import pandas as pd
     logging.info("Extracting trips from {} locations".format(len(locations)))
     traj_df = clean_trajectory(locations)
+    return _get_trips_from_trajectory(traj_df)
 
-    stop_df = detection.stops(traj_df,
-                              min_speed_kmh=20.,
-                              stop_radius_factor=0.5,
-                              minutes_for_a_stop=minutes_for_stop,
-                              spatial_radius_km=0.5,  # 1/2mi
-                              no_data_for_minutes=no_data_for_minutes)
-
-    sdf = pd.concat([
-        pd.DataFrame(
-            traj_df.iloc[0][['lat', 'lng', 'datetime']]).T,
-        stop_df,
-        pd.DataFrame(
-            traj_df.iloc[-1][['lat', 'lng', 'datetime']]).T]).reset_index(drop=True)
-
-
-    shifted_df = sdf.copy()
-    shifted_df.leaving_datetime = sdf.leaving_datetime.shift()
-    intervals = shifted_df[['leaving_datetime', 'datetime']].values
-
-    # extract trajectories within intervals
-    trajectories = [TrajDataFrame(
-        pd.concat([
-            # only include stop in beginning if it's not the first
-            pd.DataFrame(
-                sdf.iloc[n-1][['lat', 'lng', 'datetime']]).T if n > 0 else None,
-            # intermediate trajectory
-            traj_df.set_index('datetime')[i[0]:i[1]].reset_index(),
-            # and the stop that ends this segment
-            pd.DataFrame(sdf.iloc[n][['lat', 'lng', 'datetime']]).T]).reset_index(drop=True))
-        for n, i in enumerate(intervals)]
-
-    return {'trajectories': trajectories, 'stops': sdf}
 
 ###############
 
@@ -137,7 +144,7 @@ def get_route_for_trajectory(traj_df):
     return res
 
 
-def get_matched_trajectory(trajectory):
+def get_matched_trajectory(trajectory, route_uncertain_segments=True, uncertain_threshold=.25):
     """
     Generates a "matched" version of a trajectory.
 
@@ -149,6 +156,10 @@ def get_matched_trajectory(trajectory):
     ----------
     trajectory : TrajDataFrame
         TrajDataFrame to map-match
+    route_uncertain_segments : boolean
+        If True, route segments that our map matcher is under `uncertain_threshold` certain about.
+    uncertain_threshold : float
+        Route segments where map-matching is under this uncertainty
 
     Returns
     -------
@@ -157,7 +168,7 @@ def get_matched_trajectory(trajectory):
 
         trajectory: TrajDataFrame of the matched trajectory
         geometry: Full geometry as [[x,y], ...] of the matched trajectory
-        distance: Total distance of the matched trajectory
+        distance: Total distance of the matched trajectory, in miles
         bbox: Bounding box of the matched trajectory
 
     Examples
@@ -187,7 +198,7 @@ def get_matched_trajectory(trajectory):
         for match in m['matchings']:
             coordinates = match['geometry']['coordinates']
             # if low confience, just route between a start and end.
-            if match['confidence'] <= 50:
+            if match['confidence'] <= uncertain_threshold and route_uncertain_segments == True:
                 if len(m['matchings']) == 1:
                     # if length of matchings is 1 in total, just do a route on the trajectory
                     r = get_route_for_trajectory(trajectory.iloc[[0, -1]])
@@ -214,7 +225,7 @@ def get_matched_trajectory(trajectory):
 
     return MatchResult(trajectory=TrajDataFrame(locs),
                        geometry=all_geometries,
-                       distance=sum(all_dists),
+                       distance=meters_to_miles(sum(all_dists)),
                        bbox=bounding_box(all_geometries))
 
 
@@ -255,7 +266,3 @@ def get_route_geometry(locs_or_traj):
                               message="Failed to match route")
     else:
         return GeometryResult(status='ok', result=res, message='Success')
-
-
-def segment_and_match(trajdf):
-    trips = get_trips_from_locations()
