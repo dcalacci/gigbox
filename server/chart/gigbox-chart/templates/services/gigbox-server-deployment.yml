@@ -1,0 +1,67 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}-gigbox-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+      app: gigbox-server
+  annotations:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: {{ .Release.Service }}
+      meta.helm.sh/release-name: {{ .Release.Name }}
+      meta.helm.sh/release-namespace: {{ .Release.Service }}
+spec:
+  type: NodePort
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  selector:
+      app: gigbox-server
+      tier: server
+---
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: {{ .Release.Name }}-gigbox-server
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app: gigbox-server
+    tier: server
+  annotations:
+      rollme: {{ randAlphaNum 5 | quote }}
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: {{ .Release.Service }}
+      meta.helm.sh/release-name: {{ .Release.Name }}
+      meta.helm.sh/release-namespace: {{ .Release.Service }}
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+        app: gigbox-server
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+        labels: 
+            app: gigbox-server
+            tier: server
+    spec:
+      containers:
+        - image: gigbox/gigbox-server:development
+          name: gigbox-server
+          imagePullPolicy: Always
+          envFrom:
+              - secretRef:
+                  name: {{ .Release.Name }}-secrets
+          ports:
+            - containerPort: 80
+          resources: {}
+          volumeMounts:
+              - name: gigbox-data
+                mountPath: /data
+      restartPolicy: Always
+      volumes:
+        - name: gigbox-data
+          hostPath:
+            path: {{ .Values.hostGigboxDataPath }}

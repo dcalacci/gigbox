@@ -16,6 +16,18 @@ s.mount('http://', HTTPAdapter(max_retries=retries))
 
 OSRM_URI = os.environ['OSRM_URI']
 
+def route(coordinates):
+    coord_str = requests.utils.quote(
+        ';'.join([f'{c["lng"]},{c["lat"]}' for c in coordinates]))
+    print("Route API coordinate string: {}".format(coord_str))
+    # We don't include timestamps because they aren't really needed
+    payload = {
+        "geometries": "geojson",
+        "overview": "full",
+        "continue_straight": "true"}
+    MATCH_URI = f'{OSRM_URI}/route/v1/driving/{coord_str}'
+    return s.post(MATCH_URI, params=payload)
+
 def match(coordinates):
     """Submits map match request to our osrm api
 
@@ -27,6 +39,8 @@ def match(coordinates):
     # We don't include timestamps because they aren't really needed
     payload = {
         "geometries": "geojson",
+        "gaps": "ignore",
+        "overview": "full",
         "tidy": "true"}
     MATCH_URI = f'{OSRM_URI}/match/v1/car/{coord_str}'
     return s.post(MATCH_URI, params=payload)

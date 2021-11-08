@@ -1,9 +1,17 @@
+{{ if eq .Release.Namespace "develop-branch" }}
 apiVersion: v1
 kind: Service
 metadata:
+  namespace: {{ .Release.Namespace }}
   name: osrm
   labels:
     app: gigbox-server
+  annotations:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Service }}
+
 spec:
   ports:
     - port: 5000
@@ -14,9 +22,15 @@ spec:
 kind: Deployment
 apiVersion: apps/v1
 metadata:
+  namespace: {{ .Release.Namespace }}
   name: osrm
   labels:
       app: gigbox-server
+  annotations:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/managed-by: {{ .Release.Service }}
+      meta.helm.sh/release-name: {{ .Release.Name }}
+      meta.helm.sh/release-namespace: {{ .Release.Service }}
 spec:
   replicas: 1
   selector:
@@ -34,7 +48,7 @@ spec:
           image: osrm/osrm-backend:v5.24.0
           resources:
               requests:
-                  memory: 45G
+                  memory: 30G
 
           ports:
               - containerPort: 5000
@@ -51,5 +65,6 @@ spec:
       restartPolicy: Always
       volumes:
         - name: osrm-data
-          persistentVolumeClaim: 
-            claimName: osrm-claim
+          hostPath:
+            path: {{ .Values.hostOSRMPath }}
+{{ end }}

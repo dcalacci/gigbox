@@ -1,0 +1,14 @@
+apiVersion: v1
+data:
+  proxy-set-headers: "ingress-nginx/custom-headers"
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-ingress-nginx-controller
+  labels:
+    app.kubernetes.io/name: ingress-nginx
+    app.kubernetes.io/part-of: ingress-nginx
+  annotations:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/managed-by: {{ .Release.Service }}
+    meta.helm.sh/release-name: {{ .Release.Name }}
+    meta.helm.sh/release-namespace: {{ .Release.Namespace }}

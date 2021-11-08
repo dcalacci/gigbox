@@ -61,7 +61,7 @@ from api.models import (
     Session
 )
 from api.utils import generate_filename
-from api.routing.mapmatch import get_route_distance_and_geometry
+from api.routing.mapmatch import get_route_geometry
 from api.screenshots.parser import predict_app, image_to_df, parse_image
 from flask import current_app
 from api.controllers.errors import ShiftInvalidError, JobInvalidError
@@ -280,15 +280,15 @@ class DeleteShift(Mutation):
 def updateShiftMileageAndGeometry(shift, info):
     """adds mileage and geometry to a shift object using one call to our mapmatch api"""
     locs = sorted(shift.locations, key=lambda l: l.timestamp)
-    match_obj = get_route_distance_and_geometry(locs)
-    if 'geom_obj' not in match_obj or not match_obj['geom_obj']:
+    match_obj = get_route_geometry(locs)
+    if not match_obj.result:
         current_app.logger.error(f'Failed to match a route to shift...')
         current_app.logger.error(match_obj)
         return shift
 
-    distance = match_obj['distance']
-    bb = match_obj['geom_obj'][1]
-    geometries = match_obj['geom_obj'][0]
+    distance = match_obj.result.distance
+    bb = match_obj.result.bbox
+    geometries = match_obj.result.geometry
 
     bounding_box = {'minLat': bb[1],
                     'minLng': bb[0],
@@ -297,7 +297,7 @@ def updateShiftMileageAndGeometry(shift, info):
     matched = {'geometries': geometries, 'bounding_box': bounding_box}
     current_app.logger.info('adding matched geometry to shift:')
     shift.snapped_geometry = matched
-    shift.road_snapped_miles = match_obj['distance']
+    shift.road_snapped_miles = distance
     current_app.logger.info(f'matched route added to shift...')
     return shift
 
@@ -316,22 +316,22 @@ def extractJobsFromLocations(shift, locations):
     trips = get_trips_from_locations(locs)
     jobs = []
 
-    print("TRIPS:", trips)
     if len(trips) == 0:
         return jobs
-    for traj_df, stops, dist in trips:
+    for traj_df in trips['trajectories']:
         job = JobModel(
             start_location={
-                'lat': stops['start'].lat, 'lng': stops['start'].lng},
-            end_location={'lat': stops['stop'].lat, 'lng': stops['stop'].lng},
+                'lat': traj_df.iloc[0].lat, 'lng': traj_df.iloc[0].lng},
+            end_location={
+                'lat': traj_df.iloc[-1].lat, 'lng': traj_df.iloc[-1].lng},
             user_id=shift.user_id,
             shift_id=shift.id,
         )
 
-        match_obj = get_route_distance_and_geometry(traj_df)
+        match_obj = get_route_geometry(traj_df)
         try:
-            bb = match_obj['geom_obj'][1]
-            geometries = match_obj['geom_obj'][0]
+            bb = match_obj.result.bbox
+            geometries = match_obj.result.geometry
 
             bounding_box = {'minLat': bb[1],
                             'minLng': bb[0],
@@ -339,14 +339,14 @@ def extractJobsFromLocations(shift, locations):
                             'maxLng': bb[2]}
             matched = {'geometries': geometries, 'bounding_box': bounding_box}
             job.snapped_geometry = matched
-            job.mileage = match_obj['distance']
+            job.mileage = match_obj.result.distance
         except Exception as e:
             print("Exception:", e)
             job.snapped_geometry = None
             job.mileage = 0.0
 
-        job.end_time = stops['stop'].leaving_datetime
-        job.start_time = stops['start'].datetime
+        job.end_time = traj_df.iloc[-1].datetime
+        job.start_time = traj_df.iloc[0].datetime
         jobs.append(job)
     return jobs
 
@@ -570,24 +570,22 @@ def get_mileage_and_geometry_for_locations(locations):
         that line's total mileage, respectively.
     """
     locs = sorted(locations, key=lambda l: l.timestamp)
-    match_obj = get_route_distance_and_geometry(locs)
+    match_obj = get_route_geometry(locs)
 
-    if ('geom_obj' not in match_obj
-            or not match_obj['geom_obj']
-            or match_obj['status'] == 'error'):
+    if (not match_obj.result or match_obj.status == 'error'):
         current_app.logger.error("Failed to match a route to job...")
-        return job
+        return
 
-    distance = match_obj['distance']
-    bb = match_obj['geom_obj'][1]
-    geometries = match_obj['geom_obj'][0]
+    distance = match_obj.result.distance
+    bb = match_obj.result.bbox
+    geometries = match_obj.result.geometry
 
     bounding_box = {'minLat': bb[1],
                     'minLng': bb[0],
                     'maxLat': bb[3],
                     'maxLng': bb[2]}
     matched = {'geometries': geometries, 'bounding_box': bounding_box}
-    return {'geometry': matched, 'distance': match_obj['distance']}
+    return {'geometry': matched, 'distance': distance}
 
 
 def get_job_mileage_and_geometry(job, shift=None):
