@@ -144,11 +144,6 @@ jobs:
         with:
           exec: helm upgrade --install --force prod-gigbox ./server/chart/gigbox-chart --wait --atomic -n production --create-namespace --values ${{ steps.write_values.outputs.filePath }} --set apiHostname=prod.gigbox.app
           kubeconfig: '${{ secrets.KUBECONFIG }}'
-      - uses: unsplash/comment-on-pr@master
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          msg: Server deployed and cert is being provisioned at [https://prod.gigbox.app](https://prod.gigbox.app)
   deploy-review-server:
     runs-on: 'ubuntu-latest'
     if: github.event_name == 'pull_request'
