@@ -1,3 +1,6 @@
+# currently unmaintained
+I have had to put gigbox development on hold while I work on other projects as part of my PhD research. I'm continuing to do some testing with workers but this repo is largely unmaintained for the moment. If you are interested in contributing or supporting this work, please reach out to me at [dcalacci@media.mit.edu](mailto:dcalacci@media.mit.edu). If you are a worker interested in tracking your pay, I highly recommend the [Driver's Seat](https://driversseat.co) cooperative. 
+
 # gigbox
 
 [![Expo Review](https://github.com/dcalacci/gigbox/actions/workflows/build-expo.yml/badge.svg)](https://github.com/dcalacci/gigbox/actions/workflows/build-expo.yml)
